@@ -1,0 +1,962 @@
+<title>The Edit</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;1,6..96,500;1,6..96,600&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a personal beauty-counter ledger. Masthead + tabs, then one working panel per area (Today, Wants, Beauty, Skin, Wardrobe). */
+:root {
+  --bg: #F6F4F7;
+  --surface: #FFFFFF;
+  --sunk: #EEEAF1;
+  --ink: #1E1A24;
+  --muted: #6C6475;
+  --line: #E2DDE7;
+  --accent: #8E1F3F;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #F4E3E9;
+  --good: #2C7650;
+  --good-soft: #E1F1E7;
+  --warn: #9A5B05;
+  --warn-soft: #FBEFD8;
+  --bad: #B02A1E;
+  --bad-soft: #FBE4E1;
+  --f-display: "Bodoni Moda", "Didot", "Bodoni 72", Georgia, serif;
+  --f-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141218; --surface: #1D1A22; --sunk: #25212B; --ink: #F1EDF4; --muted: #A79FB0; --line: #342F3B;
+    --accent: #E68AA4; --accent-ink: #2A0E17; --accent-soft: #3A1E29;
+    --good: #74CF9C; --good-soft: #15301F; --warn: #EDB65A; --warn-soft: #33270F; --bad: #F2887D; --bad-soft: #3B1A17;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141218; --surface: #1D1A22; --sunk: #25212B; --ink: #F1EDF4; --muted: #A79FB0; --line: #342F3B;
+  --accent: #E68AA4; --accent-ink: #2A0E17; --accent-soft: #3A1E29;
+  --good: #74CF9C; --good-soft: #15301F; --warn: #EDB65A; --warn-soft: #33270F; --bad: #F2887D; --bad-soft: #3B1A17;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1140px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { text-wrap: balance; margin: 0; }
+h2 { font-family: var(--f-display); font-style: italic; font-weight: 500; font-size: 1.45rem; letter-spacing: -0.01em; }
+h3 { font-size: 1rem; font-weight: 600; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.meta { color: var(--muted); font-size: 0.84rem; }
+.eyebrow { text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.72rem; font-weight: 600; color: var(--muted); margin: 0; }
+
+/* Masthead */
+.top { border-bottom: 1px solid var(--line); background: var(--bg); }
+.top-in { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; padding-block: 28px 12px; }
+.brand { font-family: var(--f-display); font-weight: 500; font-size: clamp(2.6rem, 7vw, 4rem); line-height: 0.95; letter-spacing: -0.02em; }
+.brand em { color: var(--accent); font-weight: 600; }
+.sync { margin: 0; font-size: 0.82rem; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.sync::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+.sync.on::before { background: var(--good); }
+.tabs-scroll { overflow-x: auto; scrollbar-width: none; }
+.tabs { display: flex; gap: 4px; }
+.tab { border: 0; background: none; padding: 10px 14px 12px; cursor: pointer; color: var(--muted); font-weight: 600; border-bottom: 2px solid transparent; white-space: nowrap; }
+.tab:hover { color: var(--ink); }
+.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+.tab .n { font-family: var(--f-mono); font-size: 0.75rem; font-weight: 400; color: var(--muted); margin-left: 4px; }
+
+main.wrap { padding-block: 24px 64px; display: grid; gap: 20px; }
+.panel { display: grid; gap: 20px; }
+
+/* Controls */
+.btn { border: 1px solid var(--line); background: var(--surface); padding: 8px 14px; border-radius: 999px; cursor: pointer; font-weight: 600; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.small { padding: 5px 10px; font-size: 0.8rem; }
+.btn.ghost { background: transparent; }
+.btn.danger { color: var(--bad); }
+.btn[disabled] { opacity: 0.55; cursor: progress; }
+.link { border: 0; background: none; color: var(--accent); font-weight: 600; cursor: pointer; padding: 0; font-size: 0.86rem; }
+.toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 5px 12px; font-size: 0.84rem; cursor: pointer; color: var(--muted); }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+select.plain { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 7px 12px; font-size: 0.86rem; }
+.check { display: inline-flex; gap: 6px; align-items: center; font-size: 0.86rem; color: var(--muted); }
+
+/* Pills */
+.pill { display: inline-flex; align-items: center; gap: 4px; font-size: 0.74rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--sunk); color: var(--muted); white-space: nowrap; }
+.pill.good { background: var(--good-soft); color: var(--good); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+.pill.bad { background: var(--bad-soft); color: var(--bad); }
+.pill.accent { background: var(--accent-soft); color: var(--accent); }
+.pill.ex { background: transparent; border: 1px dashed var(--line); }
+
+/* Banner */
+.banner { display: flex; justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap; background: var(--accent-soft); border-radius: var(--r); padding: 12px 16px; font-size: 0.9rem; }
+
+/* Today */
+.today { display: grid; grid-template-columns: 1.15fr 1fr; gap: 20px; align-items: start; }
+.block { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; display: grid; gap: 14px; min-width: 0; }
+.block-h { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.alerts { list-style: none; margin: 0; padding: 0; display: grid; }
+.alerts li { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+.alerts li:first-child { border-top: 0; padding-top: 0; }
+.alerts .what { min-width: 0; }
+.alerts .what b { display: block; font-weight: 600; overflow-wrap: anywhere; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.stat { background: var(--surface); padding: 14px 16px; display: grid; gap: 2px; }
+.stat .v { font-family: var(--f-display); font-size: 1.8rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.stat .k { font-size: 0.8rem; color: var(--muted); }
+.slot h3 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 6px; }
+.ticks { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.tick { display: flex; gap: 10px; align-items: center; padding: 6px 8px; border-radius: 8px; cursor: pointer; }
+.tick:hover { background: var(--sunk); }
+.tick input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+.tick .s { color: var(--muted); font-size: 0.8rem; margin-left: auto; white-space: nowrap; }
+.tick.done .p { text-decoration: line-through; color: var(--muted); }
+.slots { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.dots { display: flex; gap: 5px; align-items: flex-end; flex-wrap: wrap; }
+.dot { display: grid; justify-items: center; gap: 3px; font-size: 0.66rem; color: var(--muted); font-family: var(--f-mono); }
+.dot i { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--line); display: block; }
+.dot i.half { background: linear-gradient(90deg, var(--accent) 50%, transparent 50%); border-color: var(--accent); }
+.dot i.full { background: var(--accent); border-color: var(--accent); }
+
+/* Cards */
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+.card.faded { opacity: 0.6; }
+.card-top { display: grid; grid-template-columns: 64px 1fr; gap: 12px; align-items: start; }
+.thumb { width: 64px; height: 64px; border-radius: 8px; background: var(--sunk); object-fit: cover; display: grid; place-items: center; font-family: var(--f-display); font-style: italic; font-size: 1.5rem; color: var(--muted); overflow: hidden; }
+.card-title { min-width: 0; display: grid; gap: 2px; }
+.card-title h3 { overflow-wrap: anywhere; }
+.card-title .meta { overflow-wrap: anywhere; }
+.pills { display: flex; gap: 6px; flex-wrap: wrap; }
+.price-row { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: end; }
+.price { font-family: var(--f-mono); font-size: 1.35rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+.price small { font-size: 0.78rem; color: var(--muted); font-weight: 400; display: block; }
+.spark { width: 120px; height: 38px; display: block; }
+.notes { font-size: 0.88rem; color: var(--muted); margin: 0; overflow-wrap: anywhere; }
+.actions { display: flex; gap: 6px; flex-wrap: wrap; border-top: 1px solid var(--line); padding-top: 12px; }
+.actions .push { margin-left: auto; }
+.swatch { width: 64px; height: 64px; border-radius: 50%; border: 1px solid var(--line); }
+.stars { color: var(--accent); letter-spacing: 1px; font-size: 0.9rem; }
+.stars .off { color: var(--line); }
+
+/* AI */
+.ask { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; display: grid; gap: 10px; }
+.ask label { font-weight: 600; }
+.ask-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end; }
+textarea, input[type="text"], input[type="url"], input[type="number"], input[type="date"], .field select { width: 100%; border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 8px 10px; }
+textarea { resize: vertical; min-height: 44px; }
+.ai-out { white-space: pre-wrap; font-size: 0.9rem; background: var(--sunk); border-radius: 8px; padding: 12px 14px; overflow-wrap: anywhere; }
+.ai-out.err { background: var(--bad-soft); color: var(--bad); }
+.ai-out .by { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 6px; white-space: normal; }
+
+/* Skin */
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; counter-reset: step; }
+.step { counter-increment: step; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; display: grid; grid-template-columns: 28px 1fr auto; gap: 12px; align-items: start; }
+.step::before { content: counter(step); font-family: var(--f-display); font-style: italic; font-size: 1.3rem; color: var(--accent); line-height: 1.2; }
+.step .body { min-width: 0; display: grid; gap: 4px; }
+.step .body b { overflow-wrap: anywhere; }
+.step .ctl { display: flex; gap: 2px; }
+.icon { border: 1px solid var(--line); background: var(--surface); width: 30px; height: 30px; border-radius: 8px; cursor: pointer; display: grid; place-items: center; color: var(--muted); font-size: 0.85rem; }
+.icon:hover { color: var(--ink); border-color: var(--muted); }
+
+/* Wardrobe */
+.closet { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
+.piece { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; display: grid; cursor: pointer; text-align: left; padding: 0; min-width: 0; }
+.piece .img { aspect-ratio: 4 / 5; max-width: 100%; background: var(--sunk); display: grid; place-items: center; overflow: hidden; }
+.piece .img img { width: 100%; height: 100%; object-fit: cover; }
+.piece .img span { font-family: var(--f-display); font-style: italic; font-size: 1.1rem; color: var(--muted); padding: 10px; text-align: center; }
+.piece .cap { padding: 10px 12px; display: grid; gap: 2px; }
+.piece .cap b { font-size: 0.9rem; overflow-wrap: anywhere; }
+.outfits { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.outfit { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; display: grid; gap: 10px; min-width: 0; }
+.outfit-items { display: flex; gap: 8px; flex-wrap: wrap; }
+.mini { width: 64px; display: grid; gap: 4px; font-size: 0.7rem; color: var(--muted); text-align: center; }
+.mini .img { width: 64px; height: 80px; border-radius: 6px; background: var(--sunk); overflow: hidden; display: grid; place-items: center; font-family: var(--f-display); font-style: italic; color: var(--muted); }
+.mini .img img { width: 100%; height: 100%; object-fit: cover; }
+.mini span { overflow-wrap: anywhere; line-height: 1.2; }
+
+.empty { border: 1px dashed var(--line); border-radius: var(--r); padding: 24px; text-align: center; color: var(--muted); display: grid; gap: 10px; justify-items: center; }
+.section-h { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+
+/* Dialog */
+dialog { border: 1px solid var(--line); border-radius: 14px; padding: 0; background: var(--surface); color: var(--ink); width: min(620px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); }
+dialog::backdrop { background: rgb(20 16 26 / 0.45); }
+.dlg { display: grid; grid-template-rows: auto 1fr auto; max-height: calc(100dvh - 26px); }
+.dlg-h { padding: 18px 20px 8px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.dlg-b { padding: 8px 20px 16px; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 12px 14px; }
+.dlg-f { padding: 12px 20px 18px; border-top: 1px solid var(--line); display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+.dlg-f .left { margin-right: auto; }
+.field { display: grid; gap: 4px; min-width: 0; }
+.field.full { grid-column: 1 / -1; }
+.field > span { font-size: 0.8rem; font-weight: 600; color: var(--muted); }
+.field .hint { font-size: 0.76rem; color: var(--muted); }
+.colour-row { display: flex; gap: 8px; align-items: center; }
+.colour-row input[type="color"] { width: 44px; height: 36px; border: 1px solid var(--line); border-radius: 8px; padding: 2px; background: var(--bg); }
+.photo-row { display: flex; gap: 10px; align-items: center; }
+.photo-row img { width: 52px; height: 52px; object-fit: cover; border-radius: 8px; }
+
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(20px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-size: 0.88rem; z-index: 50; max-width: calc(100vw - 32px); }
+
+@media (max-width: 820px) {
+  .today, .two { grid-template-columns: 1fr; }
+  .stats { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 520px) {
+  .slots { grid-template-columns: 1fr; }
+  .dlg-b { grid-template-columns: 1fr; }
+  .ask-row { grid-template-columns: 1fr; }
+  .cards { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .card, .piece, .step { transition: border-color .15s ease; }
+  .card:hover, .piece:hover { border-color: var(--muted); }
+}
+</style>
+
+<header class="top">
+  <div class="wrap top-in">
+    <div>
+      <p class="eyebrow" id="today-date">Today</p>
+      <h1 class="brand">The <em>Edit</em></h1>
+    </div>
+    <p class="sync" id="sync">Connecting…</p>
+  </div>
+  <div class="wrap tabs-scroll">
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button class="tab" role="tab" data-tab="today">Today</button>
+      <button class="tab" role="tab" data-tab="wants">Wants<span class="n" id="n-wants"></span></button>
+      <button class="tab" role="tab" data-tab="beauty">Beauty<span class="n" id="n-beauty"></span></button>
+      <button class="tab" role="tab" data-tab="skin">Skin<span class="n" id="n-skin"></span></button>
+      <button class="tab" role="tab" data-tab="wardrobe">Wardrobe<span class="n" id="n-wardrobe"></span></button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="banner"></div>
+
+  <!-- TODAY -->
+  <section class="panel" data-panel="today">
+    <div class="stats" id="stats"></div>
+    <div class="today">
+      <section class="block">
+        <div class="block-h"><h2>Heads up</h2><button class="link" data-go="wants">All wants →</button></div>
+        <ul class="alerts" id="alerts"></ul>
+      </section>
+      <section class="block">
+        <div class="block-h"><h2>Today’s skin</h2><span class="meta" id="streak"></span></div>
+        <div id="today-routine"></div>
+        <div>
+          <p class="eyebrow" style="margin-bottom:6px">Last 14 days</p>
+          <div class="dots" id="dots"></div>
+        </div>
+      </section>
+    </div>
+  </section>
+
+  <!-- WANTS -->
+  <section class="panel" data-panel="wants" hidden>
+    <div class="toolbar">
+      <div class="chips" id="wants-chips"></div>
+      <div class="tools">
+        <select class="plain" id="wants-sort" aria-label="Sort wants">
+          <option value="alert">Deals first</option>
+          <option value="priority">Priority</option>
+          <option value="new">Newest</option>
+          <option value="low">Price: low to high</option>
+          <option value="high">Price: high to low</option>
+        </select>
+        <label class="check"><input type="checkbox" id="wants-bought"> Show bought</label>
+        <button class="btn primary" data-add="wishlist">+ Add a want</button>
+      </div>
+    </div>
+    <div class="cards" id="wants-list"></div>
+  </section>
+
+  <!-- BEAUTY -->
+  <section class="panel" data-panel="beauty" hidden>
+    <div class="ask needs-ai">
+      <label for="beauty-ask">Ask for a recommendation</label>
+      <div class="ask-row">
+        <textarea id="beauty-ask" rows="2" placeholder="e.g. a dewier foundation in my shade, or a nude lip that isn’t too brown. Leave blank for “what should I try next?”"></textarea>
+        <button class="btn primary" id="beauty-ask-go">Recommend</button>
+      </div>
+      <div class="ai-out" id="beauty-ask-out" hidden></div>
+    </div>
+    <div class="toolbar">
+      <div class="chips" id="beauty-chips"></div>
+      <div class="tools"><button class="btn primary" data-add="beauty">+ Add a product</button></div>
+    </div>
+    <div class="cards" id="beauty-list"></div>
+  </section>
+
+  <!-- SKIN -->
+  <section class="panel" data-panel="skin" hidden>
+    <div class="toolbar">
+      <p class="meta" style="margin:0">Your routine, in order. Tick steps off on the Today tab.</p>
+      <div class="tools">
+        <button class="btn needs-ai" id="skin-check">Check my routine</button>
+        <button class="btn primary" data-add="routine">+ Add a step</button>
+      </div>
+    </div>
+    <div class="ai-out" id="skin-ai" hidden></div>
+    <div class="two">
+      <section style="display:grid;gap:12px"><h2>Morning</h2><ol class="steps" id="skin-am"></ol></section>
+      <section style="display:grid;gap:12px"><h2>Night</h2><ol class="steps" id="skin-pm"></ol></section>
+    </div>
+  </section>
+
+  <!-- WARDROBE -->
+  <section class="panel" data-panel="wardrobe" hidden>
+    <div class="ask needs-ai">
+      <label for="vibe-ask">Outfit vibes</label>
+      <div class="ask-row">
+        <textarea id="vibe-ask" rows="2" placeholder="e.g. Friday in the office then drinks, 22° and windy"></textarea>
+        <button class="btn primary" id="vibe-go">Style me</button>
+      </div>
+      <div id="vibe-out" class="outfits" hidden></div>
+    </div>
+    <div class="section-h" id="saved-h"><h2>Saved outfits</h2></div>
+    <div class="outfits" id="outfits"></div>
+    <div class="section-h"><h2>In my wardrobe</h2></div>
+    <div class="toolbar">
+      <div class="chips" id="wardrobe-chips"></div>
+      <div class="tools"><button class="btn primary" data-add="wardrobe">+ Add a piece</button></div>
+    </div>
+    <div class="closet" id="wardrobe-list"></div>
+  </section>
+</main>
+
+<dialog id="dlg">
+  <form class="dlg" id="dlg-form" novalidate>
+    <div class="dlg-h"><h2 id="dlg-title">Add</h2><button type="button" class="icon" data-close aria-label="Close">✕</button></div>
+    <div class="dlg-b" id="dlg-body"></div>
+    <div class="dlg-f">
+      <button type="button" class="btn ghost danger left" id="dlg-del" hidden>Delete</button>
+      <button type="button" class="btn ghost" data-close>Cancel</button>
+      <button type="submit" class="btn primary" id="dlg-save">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+  // ---------- config ----------
+  const COLS = ['wishlist', 'beauty', 'routine', 'wardrobe', 'outfits'];
+  const WANT_CATS = ['Clothes', 'Beauty', 'Skincare', 'Office', 'Home', 'Tech', 'Other'];
+  const STOCK = { in: 'In stock', low: 'Low stock', selling: 'Selling fast', out: 'Out of stock', unknown: 'Not sure' };
+  const PRIORITY = { must: 'Must have', want: 'Want', maybe: 'Maybe' };
+  const BEAUTY_STATUS = { grail: 'Holy grail', using: 'Using now', totry: 'Want to try', nope: 'Not for me' };
+  const BEAUTY_TYPES = ['Foundation', 'Skin tint', 'Concealer', 'Powder', 'Blush', 'Bronzer', 'Highlighter', 'Brows', 'Mascara', 'Eyeliner', 'Eyeshadow', 'Lipstick', 'Lip gloss', 'Lip liner', 'Lip balm', 'Setting spray', 'Fragrance', 'Hair', 'Nails', 'Other'];
+  const STEP_TYPES = ['Cleanser', 'Toner', 'Exfoliant', 'Serum', 'Treatment', 'Eye cream', 'Moisturiser', 'Oil', 'SPF', 'Mask', 'Other'];
+  const FREQ = { daily: 'Daily', alt: 'Every other day', few: '2–3× a week', weekly: 'Weekly' };
+  const WARD_CATS = ['Top', 'Knit', 'Shirt', 'Bottoms', 'Jeans', 'Skirt', 'Dress', 'Outerwear', 'Shoes', 'Bag', 'Accessory', 'Active'];
+  const opts = (list) => Array.isArray(list) ? list.map(v => [v, v]) : Object.entries(list);
+
+  const FORMS = {
+    wishlist: { title: 'want', fields: [
+      { k: 'name', label: 'What is it?', type: 'text', req: true, full: true, ph: 'e.g. Relaxed wool blazer' },
+      { k: 'brand', label: 'Brand / shop', type: 'text', ph: 'e.g. COS' },
+      { k: 'category', label: 'Category', type: 'select', options: opts(WANT_CATS) },
+      { k: 'url', label: 'Link', type: 'url', full: true, ph: 'https://…' },
+      { k: 'variant', label: 'Size / shade / colour', type: 'text', ph: 'e.g. 10, Black' },
+      { k: 'priority', label: 'Priority', type: 'select', options: opts(PRIORITY) },
+      { k: 'price', label: 'Current price (AUD)', type: 'number' },
+      { k: 'target', label: 'Buy if it drops to', type: 'number' },
+      { k: 'stock', label: 'Stock', type: 'select', options: opts(STOCK) },
+      { k: 'photoId', label: 'Photo', type: 'photo' },
+      { k: 'notes', label: 'Notes', type: 'textarea', full: true, ph: 'Why you want it, sale dates, sizing notes…' },
+    ]},
+    beauty: { title: 'product', fields: [
+      { k: 'name', label: 'Product', type: 'text', req: true, full: true, ph: 'e.g. Soft Pinch Liquid Blush' },
+      { k: 'brand', label: 'Brand', type: 'text' },
+      { k: 'type', label: 'Type', type: 'select', options: opts(BEAUTY_TYPES) },
+      { k: 'shade', label: 'Shade', type: 'text', ph: 'e.g. Hope' },
+      { k: 'shadeHex', label: 'Shade colour', type: 'colour' },
+      { k: 'finish', label: 'Finish', type: 'select', options: opts(['', 'Matte', 'Satin', 'Natural', 'Dewy', 'Glossy', 'Shimmer', 'Sheer']) },
+      { k: 'status', label: 'Status', type: 'select', options: opts(BEAUTY_STATUS) },
+      { k: 'rating', label: 'Rating', type: 'rating' },
+      { k: 'repurchase', label: 'Would repurchase?', type: 'select', options: opts(['', 'Yes', 'Maybe', 'No']) },
+      { k: 'photoId', label: 'Photo', type: 'photo' },
+      { k: 'feedback', label: 'How it went', type: 'textarea', full: true, ph: 'Wear time, oxidising, too warm/cool, breakouts, what you love…' },
+    ]},
+    routine: { title: 'step', fields: [
+      { k: 'product', label: 'Product', type: 'text', req: true, full: true, ph: 'e.g. Gentle cleanser' },
+      { k: 'brand', label: 'Brand', type: 'text' },
+      { k: 'step', label: 'Step', type: 'select', options: opts(STEP_TYPES) },
+      { k: 'when', label: 'When', type: 'select', options: opts({ am: 'Morning', pm: 'Night', both: 'Morning & night' }) },
+      { k: 'freq', label: 'How often', type: 'select', options: opts(FREQ) },
+      { k: 'actives', label: 'Key actives', type: 'text', full: true, ph: 'e.g. niacinamide 10%, retinal 0.1%' },
+      { k: 'rating', label: 'Rating', type: 'rating' },
+      { k: 'feedback', label: 'How it’s going', type: 'textarea', full: true },
+    ]},
+    wardrobe: { title: 'piece', fields: [
+      { k: 'name', label: 'Piece', type: 'text', req: true, full: true, ph: 'e.g. Cream cable knit' },
+      { k: 'category', label: 'Category', type: 'select', options: opts(WARD_CATS) },
+      { k: 'colour', label: 'Colour', type: 'text' },
+      { k: 'vibes', label: 'Vibes', type: 'tags', full: true, ph: 'comma separated, e.g. office, weekend, date night', hint: 'Used when styling outfits.' },
+      { k: 'season', label: 'Season', type: 'select', options: opts({ all: 'All year', warm: 'Warm weather', cool: 'Cool weather' }) },
+      { k: 'photoId', label: 'Photo', type: 'photo' },
+      { k: 'notes', label: 'Notes', type: 'textarea', full: true, ph: 'Fit, care, what it goes with…' },
+    ]},
+    logprice: { title: 'price check', fields: [
+      { k: 'price', label: 'Price today (AUD)', type: 'number', req: true },
+      { k: 'stock', label: 'Stock', type: 'select', options: opts(STOCK) },
+    ]},
+  };
+
+  // ---------- state ----------
+  const S = {
+    wishlist: [], beauty: [], routine: [], wardrobe: [], outfits: [], log: {},
+    loaded: new Set(), status: 'connecting',
+    tab: 'today', wantCat: 'All', wantSort: 'alert', showBought: false, beautyStatus: 'All', wardCat: 'All',
+    cardAi: {}, suggestions: [],
+  };
+  let db = null, assets = null, sample = null, canWrite = true;
+
+  // ---------- utils ----------
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const money = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' });
+  const fmt = (n) => (n == null || n === '' || isNaN(n)) ? '—' : money.format(Number(n));
+  const pad = (n) => String(n).padStart(2, '0');
+  const dayKey = (d = new Date()) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const daysSince = (k) => k ? Math.floor((new Date(dayKey()) - new Date(k)) / 864e5) : null;
+  const photoUrl = (id) => id ? '/_blob/' + encodeURIComponent(id) : '';
+  const initial = (s) => esc((s || '?').trim().charAt(0).toUpperCase());
+  const stars = (n) => { n = Number(n) || 0; if (!n) return ''; return `<span class="stars" aria-label="${n} out of 5">${'★'.repeat(n)}<span class="off">${'★'.repeat(5 - n)}</span></span>`; };
+  let toastT;
+  const toast = (msg) => { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 2600); };
+  const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
+
+  const AI_ERR = {
+    not_granted: 'Claude isn’t switched on for this page. Allow it from the artifact’s permissions menu to get recommendations.',
+    sampling_disabled: 'Claude isn’t available on this account.',
+    rate_limited: 'Too many asks in a row. Give it a minute and try again.',
+    session_expired: 'Sign in to Claude again, then retry.',
+    refused: 'Claude couldn’t help with that one. Try rewording it.',
+    invalid_json: 'Claude’s answer came back in the wrong shape. Try again.',
+  };
+  const aiErr = (e) => AI_ERR[e?.code] || 'Couldn’t reach Claude just now. Try again.';
+
+  // ---------- price logic ----------
+  function priceInfo(it) {
+    const h = (it.priceHistory || []).filter(x => x && x.p != null).slice().sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0);
+    const last = h.length ? h[h.length - 1].p : (it.price ?? null);
+    const prev = h.length > 1 ? h[h.length - 2].p : null;
+    const peak = h.length ? Math.max(...h.map(x => x.p)) : last;
+    const drop = prev != null && last < prev ? prev - last : 0;
+    const rise = prev != null && last > prev ? last - prev : 0;
+    const offPeak = peak != null && last != null && peak > last ? peak - last : 0;
+    const atTarget = it.target != null && it.target !== '' && last != null && Number(last) <= Number(it.target);
+    const lastChecked = it.lastChecked || (h.length ? h[h.length - 1].d : null);
+    return { h, last, prev, peak, drop, rise, offPeak, atTarget, lastChecked, stale: daysSince(lastChecked) };
+  }
+  function wantAlerts(it) {
+    const p = priceInfo(it), out = [];
+    if (p.atTarget) out.push({ tone: 'good', label: 'Hit your target', detail: `${fmt(p.last)} (target ${fmt(it.target)})`, rank: 0 });
+    if (p.drop) out.push({ tone: 'good', label: `Down ${fmt(p.drop)}`, detail: `${Math.round(p.drop / p.prev * 100)}% since last check`, rank: 1 });
+    if (it.stock === 'out') out.push({ tone: 'bad', label: 'Out of stock', detail: 'Check for restocks or a similar piece', rank: 2 });
+    if (it.stock === 'low' || it.stock === 'selling') out.push({ tone: 'warn', label: STOCK[it.stock], detail: 'Might go soon', rank: 2 });
+    if (p.rise) out.push({ tone: 'bad', label: `Up ${fmt(p.rise)}`, detail: 'Price went up since last check', rank: 3 });
+    if (p.stale != null && p.stale >= 14) out.push({ tone: '', label: `Checked ${p.stale} days ago`, detail: 'Log a fresh price', rank: 4 });
+    return out;
+  }
+  function spark(h) {
+    if (!h || h.length < 2) return '';
+    const w = 120, ht = 38, pd = 4, ps = h.map(x => Number(x.p));
+    const min = Math.min(...ps), max = Math.max(...ps), span = max - min || 1;
+    const pts = ps.map((p, i) => [pd + i * (w - pd * 2) / (ps.length - 1), pd + (1 - (p - min) / span) * (ht - pd * 2)]);
+    const line = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+    const area = line + ` L${pts[pts.length - 1][0].toFixed(1)} ${ht} L${pts[0][0].toFixed(1)} ${ht} Z`;
+    const down = ps[ps.length - 1] < ps[0];
+    const col = down ? 'var(--good)' : 'var(--accent)';
+    const [ex, ey] = pts[pts.length - 1];
+    return `<svg class="spark" viewBox="0 0 ${w} ${ht}" aria-label="Price history, ${ps.length} checks"><line x1="0" x2="${w}" y1="${ht - 0.5}" y2="${ht - 0.5}" stroke="var(--line)" stroke-width="1"/><path d="${area}" fill="${col}" fill-opacity="0.12"/><path d="${line}" fill="none" stroke="${col}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${ex}" cy="${ey}" r="3" fill="${col}"/></svg>`;
+  }
+
+  // ---------- rendering ----------
+  const activeWants = () => S.wishlist.filter(w => w.status !== 'bought');
+  const hasData = () => COLS.some(c => S[c].length);
+
+  function renderChrome() {
+    $('#today-date').textContent = new Date().toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' });
+    const sync = $('#sync');
+    sync.className = 'sync' + (S.status === 'live' ? ' on' : '');
+    sync.textContent = S.status === 'live' ? (canWrite ? 'Saved to your Edit' : 'View only') : S.status === 'off' ? 'Not connected' : 'Connecting…';
+    $$('.tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.tab === S.tab)));
+    $$('[data-panel]').forEach(p => p.hidden = p.dataset.panel !== S.tab);
+    $('#n-wants').textContent = activeWants().length || '';
+    $('#n-beauty').textContent = S.beauty.length || '';
+    $('#n-skin').textContent = S.routine.length || '';
+    $('#n-wardrobe').textContent = S.wardrobe.length || '';
+    $$('.needs-ai').forEach(el => el.hidden = !sample);
+    $$('[data-add]').forEach(b => b.hidden = !canWrite || !db);
+
+    const ex = COLS.reduce((n, c) => n + S[c].filter(x => x.example).length, 0);
+    const b = $('#banner');
+    if (S.status === 'off') {
+      b.innerHTML = `<div class="banner"><span>Your Edit saves to your Claude account. Open this page on claude.ai while signed in to load and save your things.</span></div>`;
+    } else if (ex && canWrite) {
+      b.innerHTML = `<div class="banner"><span>The things marked <span class="pill ex">Example</span> are samples to show how it works. Add your own, then clear them.</span><button class="btn small" data-act="clear-examples">Clear ${ex} examples</button></div>`;
+    } else b.innerHTML = '';
+  }
+
+  function renderToday() {
+    const wants = activeWants();
+    const totalWant = wants.reduce((s, w) => s + (Number(priceInfo(w).last) || 0), 0);
+    const deals = wants.filter(w => { const p = priceInfo(w); return p.atTarget || p.drop; }).length;
+    const grails = S.beauty.filter(x => x.status === 'grail').length;
+    $('#stats').innerHTML = [
+      [fmt(totalWant).replace(/\.00$/, ''), `on the want list (${wants.length} things)`],
+      [deals, deals === 1 ? 'deal to look at' : 'deals to look at'],
+      [grails, 'holy grail products'],
+      [S.wardrobe.length, 'pieces in the wardrobe'],
+    ].map(([v, k]) => `<div class="stat"><span class="v">${esc(v)}</span><span class="k">${esc(k)}</span></div>`).join('');
+
+    const rows = [];
+    wants.forEach(w => wantAlerts(w).forEach(a => rows.push({ w, a })));
+    rows.sort((x, y) => x.a.rank - y.a.rank);
+    $('#alerts').innerHTML = rows.length ? rows.slice(0, 8).map(({ w, a }) => `
+      <li><span class="pill ${a.tone}">${esc(a.label)}</span>
+        <span class="what"><b>${esc(w.name)}</b><span class="meta">${esc([w.brand, a.detail].filter(Boolean).join(' · '))}</span></span>
+        <button class="btn small" data-act="logprice" data-id="${esc(w.id)}">Log price</button></li>`).join('')
+      : `<li style="display:block"><span class="meta">${wants.length ? 'Nothing has dropped or is running low. Log prices on your wants to start tracking.' : 'Add things you want and their prices. Drops, target prices and low stock show up here.'}</span></li>`;
+
+    // routine
+    const key = dayKey(), today = S.log[key] || {};
+    const slot = (s, label) => {
+      const steps = stepsFor(s);
+      if (!steps.length) return `<div class="slot"><h3>${label}</h3><p class="meta" style="margin:0">No ${label.toLowerCase()} steps yet.</p></div>`;
+      const done = new Set(today[s] || []);
+      return `<div class="slot"><h3>${label} · ${done.size}/${steps.length}</h3><ul class="ticks">${steps.map(st => `
+        <li><label class="tick ${done.has(st.id) ? 'done' : ''}"><input type="checkbox" data-act="tick" data-slot="${s}" data-id="${esc(st.id)}" ${done.has(st.id) ? 'checked' : ''} ${canWrite ? '' : 'disabled'}>
+        <span class="p">${esc(st.product)}</span><span class="s">${esc(st.freq && st.freq !== 'daily' ? FREQ[st.freq] : st.step || '')}</span></label></li>`).join('')}</ul></div>`;
+    };
+    $('#today-routine').innerHTML = S.routine.length
+      ? `<div class="slots">${slot('am', 'Morning')}${slot('pm', 'Night')}</div>`
+      : `<div class="empty"><span>Add your skincare steps to tick them off each day.</span><button class="btn small" data-go="skin">Set up routine</button></div>`;
+
+    // dots + streak
+    let html = '', streak = 0, counting = true;
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const l = S.log[dayKey(d)] || {};
+      const am = (l.am || []).length > 0, pm = (l.pm || []).length > 0;
+      const cls = am && pm ? 'full' : (am || pm) ? 'half' : '';
+      html += `<span class="dot" title="${d.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })}"><i class="${cls}"></i>${'SMTWTFS'[d.getDay()]}</span>`;
+    }
+    for (let i = 0; i < 365 && counting; i++) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const l = S.log[dayKey(d)] || {};
+      if ((l.am || []).length || (l.pm || []).length) streak++;
+      else if (i > 0) counting = false;
+    }
+    $('#dots').innerHTML = html;
+    $('#streak').textContent = streak ? `${streak}-day streak` : '';
+  }
+
+  function chipRow(el, list, cur, act) {
+    el.innerHTML = [['All', 'All'], ...list].map(([v, l]) => `<button class="chip" aria-pressed="${v === cur}" data-act="${act}" data-v="${esc(v)}">${esc(l)}</button>`).join('');
+  }
+
+  function renderWants() {
+    const present = WANT_CATS.filter(c => S.wishlist.some(w => w.category === c));
+    chipRow($('#wants-chips'), present.map(c => [c, c]), S.wantCat, 'want-cat');
+    $('#wants-sort').value = S.wantSort;
+    $('#wants-bought').checked = S.showBought;
+    let list = S.wishlist.filter(w => (S.showBought || w.status !== 'bought') && (S.wantCat === 'All' || w.category === S.wantCat));
+    const pr = { must: 0, want: 1, maybe: 2 };
+    const sorters = {
+      alert: (a, b) => (Math.min(9, ...wantAlerts(a).map(x => x.rank)) - Math.min(9, ...wantAlerts(b).map(x => x.rank))) || (pr[a.priority] ?? 1) - (pr[b.priority] ?? 1),
+      priority: (a, b) => (pr[a.priority] ?? 1) - (pr[b.priority] ?? 1),
+      new: (a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')),
+      low: (a, b) => (priceInfo(a).last ?? 1e9) - (priceInfo(b).last ?? 1e9),
+      high: (a, b) => (priceInfo(b).last ?? -1) - (priceInfo(a).last ?? -1),
+    };
+    list.sort(sorters[S.wantSort] || sorters.alert);
+    const el = $('#wants-list');
+    if (!list.length) { el.innerHTML = emptyState('wishlist', S.wishlist.length ? 'Nothing in this category.' : 'Paste in things you’re eyeing: clothes, beauty, office bits. Log the price now and then to catch drops.'); return; }
+    el.innerHTML = list.map(w => {
+      const p = priceInfo(w), al = wantAlerts(w);
+      const isClothes = ['Clothes'].includes(w.category);
+      return `<article class="card ${w.status === 'bought' ? 'faded' : ''}">
+        <div class="card-top">
+          ${w.photoId ? `<img class="thumb" src="${photoUrl(w.photoId)}" alt="">` : `<div class="thumb">${initial(w.brand || w.name)}</div>`}
+          <div class="card-title">
+            <h3>${esc(w.name)}</h3>
+            <span class="meta">${esc([w.brand, w.variant].filter(Boolean).join(' · '))}</span>
+            <div class="pills">${w.example ? '<span class="pill ex">Example</span>' : ''}${w.category ? `<span class="pill">${esc(w.category)}</span>` : ''}${w.priority === 'must' ? '<span class="pill accent">Must have</span>' : ''}${w.status === 'bought' ? '<span class="pill good">Bought</span>' : ''}</div>
+          </div>
+        </div>
+        <div class="price-row">
+          <div class="price">${fmt(p.last)}<small>${w.target ? `Target ${fmt(w.target)}` : 'No target set'}${p.offPeak ? ` · ${fmt(p.offPeak)} off peak` : ''}</small></div>
+          ${spark(p.h)}
+        </div>
+        ${al.length ? `<div class="pills">${al.map(a => `<span class="pill ${a.tone}">${esc(a.label)}</span>`).join('')}</div>` : ''}
+        ${w.notes ? `<p class="notes">${esc(w.notes)}</p>` : ''}
+        ${aiBox(w.id)}
+        <div class="actions">
+          ${canWrite && w.status !== 'bought' ? `<button class="btn small" data-act="logprice" data-id="${esc(w.id)}">Log price</button>` : ''}
+          ${w.url ? `<a class="btn small ghost" href="${esc(w.url)}" target="_blank" rel="noopener">Open shop ↗</a>` : ''}
+          ${sample && isClothes && S.wardrobe.length ? `<button class="btn small ghost" data-act="ai-pairs" data-id="${esc(w.id)}">Goes with?</button>` : ''}
+          ${canWrite ? `<button class="btn small ghost push" data-act="edit" data-col="wishlist" data-id="${esc(w.id)}">Edit</button>` : ''}
+          ${canWrite ? `<button class="btn small ghost" data-act="bought" data-id="${esc(w.id)}">${w.status === 'bought' ? 'Undo bought' : 'Bought it'}</button>` : ''}
+        </div>
+      </article>`;
+    }).join('');
+  }
+
+  function renderBeauty() {
+    chipRow($('#beauty-chips'), Object.entries(BEAUTY_STATUS).filter(([k]) => S.beauty.some(b => b.status === k)), S.beautyStatus, 'beauty-status');
+    const order = { grail: 0, using: 1, totry: 2, nope: 3 };
+    const list = S.beauty.filter(b => S.beautyStatus === 'All' || b.status === S.beautyStatus)
+      .sort((a, b) => (order[a.status] ?? 5) - (order[b.status] ?? 5) || (Number(b.rating) || 0) - (Number(a.rating) || 0));
+    const el = $('#beauty-list');
+    if (!list.length) { el.innerHTML = emptyState('beauty', S.beauty.length ? 'Nothing with this status.' : 'Log your favourite products with their shades and how they went. Claude uses your feedback to suggest what to try next.'); return; }
+    const tone = { grail: 'accent', using: 'good', totry: '', nope: 'bad' };
+    el.innerHTML = list.map(b => `<article class="card">
+      <div class="card-top">
+        ${b.photoId ? `<img class="thumb" src="${photoUrl(b.photoId)}" alt="">` : `<div class="swatch" style="background:${/^#[0-9a-f]{6}$/i.test(b.shadeHex || '') ? b.shadeHex : 'var(--sunk)'}" aria-hidden="true"></div>`}
+        <div class="card-title">
+          <h3>${esc(b.name)}</h3>
+          <span class="meta">${esc([b.brand, b.type].filter(Boolean).join(' · '))}</span>
+          <span><b>${esc(b.shade || 'No shade')}</b>${b.finish ? `<span class="meta"> · ${esc(b.finish)}</span>` : ''}</span>
+        </div>
+      </div>
+      <div class="pills">${b.example ? '<span class="pill ex">Example</span>' : ''}${b.status ? `<span class="pill ${tone[b.status] || ''}">${esc(BEAUTY_STATUS[b.status])}</span>` : ''}${b.repurchase ? `<span class="pill">Repurchase: ${esc(b.repurchase)}</span>` : ''}${stars(b.rating)}</div>
+      ${b.feedback ? `<p class="notes">“${esc(b.feedback)}”</p>` : ''}
+      ${aiBox(b.id)}
+      <div class="actions">
+        ${sample ? `<button class="btn small" data-act="ai-alt" data-id="${esc(b.id)}">${b.status === 'nope' ? 'Find something better' : 'Similar or dupes'}</button>` : ''}
+        ${canWrite ? `<button class="btn small ghost push" data-act="edit" data-col="beauty" data-id="${esc(b.id)}">Edit</button>` : ''}
+      </div>
+    </article>`).join('');
+  }
+
+  function stepsFor(slot) {
+    return S.routine.filter(r => r.when === slot || r.when === 'both' || (!r.when && slot === 'am'))
+      .sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0) || String(a.product).localeCompare(String(b.product)));
+  }
+  function renderSkin() {
+    for (const slot of ['am', 'pm']) {
+      const steps = stepsFor(slot), el = $('#skin-' + slot);
+      if (!steps.length) { el.innerHTML = `<li class="empty">No ${slot === 'am' ? 'morning' : 'night'} steps yet.${canWrite && db ? ` <button class="btn small" data-add="routine" data-when="${slot}">+ Add a step</button>` : ''}</li>`; continue; }
+      el.innerHTML = steps.map((s, i) => `<li class="step">
+        <div class="body">
+          <b>${esc(s.product)}</b>
+          <span class="meta">${esc([s.brand, s.step, FREQ[s.freq]].filter(Boolean).join(' · '))}</span>
+          ${s.actives ? `<span class="meta">Actives: ${esc(s.actives)}</span>` : ''}
+          <div class="pills">${s.example ? '<span class="pill ex">Example</span>' : ''}${s.when === 'both' ? '<span class="pill">AM & PM</span>' : ''}${stars(s.rating)}</div>
+          ${s.feedback ? `<p class="notes">${esc(s.feedback)}</p>` : ''}
+        </div>
+        ${canWrite ? `<div class="ctl">
+          <button class="icon" data-act="move" data-slot="${slot}" data-dir="-1" data-id="${esc(s.id)}" aria-label="Move up" ${i === 0 ? 'disabled' : ''}>↑</button>
+          <button class="icon" data-act="move" data-slot="${slot}" data-dir="1" data-id="${esc(s.id)}" aria-label="Move down" ${i === steps.length - 1 ? 'disabled' : ''}>↓</button>
+          <button class="icon" data-act="edit" data-col="routine" data-id="${esc(s.id)}" aria-label="Edit">✎</button>
+        </div>` : '<span></span>'}
+      </li>`).join('');
+    }
+  }
+
+  function pieceTile(p, cls = 'mini') {
+    return `<div class="${cls}"><div class="img">${p.photoId ? `<img src="${photoUrl(p.photoId)}" alt="">` : initial(p.name)}</div><span>${esc(p.name)}</span></div>`;
+  }
+  function outfitCard(o, i, saved) {
+    const items = (o.itemIds || []).map(id => S.wardrobe.find(w => w.id === id)).filter(Boolean);
+    return `<article class="outfit">
+      <div class="section-h"><h3>${esc(o.title || 'Outfit')}</h3>${o.vibe ? `<span class="meta">${esc(o.vibe)}</span>` : ''}</div>
+      <div class="outfit-items">${items.map(p => pieceTile(p)).join('') || '<span class="meta">These pieces have been removed.</span>'}</div>
+      ${o.note ? `<p class="notes">${esc(o.note)}</p>` : ''}
+      ${o.missing ? `<p class="notes"><b>Would finish it:</b> ${esc(o.missing)}</p>` : ''}
+      <div class="actions">${saved
+        ? (canWrite ? `<button class="btn small ghost danger push" data-act="del-outfit" data-id="${esc(o.id)}">Remove</button>` : '')
+        : (canWrite ? `<button class="btn small" data-act="save-outfit" data-i="${i}">Save outfit</button>` : '')}</div>
+    </article>`;
+  }
+  function renderWardrobe() {
+    const present = WARD_CATS.filter(c => S.wardrobe.some(w => w.category === c));
+    chipRow($('#wardrobe-chips'), present.map(c => [c, c]), S.wardCat, 'ward-cat');
+    const list = S.wardrobe.filter(w => S.wardCat === 'All' || w.category === S.wardCat)
+      .sort((a, b) => WARD_CATS.indexOf(a.category) - WARD_CATS.indexOf(b.category) || String(a.name).localeCompare(String(b.name)));
+    const el = $('#wardrobe-list');
+    el.innerHTML = list.length ? list.map(p => `<button class="piece" data-act="${canWrite ? 'edit' : ''}" data-col="wardrobe" data-id="${esc(p.id)}">
+        <div class="img">${p.photoId ? `<img src="${photoUrl(p.photoId)}" alt="">` : `<span>${esc(p.name)}</span>`}</div>
+        <div class="cap"><b>${esc(p.name)}</b><span class="meta">${esc([p.colour, p.category].filter(Boolean).join(' · '))}</span>
+        ${(p.vibes || []).length || p.example ? `<div class="pills">${p.example ? '<span class="pill ex">Example</span>' : ''}${(p.vibes || []).slice(0, 3).map(v => `<span class="pill">${esc(v)}</span>`).join('')}</div>` : ''}</div>
+      </button>`).join('')
+      : emptyState('wardrobe', 'Add what’s in your wardrobe (a photo helps). Then describe a vibe and Claude will put outfits together from your own pieces.');
+    const saved = S.outfits.slice().sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+    $('#saved-h').hidden = !saved.length;
+    $('#outfits').innerHTML = saved.map((o, i) => outfitCard(o, i, true)).join('');
+    const vo = $('#vibe-out');
+    if (S.suggestions.length) { vo.hidden = false; vo.innerHTML = S.suggestions.map((o, i) => outfitCard(o, i, false)).join(''); }
+  }
+
+  function emptyState(col, msg) {
+    return `<div class="empty" style="grid-column:1/-1"><span>${esc(msg)}</span>${canWrite && db ? `<button class="btn primary small" data-add="${col}">+ Add the first one</button>` : ''}</div>`;
+  }
+  function aiBox(id) {
+    const a = S.cardAi[id];
+    if (!a) return '';
+    return `<div class="ai-out ${a.err ? 'err' : ''}" id="ai-${esc(id)}"><span class="by">Claude</span>${esc(a.text)}</div>`;
+  }
+
+  function render() {
+    renderChrome();
+    renderToday(); renderWants(); renderBeauty(); renderSkin(); renderWardrobe();
+  }
+
+  // ---------- form dialog ----------
+  const dlg = $('#dlg');
+  let editing = null; // {col, item, pendingPhoto}
+  function fieldHtml(f, v) {
+    const id = 'f-' + f.k, base = `id="${id}" name="${f.k}"`;
+    let ctl = '';
+    if (f.type === 'textarea') ctl = `<textarea ${base} rows="3" placeholder="${esc(f.ph || '')}">${esc(v)}</textarea>`;
+    else if (f.type === 'select') ctl = `<select ${base}>${f.options.map(([val, l]) => `<option value="${esc(val)}" ${String(v ?? '') === val ? 'selected' : ''}>${esc(l || '—')}</option>`).join('')}</select>`;
+    else if (f.type === 'rating') ctl = `<select ${base}><option value="">Not rated</option>${[5, 4, 3, 2, 1].map(n => `<option value="${n}" ${Number(v) === n ? 'selected' : ''}>${'★'.repeat(n)}${'☆'.repeat(5 - n)}</option>`).join('')}</select>`;
+    else if (f.type === 'colour') ctl = `<div class="colour-row"><input type="color" ${base} value="${/^#[0-9a-f]{6}$/i.test(v || '') ? v : '#c79a86'}"><span class="hint">Pick something close to the shade</span></div>`;
+    else if (f.type === 'tags') ctl = `<input type="text" ${base} value="${esc((v || []).join(', '))}" placeholder="${esc(f.ph || '')}">`;
+    else if (f.type === 'photo') {
+      if (!assets) return '';
+      ctl = `<div class="photo-row">${v ? `<img src="${photoUrl(v)}" alt="" id="f-photo-prev">` : '<img alt="" id="f-photo-prev" hidden>'}<input type="file" id="${id}" accept="image/*"></div>`;
+    }
+    else ctl = `<input type="${f.type === 'number' ? 'number' : f.type === 'url' ? 'url' : 'text'}" ${base} ${f.type === 'number' ? 'step="0.01" min="0" inputmode="decimal"' : ''} value="${esc(v ?? '')}" placeholder="${esc(f.ph || '')}" ${f.req ? 'required' : ''}>`;
+    return `<label class="field ${f.full ? 'full' : ''}" for="${id}"><span>${esc(f.label)}</span>${ctl}${f.hint ? `<span class="hint">${esc(f.hint)}</span>` : ''}</label>`;
+  }
+  function openForm(col, item, preset = {}) {
+    if (!db || !canWrite) return;
+    const def = FORMS[col];
+    editing = { col, item, pendingPhoto: null };
+    const isNew = !item;
+    $('#dlg-title').textContent = col === 'logprice' ? `Log price · ${item.name}` : (isNew ? 'Add a ' : 'Edit ') + def.title;
+    const src = col === 'logprice' ? { price: priceInfo(item).last ?? '', stock: item.stock || 'in' } : (item || preset);
+    $('#dlg-body').innerHTML = def.fields.map(f => fieldHtml(f, src[f.k])).join('');
+    const del = $('#dlg-del');
+    del.hidden = isNew || col === 'logprice';
+    del.textContent = 'Delete'; del.dataset.armed = '';
+    $('#dlg-save').disabled = false;
+    dlg.showModal();
+    const first = $('#dlg-body input, #dlg-body select, #dlg-body textarea');
+    if (first) first.focus();
+  }
+  $('#dlg-body').addEventListener('change', (e) => {
+    if (e.target.type === 'file' && e.target.files[0]) {
+      editing.pendingPhoto = e.target.files[0];
+      const prev = $('#f-photo-prev');
+      prev.src = URL.createObjectURL(editing.pendingPhoto); prev.hidden = false;
+    }
+  });
+  $$('[data-close]').forEach(b => b.addEventListener('click', () => dlg.close()));
+
+  $('#dlg-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const { col, item, pendingPhoto } = editing;
+    const def = FORMS[col], form = e.target, data = {};
+    for (const f of def.fields) {
+      if (f.type === 'photo') continue;
+      const el = form.elements[f.k]; if (!el) continue;
+      let v = el.value.trim();
+      if (f.req && !v) { el.focus(); toast(`Add “${f.label.toLowerCase()}” first.`); return; }
+      if (f.type === 'number' || f.type === 'rating') v = v === '' ? null : Math.round(Number(v) * 100) / 100;
+      if (f.type === 'tags') v = v.split(',').map(s => s.trim()).filter(Boolean);
+      data[f.k] = v;
+    }
+    const save = $('#dlg-save'); save.disabled = true;
+    try {
+      if (pendingPhoto && assets) {
+        save.textContent = 'Uploading photo…';
+        const up = await assets.upload(pendingPhoto);
+        data.photoId = up.id;
+      }
+      save.textContent = 'Saving…';
+      const today = dayKey();
+      if (col === 'logprice') {
+        const hist = (item.priceHistory || []).filter(h => h.d !== today);
+        if (data.price != null) hist.push({ d: today, p: data.price });
+        await db.collection('wishlist').doc(item.id).update({ priceHistory: hist, price: data.price, stock: data.stock, lastChecked: today });
+        const p = priceInfo({ ...item, priceHistory: hist });
+        toast(p.atTarget ? 'At or under your target!' : p.drop ? `Down ${fmt(p.drop)} — logged` : 'Price logged');
+      } else if (item) {
+        if (col === 'wishlist' && data.price != null && data.price !== priceInfo(item).last) {
+          const hist = (item.priceHistory || []).filter(h => h.d !== today);
+          hist.push({ d: today, p: data.price });
+          data.priceHistory = hist; data.lastChecked = today;
+        }
+        await db.collection(col).doc(item.id).update(data);
+        toast('Saved');
+      } else {
+        data.createdAt = new Date().toISOString();
+        if (col === 'wishlist') { data.status = 'want'; data.priceHistory = data.price != null ? [{ d: today, p: data.price }] : []; data.lastChecked = data.price != null ? today : null; }
+        if (col === 'routine') data.order = (Math.max(0, ...S.routine.map(r => Number(r.order) || 0)) + 1);
+        await db.collection(col).add(data);
+        toast('Added');
+      }
+      dlg.close();
+    } catch (err) {
+      toast(err?.code === 'quota_exceeded' ? 'Your Edit is full. Delete a few old things first.' : 'Couldn’t save that. Check your connection and try again.');
+    } finally { save.disabled = false; save.textContent = 'Save'; }
+  });
+  $('#dlg-del').addEventListener('click', async (e) => {
+    const b = e.currentTarget;
+    if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = 'Tap again to delete'; return; }
+    const { col, item } = editing;
+    try { await db.collection(col).doc(item.id).delete(); delete S.cardAi[item.id]; toast('Deleted'); dlg.close(); }
+    catch { toast('Couldn’t delete that. Try again.'); }
+  });
+
+  // ---------- Claude ----------
+  async function cardAsk(id, prompt) {
+    if (!sample) return;
+    S.cardAi[id] = { text: 'Thinking…' }; render();
+    try {
+      const { text } = await sample(prompt, { onText: ({ text }) => { S.cardAi[id] = { text }; const el = document.getElementById('ai-' + id); if (el) el.innerHTML = `<span class="by">Claude</span>${esc(text)}`; } });
+      S.cardAi[id] = { text };
+    } catch (e) { S.cardAi[id] = e.text ? { text: e.text } : { text: aiErr(e), err: true }; }
+    render();
+  }
+  const slimBeauty = (b) => ({ product: b.name, brand: b.brand, type: b.type, shade: b.shade, finish: b.finish, status: BEAUTY_STATUS[b.status], rating: b.rating, repurchase: b.repurchase, feedback: b.feedback });
+  const slimPiece = (p) => ({ id: p.id, name: p.name, category: p.category, colour: p.colour, vibes: p.vibes, season: p.season, notes: p.notes });
+  const STYLE = 'Write in Australian English. Plain text only: no markdown, no asterisks, no headings. Use "–" for list items. Be specific and candid, like a knowledgeable friend. Prefer products sold in Australia (Mecca, Sephora AU, Adore Beauty, Priceline, Myer, David Jones). If you are guessing a shade match, say so.';
+
+  async function streamInto(outEl, btn, prompt, opts = {}) {
+    btn.disabled = true; outEl.hidden = false; outEl.className = 'ai-out'; outEl.innerHTML = '<span class="by">Claude</span>Thinking…';
+    try {
+      await sample(prompt, { ...opts, onText: ({ text }) => { outEl.innerHTML = `<span class="by">Claude</span>${esc(text)}`; } });
+    } catch (e) {
+      if (e.text) outEl.innerHTML = `<span class="by">Claude</span>${esc(e.text)}`;
+      else { outEl.className = 'ai-out err'; outEl.textContent = aiErr(e); }
+    } finally { btn.disabled = false; }
+  }
+
+  $('#beauty-ask-go').addEventListener('click', (e) => {
+    const ask = $('#beauty-ask').value.trim() || 'Recommend 3 products I should try next, based on what I love and what didn’t work for me.';
+    streamInto($('#beauty-ask-out'), e.currentTarget,
+      `You are a beauty advisor. ${STYLE}\n\nMy beauty products, shades and feedback (JSON):\n${JSON.stringify(S.beauty.map(slimBeauty))}\n\nMy skincare routine: ${JSON.stringify(S.routine.map(r => ({ product: r.product, brand: r.brand, step: r.step, actives: r.actives, feedback: r.feedback })))}\n\nWhat I’m after: ${ask}\n\nGive at most 3 suggestions. For each: product and brand, the shade to try (relative to shades I already wear), and why, tied to my feedback. Keep it under 220 words.`);
+  });
+
+  $('#skin-check').addEventListener('click', (e) => {
+    if (!S.routine.length) { toast('Add a few steps first.'); return; }
+    const fmtSteps = (slot) => stepsFor(slot).map((s, i) => `${i + 1}. ${s.product}${s.brand ? ' (' + s.brand + ')' : ''} – ${s.step || ''}${s.actives ? ', actives: ' + s.actives : ''}, ${FREQ[s.freq] || 'daily'}${s.feedback ? '. Notes: ' + s.feedback : ''}`).join('\n');
+    streamInto($('#skin-ai'), e.currentTarget,
+      `Review this skincare routine. ${STYLE}\n\nMorning:\n${fmtSteps('am') || '(none)'}\n\nNight:\n${fmtSteps('pm') || '(none)'}\n\nCheck: step order, ingredient clashes (e.g. retinoids with acids or benzoyl peroxide on the same night), gaps (especially daily SPF in Australia), and frequency. At most 7 short points, most important first. End with one line noting this isn’t medical advice and to see a GP or dermatologist for ongoing skin concerns.`);
+  });
+
+  $('#vibe-go').addEventListener('click', async (e) => {
+    const vibe = $('#vibe-ask').value.trim();
+    if (!vibe) { $('#vibe-ask').focus(); toast('Describe the vibe or occasion first.'); return; }
+    if (S.wardrobe.length < 2) { toast('Add a few wardrobe pieces first.'); return; }
+    const btn = e.currentTarget, out = $('#vibe-out');
+    btn.disabled = true; btn.textContent = 'Styling…'; out.hidden = false;
+    out.innerHTML = '<div class="ai-out"><span class="by">Claude</span>Pulling outfits from your wardrobe…</div>';
+    try {
+      const res = await sample.json(`You are a personal stylist working only from my wardrobe. Write in Australian English.\n\nMy wardrobe (JSON):\n${JSON.stringify(S.wardrobe.map(slimPiece))}\n\nVibe / occasion: ${vibe}\n\nBuild up to 3 distinct outfits using ONLY ids from my wardrobe. Reply with only a JSON array like:\n[{"title":"Short evocative name","itemIds":["id1","id2"],"note":"One sentence styling tip","missing":"One piece I don't own that would finish it, or empty string"}]`, { cache: false });
+      const ids = new Set(S.wardrobe.map(w => w.id));
+      S.suggestions = (Array.isArray(res) ? res : []).slice(0, 3).map(o => ({
+        title: String(o.title || 'Outfit'), note: String(o.note || ''), missing: String(o.missing || ''), vibe,
+        itemIds: (Array.isArray(o.itemIds) ? o.itemIds : []).map(String).filter(id => ids.has(id)),
+      })).filter(o => o.itemIds.length);
+      if (!S.suggestions.length) out.innerHTML = '<div class="ai-out err">Claude couldn’t build outfits from those pieces. Try a different vibe or add more pieces.</div>';
+      else renderWardrobe();
+    } catch (err) {
+      out.innerHTML = `<div class="ai-out err">${esc(aiErr(err))}</div>`;
+    } finally { btn.disabled = false; btn.textContent = 'Style me'; }
+  });
+
+  // ---------- actions ----------
+  async function act(fn, fail = 'Couldn’t save that. Try again.') { try { await fn(); } catch { toast(fail); } }
+  document.addEventListener('click', (e) => {
+    const t = e.target.closest('[data-tab],[data-go],[data-add],[data-act]');
+    if (!t || t.tagName === 'INPUT') return;
+    if (t.dataset.tab || t.dataset.go) { S.tab = t.dataset.tab || t.dataset.go; store.set('edit.tab', S.tab); history.replaceState(null, '', '#' + S.tab); render(); window.scrollTo({ top: 0 }); return; }
+    if (t.dataset.add) { openForm(t.dataset.add, null, t.dataset.when ? { when: t.dataset.when } : {}); return; }
+    const a = t.dataset.act, id = t.dataset.id;
+    if (!a) return;
+    const find = (col) => S[col].find(x => x.id === id);
+    switch (a) {
+      case 'want-cat': S.wantCat = t.dataset.v; renderWants(); break;
+      case 'beauty-status': S.beautyStatus = t.dataset.v; renderBeauty(); break;
+      case 'ward-cat': S.wardCat = t.dataset.v; renderWardrobe(); break;
+      case 'edit': { const it = find(t.dataset.col); if (it) openForm(t.dataset.col, it); break; }
+      case 'logprice': { const it = find('wishlist'); if (it) openForm('logprice', it); break; }
+      case 'bought': { const it = find('wishlist'); if (it) act(() => db.collection('wishlist').doc(id).update({ status: it.status === 'bought' ? 'want' : 'bought', boughtOn: it.status === 'bought' ? null : dayKey() })); break; }
+      case 'move': {
+        const steps = stepsFor(t.dataset.slot), i = steps.findIndex(s => s.id === id), j = i + Number(t.dataset.dir);
+        if (i < 0 || j < 0 || j >= steps.length) break;
+        const swapped = steps.slice(); [swapped[i], swapped[j]] = [swapped[j], swapped[i]];
+        act(async () => { for (let k = 0; k < swapped.length; k++) if (Number(swapped[k].order) !== k + 1) await db.collection('routine').doc(swapped[k].id).update({ order: k + 1 }); });
+        break;
+      }
+      case 'ai-alt': {
+        const b = find('beauty'); if (!b) break;
+        cardAsk(id, `You are a beauty advisor. ${STYLE}\n\nProduct: ${JSON.stringify(slimBeauty(b))}\n\nMy other products for context: ${JSON.stringify(S.beauty.filter(x => x.id !== id).map(slimBeauty).slice(0, 40))}\n\n${b.status === 'nope' ? 'This didn’t work for me. Suggest 2–3 alternatives that fix what I didn’t like, with the shade to try.' : 'Suggest 2–3 similar products or cheaper dupes, with the closest shade, and one line on how each differs.'} Under 140 words.`);
+        break;
+      }
+      case 'ai-pairs': {
+        const w = find('wishlist'); if (!w) break;
+        cardAsk(id, `You are a personal stylist. ${STYLE}\n\nI’m thinking of buying: ${JSON.stringify({ name: w.name, brand: w.brand, variant: w.variant, notes: w.notes, price: priceInfo(w).last })}\n\nMy wardrobe: ${JSON.stringify(S.wardrobe.map(slimPiece))}\n\nUnder 110 words: does it fill a gap or duplicate something I own, and name 2–3 outfits it makes with my pieces by name.`);
+        break;
+      }
+      case 'save-outfit': { const o = S.suggestions[Number(t.dataset.i)]; if (!o) break; act(async () => { await db.collection('outfits').add({ ...o, createdAt: new Date().toISOString() }); S.suggestions.splice(Number(t.dataset.i), 1); toast('Outfit saved'); render(); }); break; }
+      case 'del-outfit': act(() => db.collection('outfits').doc(id).delete()); break;
+      case 'clear-examples': {
+        if (!t.dataset.armed) { t.dataset.armed = '1'; t.textContent = 'Tap again to clear'; break; }
+        t.disabled = true;
+        act(async () => { for (const c of COLS) for (const x of S[c].filter(x => x.example)) await db.collection(c).doc(x.id).delete(); for (const [k, v] of Object.entries(S.log)) if (v.example) await db.collection('routineLog').doc(k).delete(); toast('Examples cleared'); });
+        break;
+      }
+    }
+  });
+  document.addEventListener('change', (e) => {
+    const t = e.target;
+    if (t.dataset.act === 'tick') {
+      const key = dayKey(), cur = S.log[key] || {}, slot = t.dataset.slot;
+      const set = new Set(cur[slot] || []); t.checked ? set.add(t.dataset.id) : set.delete(t.dataset.id);
+      const next = { am: cur.am || [], pm: cur.pm || [], date: key, [slot]: [...set] };
+      S.log[key] = next; renderToday();
+      act(() => db.collection('routineLog').doc(key).set(next));
+    }
+    if (t.id === 'wants-sort') { S.wantSort = t.value; renderWants(); }
+    if (t.id === 'wants-bought') { S.showBought = t.checked; renderWants(); }
+  });
+
+  // ---------- boot ----------
+  const startTab = (location.hash || '').slice(1) || store.get('edit.tab');
+  if (['today', 'wants', 'beauty', 'skin', 'wardrobe'].includes(startTab)) S.tab = startTab;
+  render();
+
+  (async () => {
+    const C = window.claude;
+    if (!C || !C.use) { S.status = 'off'; render(); return; }
+    const use = (n) => C.use(n).catch(() => null);
+    const [d, a, s, u] = await Promise.all([use('db'), use('assets'), use('sample'), use('user')]);
+    db = d; assets = a; sample = s;
+    if (!db) { S.status = 'off'; render(); return; }
+    if (u) { try { canWrite = (await u.isOwner()) || (await u.canEdit()); } catch {} }
+    const onErr = () => { S.status = 'off'; render(); };
+    for (const col of COLS) {
+      db.collection(col).onSnapshot(snap => {
+        S[col] = snap.docs.map(x => ({ id: x.id, ...x.data() }));
+        S.status = 'live'; render();
+      }, onErr);
+    }
+    db.collection('routineLog').onSnapshot(snap => {
+      S.log = Object.fromEntries(snap.docs.map(x => [x.id, x.data()]));
+      renderToday();
+    }, onErr);
+  })();
+})();
+</script>
