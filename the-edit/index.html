@@ -4,7 +4,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;1,6..96,500;1,6..96,600&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: a personal beauty-counter ledger. Masthead + tabs, then one working panel per area (Today, Wants, Beauty, Skin, Wardrobe). */
+/* Layout: a personal beauty-counter ledger. Masthead + tabs, then one working panel per area. Stacks are grouped by step/area like a shelf. */
 :root {
   --bg: #F6F4F7;
   --surface: #FFFFFF;
@@ -48,7 +48,7 @@ h2 { font-family: var(--f-display); font-style: italic; font-weight: 500; font-s
 h3 { font-size: 1rem; font-weight: 600; }
 button, input, select, textarea { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+a { color: var(--accent); }
 .meta { color: var(--muted); font-size: 0.84rem; }
 .eyebrow { text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.72rem; font-weight: 600; color: var(--muted); margin: 0; }
 
@@ -57,6 +57,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .top-in { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; padding-block: 28px 12px; }
 .brand { font-family: var(--f-display); font-weight: 500; font-size: clamp(2.6rem, 7vw, 4rem); line-height: 0.95; letter-spacing: -0.02em; }
 .brand em { color: var(--accent); font-weight: 600; }
+.top-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .sync { margin: 0; font-size: 0.82rem; color: var(--muted); display: flex; align-items: center; gap: 6px; }
 .sync::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
 .sync.on::before { background: var(--good); }
@@ -66,12 +67,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .tab:hover { color: var(--ink); }
 .tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
 .tab .n { font-family: var(--f-mono); font-size: 0.75rem; font-weight: 400; color: var(--muted); margin-left: 4px; }
+.tab .new { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-left: 5px; vertical-align: middle; }
 
 main.wrap { padding-block: 24px 64px; display: grid; gap: 20px; }
 .panel { display: grid; gap: 20px; }
 
 /* Controls */
-.btn { border: 1px solid var(--line); background: var(--surface); padding: 8px 14px; border-radius: 999px; cursor: pointer; font-weight: 600; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.btn { border: 1px solid var(--line); background: var(--surface); padding: 8px 14px; border-radius: 999px; cursor: pointer; font-weight: 600; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; text-decoration: none; color: var(--ink); }
 .btn:hover { border-color: var(--muted); }
 .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .btn.primary:hover { filter: brightness(1.08); }
@@ -96,77 +98,80 @@ select.plain { border: 1px solid var(--line); background: var(--surface); border
 .pill.accent { background: var(--accent-soft); color: var(--accent); }
 .pill.ex { background: transparent; border: 1px dashed var(--line); }
 
-/* Banner */
 .banner { display: flex; justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap; background: var(--accent-soft); border-radius: var(--r); padding: 12px 16px; font-size: 0.9rem; }
 
 /* Today */
-.today { display: grid; grid-template-columns: 1.15fr 1fr; gap: 20px; align-items: start; }
+.refresh { display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px 18px; }
+.refresh p { margin: 0; }
+.refresh .when { font-family: var(--f-display); font-style: italic; font-size: 1.2rem; }
+.today { display: grid; grid-template-columns: 1.1fr 1fr; gap: 20px; align-items: start; }
 .block { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; display: grid; gap: 14px; min-width: 0; }
 .block-h { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
 .alerts { list-style: none; margin: 0; padding: 0; display: grid; }
-.alerts li { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+.alerts li { display: grid; grid-template-columns: 40px 1fr auto; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
 .alerts li:first-child { border-top: 0; padding-top: 0; }
-.alerts .what { min-width: 0; }
-.alerts .what b { display: block; font-weight: 600; overflow-wrap: anywhere; }
+.alerts .what { min-width: 0; display: grid; gap: 2px; }
+.alerts .what b { font-weight: 600; overflow-wrap: anywhere; }
+.alerts .thumb { width: 40px; height: 40px; font-size: 1rem; }
 .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
 .stat { background: var(--surface); padding: 14px 16px; display: grid; gap: 2px; }
 .stat .v { font-family: var(--f-display); font-size: 1.8rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .stat .k { font-size: 0.8rem; color: var(--muted); }
-.slot h3 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 6px; }
-.ticks { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
-.tick { display: flex; gap: 10px; align-items: center; padding: 6px 8px; border-radius: 8px; cursor: pointer; }
-.tick:hover { background: var(--sunk); }
-.tick input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
-.tick .s { color: var(--muted); font-size: 0.8rem; margin-left: auto; white-space: nowrap; }
-.tick.done .p { text-decoration: line-through; color: var(--muted); }
-.slots { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.dots { display: flex; gap: 5px; align-items: flex-end; flex-wrap: wrap; }
-.dot { display: grid; justify-items: center; gap: 3px; font-size: 0.66rem; color: var(--muted); font-family: var(--f-mono); }
-.dot i { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--line); display: block; }
-.dot i.half { background: linear-gradient(90deg, var(--accent) 50%, transparent 50%); border-color: var(--accent); }
-.dot i.full { background: var(--accent); border-color: var(--accent); }
 
 /* Cards */
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; display: grid; gap: 12px; align-content: start; min-width: 0; }
-.card.faded { opacity: 0.6; }
-.card-top { display: grid; grid-template-columns: 64px 1fr; gap: 12px; align-items: start; }
-.thumb { width: 64px; height: 64px; border-radius: 8px; background: var(--sunk); object-fit: cover; display: grid; place-items: center; font-family: var(--f-display); font-style: italic; font-size: 1.5rem; color: var(--muted); overflow: hidden; }
+.card.faded { opacity: 0.62; }
+.card-top { display: grid; grid-template-columns: 72px 1fr; gap: 12px; align-items: start; }
+.thumb { width: 72px; height: 72px; border-radius: 8px; background: var(--sunk); object-fit: cover; display: grid; place-items: center; font-family: var(--f-display); font-style: italic; font-size: 1.5rem; color: var(--muted); overflow: hidden; flex: none; }
+.thumb.round { border-radius: 50%; }
 .card-title { min-width: 0; display: grid; gap: 2px; }
-.card-title h3 { overflow-wrap: anywhere; }
-.card-title .meta { overflow-wrap: anywhere; }
-.pills { display: flex; gap: 6px; flex-wrap: wrap; }
+.card-title h3, .card-title .meta { overflow-wrap: anywhere; }
+.pills { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 .price-row { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: end; }
 .price { font-family: var(--f-mono); font-size: 1.35rem; font-weight: 500; font-variant-numeric: tabular-nums; }
-.price small { font-size: 0.78rem; color: var(--muted); font-weight: 400; display: block; }
+.price small { font-size: 0.78rem; color: var(--muted); font-weight: 400; display: block; font-family: var(--f-body); }
 .spark { width: 120px; height: 38px; display: block; }
 .notes { font-size: 0.88rem; color: var(--muted); margin: 0; overflow-wrap: anywhere; }
 .actions { display: flex; gap: 6px; flex-wrap: wrap; border-top: 1px solid var(--line); padding-top: 12px; }
 .actions .push { margin-left: auto; }
-.swatch { width: 64px; height: 64px; border-radius: 50%; border: 1px solid var(--line); }
 .stars { color: var(--accent); letter-spacing: 1px; font-size: 0.9rem; }
 .stars .off { color: var(--line); }
+details.more { font-size: 0.86rem; }
+details.more summary { cursor: pointer; color: var(--muted); font-weight: 600; }
+.offers { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; }
+.offers li { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: baseline; }
+.offers .mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.review { background: var(--sunk); border-radius: 8px; padding: 10px 12px; display: grid; gap: 6px; font-size: 0.87rem; }
+.review ul { margin: 0; padding-left: 18px; }
+.sources { display: flex; gap: 4px 10px; flex-wrap: wrap; font-size: 0.8rem; }
+.sources a { overflow-wrap: anywhere; }
+
+/* Stacks */
+.stack-group { display: grid; gap: 10px; }
+.stack-group > .gh { display: flex; align-items: baseline; gap: 10px; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+.stack-group > .gh h3 { font-family: var(--f-display); font-style: italic; font-weight: 500; font-size: 1.15rem; }
+.stack-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+.sitem { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px; display: grid; grid-template-columns: 64px 1fr; gap: 12px; min-width: 0; }
+.sitem .thumb { width: 64px; height: 64px; }
+.sitem .body { min-width: 0; display: grid; gap: 4px; align-content: start; }
+.sitem .body b { overflow-wrap: anywhere; }
+.sitem .actions { grid-column: 1 / -1; padding-top: 10px; }
+.sitem.out { opacity: 0.7; }
+details.shelf { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 16px; }
+details.shelf summary { cursor: pointer; font-weight: 600; }
+details.shelf[open] summary { margin-bottom: 12px; }
 
 /* AI */
 .ask { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; display: grid; gap: 10px; }
 .ask label { font-weight: 600; }
 .ask-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end; }
-textarea, input[type="text"], input[type="url"], input[type="number"], input[type="date"], .field select { width: 100%; border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 8px 10px; }
+.ask-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+textarea, input[type="text"], input[type="url"], input[type="number"], .field select { width: 100%; border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 8px 10px; }
 textarea { resize: vertical; min-height: 44px; }
 .ai-out { white-space: pre-wrap; font-size: 0.9rem; background: var(--sunk); border-radius: 8px; padding: 12px 14px; overflow-wrap: anywhere; }
 .ai-out.err { background: var(--bad-soft); color: var(--bad); }
 .ai-out .by { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 6px; white-space: normal; }
-
-/* Skin */
-.two { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
-.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; counter-reset: step; }
-.step { counter-increment: step; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; display: grid; grid-template-columns: 28px 1fr auto; gap: 12px; align-items: start; }
-.step::before { content: counter(step); font-family: var(--f-display); font-style: italic; font-size: 1.3rem; color: var(--accent); line-height: 1.2; }
-.step .body { min-width: 0; display: grid; gap: 4px; }
-.step .body b { overflow-wrap: anywhere; }
-.step .ctl { display: flex; gap: 2px; }
-.icon { border: 1px solid var(--line); background: var(--surface); width: 30px; height: 30px; border-radius: 8px; cursor: pointer; display: grid; place-items: center; color: var(--muted); font-size: 0.85rem; }
-.icon:hover { color: var(--ink); border-color: var(--muted); }
 
 /* Wardrobe */
 .closet { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
@@ -183,6 +188,17 @@ textarea { resize: vertical; min-height: 44px; }
 .mini .img { width: 64px; height: 80px; border-radius: 6px; background: var(--sunk); overflow: hidden; display: grid; place-items: center; font-family: var(--f-display); font-style: italic; color: var(--muted); }
 .mini .img img { width: 100%; height: 100%; object-fit: cover; }
 .mini span { overflow-wrap: anywhere; line-height: 1.2; }
+.gaps { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.gaps li { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 10px 14px; }
+.gaps li > span { min-width: 0; overflow-wrap: anywhere; }
+
+/* Bin */
+.bin { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.bin li { display: grid; grid-template-columns: 48px 1fr auto; gap: 12px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 10px 14px; }
+.bin .thumb { width: 48px; height: 48px; font-size: 1.1rem; }
+.bin .what { min-width: 0; display: grid; }
+.bin .what b { overflow-wrap: anywhere; }
+.bin .tools { justify-content: flex-end; }
 
 .empty { border: 1px dashed var(--line); border-radius: var(--r); padding: 24px; text-align: center; color: var(--muted); display: grid; gap: 10px; justify-items: center; }
 .section-h { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
@@ -195,30 +211,37 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
 .dlg-b { padding: 8px 20px 16px; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 12px 14px; }
 .dlg-f { padding: 12px 20px 18px; border-top: 1px solid var(--line); display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
 .dlg-f .left { margin-right: auto; }
+.dlg-note { grid-column: 1 / -1; margin: 0; font-size: 0.88rem; color: var(--muted); }
 .field { display: grid; gap: 4px; min-width: 0; }
 .field.full { grid-column: 1 / -1; }
 .field > span { font-size: 0.8rem; font-weight: 600; color: var(--muted); }
 .field .hint { font-size: 0.76rem; color: var(--muted); }
 .colour-row { display: flex; gap: 8px; align-items: center; }
 .colour-row input[type="color"] { width: 44px; height: 36px; border: 1px solid var(--line); border-radius: 8px; padding: 2px; background: var(--bg); }
-.photo-row { display: flex; gap: 10px; align-items: center; }
-.photo-row img { width: 52px; height: 52px; object-fit: cover; border-radius: 8px; }
+.drop { grid-column: 1 / -1; border: 1.5px dashed var(--line); border-radius: 10px; padding: 12px; display: grid; grid-template-columns: 72px 1fr; gap: 14px; align-items: center; cursor: pointer; }
+.drop.over { border-color: var(--accent); background: var(--accent-soft); }
+.drop .thumb { width: 72px; height: 72px; }
+.drop input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.icon { border: 1px solid var(--line); background: var(--surface); width: 30px; height: 30px; border-radius: 8px; cursor: pointer; display: grid; place-items: center; color: var(--muted); font-size: 0.85rem; }
 
-.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(20px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-size: 0.88rem; z-index: 50; max-width: calc(100vw - 32px); }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(20px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 8px 8px 8px 16px; border-radius: 999px; font-size: 0.88rem; z-index: 50; max-width: calc(100vw - 32px); display: flex; gap: 12px; align-items: center; }
+.toast button { border: 0; background: var(--bg); color: var(--ink); border-radius: 999px; padding: 4px 12px; font-weight: 600; cursor: pointer; }
+.toast:not(.has-undo) { padding-right: 16px; }
 
 @media (max-width: 820px) {
-  .today, .two { grid-template-columns: 1fr; }
+  .today { grid-template-columns: 1fr; }
   .stats { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 520px) {
-  .slots { grid-template-columns: 1fr; }
   .dlg-b { grid-template-columns: 1fr; }
-  .ask-row { grid-template-columns: 1fr; }
-  .cards { grid-template-columns: 1fr; }
+  .ask-row, .refresh { grid-template-columns: 1fr; }
+  .cards, .stack-list { grid-template-columns: 1fr; }
+  .bin li { grid-template-columns: 48px 1fr; }
+  .bin .tools { grid-column: 1 / -1; justify-content: flex-start; }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .card, .piece, .step { transition: border-color .15s ease; }
-  .card:hover, .piece:hover { border-color: var(--muted); }
+  .card, .piece, .sitem { transition: border-color .15s ease; }
+  .card:hover, .piece:hover, .sitem:hover { border-color: var(--muted); }
 }
 </style>
 
@@ -228,14 +251,19 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       <p class="eyebrow" id="today-date">Today</p>
       <h1 class="brand">The <em>Edit</em></h1>
     </div>
-    <p class="sync" id="sync">Connecting…</p>
+    <div class="top-tools">
+      <p class="sync" id="sync">Connecting…</p>
+      <button class="btn small ghost" data-act="profile" id="profile-btn">About me</button>
+      <button class="btn small ghost" data-tab="bin" id="bin-btn">Bin</button>
+    </div>
   </div>
   <div class="wrap tabs-scroll">
     <nav class="tabs" role="tablist" aria-label="Sections">
       <button class="tab" role="tab" data-tab="today">Today</button>
       <button class="tab" role="tab" data-tab="wants">Wants<span class="n" id="n-wants"></span></button>
-      <button class="tab" role="tab" data-tab="beauty">Beauty<span class="n" id="n-beauty"></span></button>
+      <button class="tab" role="tab" data-tab="finds">Finds<span class="n" id="n-finds"></span></button>
       <button class="tab" role="tab" data-tab="skin">Skin<span class="n" id="n-skin"></span></button>
+      <button class="tab" role="tab" data-tab="makeup">Makeup<span class="n" id="n-makeup"></span></button>
       <button class="tab" role="tab" data-tab="wardrobe">Wardrobe<span class="n" id="n-wardrobe"></span></button>
     </nav>
   </div>
@@ -246,19 +274,16 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
 
   <!-- TODAY -->
   <section class="panel" data-panel="today">
+    <div class="refresh" id="refresh"></div>
     <div class="stats" id="stats"></div>
     <div class="today">
       <section class="block">
-        <div class="block-h"><h2>Heads up</h2><button class="link" data-go="wants">All wants →</button></div>
+        <div class="block-h"><h2>Heads up</h2><button class="link" data-tab="wants">All wants →</button></div>
         <ul class="alerts" id="alerts"></ul>
       </section>
       <section class="block">
-        <div class="block-h"><h2>Today’s skin</h2><span class="meta" id="streak"></span></div>
-        <div id="today-routine"></div>
-        <div>
-          <p class="eyebrow" style="margin-bottom:6px">Last 14 days</p>
-          <div class="dots" id="dots"></div>
-        </div>
+        <div class="block-h"><h2>Fresh finds</h2><button class="link" data-tab="finds">All finds →</button></div>
+        <ul class="alerts" id="today-finds"></ul>
       </section>
     </div>
   </section>
@@ -282,8 +307,30 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     <div class="cards" id="wants-list"></div>
   </section>
 
-  <!-- BEAUTY -->
-  <section class="panel" data-panel="beauty" hidden>
+  <!-- FINDS -->
+  <section class="panel" data-panel="finds" hidden>
+    <div class="toolbar">
+      <p class="meta" style="margin:0;max-width:60ch">New products the daily refresh found for you, with what Reddit and independent reviewers actually say. Add the good ones to your wants or swap them into your stack.</p>
+      <div class="chips" id="finds-chips"></div>
+    </div>
+    <div class="cards" id="finds-list"></div>
+  </section>
+
+  <!-- SKIN -->
+  <section class="panel" data-panel="skin" hidden>
+    <div class="toolbar">
+      <p class="meta" style="margin:0;max-width:60ch">Your skincare stack by step. Swap a product out and the old one moves to “Swapped out” with your reason, so you remember what didn’t work.</p>
+      <div class="tools">
+        <button class="btn needs-ai" id="skin-check">Review my stack</button>
+        <button class="btn primary" data-add="routine">+ Add a product</button>
+      </div>
+    </div>
+    <div class="ai-out" id="skin-ai" hidden></div>
+    <div id="skin-stack" style="display:grid;gap:22px"></div>
+  </section>
+
+  <!-- MAKEUP -->
+  <section class="panel" data-panel="makeup" hidden>
     <div class="ask needs-ai">
       <label for="beauty-ask">Ask for a recommendation</label>
       <div class="ask-row">
@@ -293,37 +340,25 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       <div class="ai-out" id="beauty-ask-out" hidden></div>
     </div>
     <div class="toolbar">
-      <div class="chips" id="beauty-chips"></div>
+      <p class="meta" style="margin:0">Your makeup bag by area, with shades.</p>
       <div class="tools"><button class="btn primary" data-add="beauty">+ Add a product</button></div>
     </div>
-    <div class="cards" id="beauty-list"></div>
-  </section>
-
-  <!-- SKIN -->
-  <section class="panel" data-panel="skin" hidden>
-    <div class="toolbar">
-      <p class="meta" style="margin:0">Your routine, in order. Tick steps off on the Today tab.</p>
-      <div class="tools">
-        <button class="btn needs-ai" id="skin-check">Check my routine</button>
-        <button class="btn primary" data-add="routine">+ Add a step</button>
-      </div>
-    </div>
-    <div class="ai-out" id="skin-ai" hidden></div>
-    <div class="two">
-      <section style="display:grid;gap:12px"><h2>Morning</h2><ol class="steps" id="skin-am"></ol></section>
-      <section style="display:grid;gap:12px"><h2>Night</h2><ol class="steps" id="skin-pm"></ol></section>
-    </div>
+    <div id="makeup-stack" style="display:grid;gap:22px"></div>
   </section>
 
   <!-- WARDROBE -->
   <section class="panel" data-panel="wardrobe" hidden>
     <div class="ask needs-ai">
-      <label for="vibe-ask">Outfit vibes</label>
+      <label for="vibe-ask">Mix up what I own</label>
       <div class="ask-row">
-        <textarea id="vibe-ask" rows="2" placeholder="e.g. Friday in the office then drinks, 22° and windy"></textarea>
-        <button class="btn primary" id="vibe-go">Style me</button>
+        <textarea id="vibe-ask" rows="2" placeholder="Optional: a vibe or occasion, e.g. Friday in the office then drinks, 22° and windy"></textarea>
+        <div class="ask-btns">
+          <button class="btn primary" id="vibe-go">Style me</button>
+          <button class="btn" id="gaps-go">Missing basics?</button>
+        </div>
       </div>
       <div id="vibe-out" class="outfits" hidden></div>
+      <div id="gaps-out" hidden></div>
     </div>
     <div class="section-h" id="saved-h"><h2>Saved outfits</h2></div>
     <div class="outfits" id="outfits"></div>
@@ -333,6 +368,15 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       <div class="tools"><button class="btn primary" data-add="wardrobe">+ Add a piece</button></div>
     </div>
     <div class="closet" id="wardrobe-list"></div>
+  </section>
+
+  <!-- BIN -->
+  <section class="panel" data-panel="bin" hidden>
+    <div class="toolbar">
+      <div><h2>Recently deleted</h2><p class="meta" style="margin:4px 0 0">Restore anything you deleted by mistake, or remove it for good.</p></div>
+      <div class="tools"><button class="btn small ghost danger" data-act="empty-bin" id="empty-bin">Empty bin</button></div>
+    </div>
+    <ul class="bin" id="bin-list"></ul>
   </section>
 </main>
 
@@ -348,22 +392,37 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
   </form>
 </dialog>
 
-<div class="toast" id="toast" hidden></div>
+<div class="toast" id="toast" hidden><span id="toast-msg"></span><button type="button" id="toast-undo" hidden>Undo</button></div>
 
 <script>
 (() => {
   // ---------- config ----------
-  const COLS = ['wishlist', 'beauty', 'routine', 'wardrobe', 'outfits'];
+  const COLS = ['wishlist', 'finds', 'routine', 'beauty', 'wardrobe', 'outfits'];
+  const COL_LABEL = { wishlist: 'Wants', finds: 'Finds', routine: 'Skin', beauty: 'Makeup', wardrobe: 'Wardrobe', outfits: 'Outfits' };
   const WANT_CATS = ['Clothes', 'Beauty', 'Skincare', 'Office', 'Home', 'Tech', 'Other'];
   const STOCK = { in: 'In stock', low: 'Low stock', selling: 'Selling fast', out: 'Out of stock', unknown: 'Not sure' };
   const PRIORITY = { must: 'Must have', want: 'Want', maybe: 'Maybe' };
-  const BEAUTY_STATUS = { grail: 'Holy grail', using: 'Using now', totry: 'Want to try', nope: 'Not for me' };
-  const BEAUTY_TYPES = ['Foundation', 'Skin tint', 'Concealer', 'Powder', 'Blush', 'Bronzer', 'Highlighter', 'Brows', 'Mascara', 'Eyeliner', 'Eyeshadow', 'Lipstick', 'Lip gloss', 'Lip liner', 'Lip balm', 'Setting spray', 'Fragrance', 'Hair', 'Nails', 'Other'];
-  const STEP_TYPES = ['Cleanser', 'Toner', 'Exfoliant', 'Serum', 'Treatment', 'Eye cream', 'Moisturiser', 'Oil', 'SPF', 'Mask', 'Other'];
+  const STACK = { grail: 'Holy grail', current: 'In my stack', testing: 'Testing', shelf: 'On the shelf', out: 'Swapped out' };
+  const STACK_TONE = { grail: 'accent', current: 'good', testing: 'warn', shelf: '', out: 'bad' };
+  const LEGACY = { using: 'current', nope: 'out', totry: 'shelf' };
+  const statusOf = (x) => LEGACY[x.status] || (STACK[x.status] ? x.status : 'current');
+  const MAKEUP_AREAS = [
+    ['Face', ['Primer', 'Foundation', 'Skin tint', 'Concealer', 'Powder', 'Setting spray']],
+    ['Cheeks', ['Blush', 'Bronzer', 'Contour', 'Highlighter']],
+    ['Eyes', ['Brows', 'Eyeshadow', 'Eyeliner', 'Mascara']],
+    ['Lips', ['Lip liner', 'Lipstick', 'Lip gloss', 'Lip oil', 'Lip balm']],
+    ['Everything else', ['Fragrance', 'Hair', 'Nails', 'Tools', 'Other']],
+  ];
+  const MAKEUP_TYPES = MAKEUP_AREAS.flatMap(a => a[1]);
+  const SKIN_STEPS = ['Cleanser', 'Toner', 'Exfoliant', 'Serum', 'Treatment', 'Eye cream', 'Moisturiser', 'Oil', 'SPF', 'Mask', 'Other'];
+  const WHEN = { am: 'AM', pm: 'PM', both: 'AM & PM' };
   const FREQ = { daily: 'Daily', alt: 'Every other day', few: '2–3× a week', weekly: 'Weekly' };
   const WARD_CATS = ['Top', 'Knit', 'Shirt', 'Bottoms', 'Jeans', 'Skirt', 'Dress', 'Outerwear', 'Shoes', 'Bag', 'Accessory', 'Active'];
+  const FIND_KINDS = { skincare: 'Skincare', makeup: 'Makeup', clothes: 'Clothes', office: 'Office', other: 'Other' };
+  const VERDICT = { loved: ['good', 'Reviewers love it'], mixed: ['warn', 'Mixed reviews'], skip: ['bad', 'Probably skip'] };
   const opts = (list) => Array.isArray(list) ? list.map(v => [v, v]) : Object.entries(list);
 
+  const PHOTO = { k: 'photo', label: 'Photo', type: 'photo' };
   const FORMS = {
     wishlist: { title: 'want', fields: [
       { k: 'name', label: 'What is it?', type: 'text', req: true, full: true, ph: 'e.g. Relaxed wool blazer' },
@@ -375,71 +434,112 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       { k: 'price', label: 'Current price (AUD)', type: 'number' },
       { k: 'target', label: 'Buy if it drops to', type: 'number' },
       { k: 'stock', label: 'Stock', type: 'select', options: opts(STOCK) },
-      { k: 'photoId', label: 'Photo', type: 'photo' },
+      PHOTO,
       { k: 'notes', label: 'Notes', type: 'textarea', full: true, ph: 'Why you want it, sale dates, sizing notes…' },
     ]},
-    beauty: { title: 'product', fields: [
+    beauty: { title: 'makeup product', fields: [
       { k: 'name', label: 'Product', type: 'text', req: true, full: true, ph: 'e.g. Soft Pinch Liquid Blush' },
       { k: 'brand', label: 'Brand', type: 'text' },
-      { k: 'type', label: 'Type', type: 'select', options: opts(BEAUTY_TYPES) },
+      { k: 'type', label: 'Type', type: 'select', options: opts(MAKEUP_TYPES) },
       { k: 'shade', label: 'Shade', type: 'text', ph: 'e.g. Hope' },
       { k: 'shadeHex', label: 'Shade colour', type: 'colour' },
       { k: 'finish', label: 'Finish', type: 'select', options: opts(['', 'Matte', 'Satin', 'Natural', 'Dewy', 'Glossy', 'Shimmer', 'Sheer']) },
-      { k: 'status', label: 'Status', type: 'select', options: opts(BEAUTY_STATUS) },
+      { k: 'status', label: 'Status', type: 'select', options: opts(STACK) },
       { k: 'rating', label: 'Rating', type: 'rating' },
       { k: 'repurchase', label: 'Would repurchase?', type: 'select', options: opts(['', 'Yes', 'Maybe', 'No']) },
-      { k: 'photoId', label: 'Photo', type: 'photo' },
-      { k: 'feedback', label: 'How it went', type: 'textarea', full: true, ph: 'Wear time, oxidising, too warm/cool, breakouts, what you love…' },
+      PHOTO,
+      { k: 'feedback', label: 'How it went', type: 'textarea', full: true, ph: 'Wear time, oxidising, too warm/cool, what you love…' },
     ]},
-    routine: { title: 'step', fields: [
+    routine: { title: 'skincare product', fields: [
       { k: 'product', label: 'Product', type: 'text', req: true, full: true, ph: 'e.g. Gentle cleanser' },
       { k: 'brand', label: 'Brand', type: 'text' },
-      { k: 'step', label: 'Step', type: 'select', options: opts(STEP_TYPES) },
+      { k: 'step', label: 'Step', type: 'select', options: opts(SKIN_STEPS) },
       { k: 'when', label: 'When', type: 'select', options: opts({ am: 'Morning', pm: 'Night', both: 'Morning & night' }) },
       { k: 'freq', label: 'How often', type: 'select', options: opts(FREQ) },
+      { k: 'status', label: 'Status', type: 'select', options: opts(STACK) },
       { k: 'actives', label: 'Key actives', type: 'text', full: true, ph: 'e.g. niacinamide 10%, retinal 0.1%' },
       { k: 'rating', label: 'Rating', type: 'rating' },
+      PHOTO,
       { k: 'feedback', label: 'How it’s going', type: 'textarea', full: true },
     ]},
     wardrobe: { title: 'piece', fields: [
       { k: 'name', label: 'Piece', type: 'text', req: true, full: true, ph: 'e.g. Cream cable knit' },
       { k: 'category', label: 'Category', type: 'select', options: opts(WARD_CATS) },
       { k: 'colour', label: 'Colour', type: 'text' },
-      { k: 'vibes', label: 'Vibes', type: 'tags', full: true, ph: 'comma separated, e.g. office, weekend, date night', hint: 'Used when styling outfits.' },
+      { k: 'vibes', label: 'Vibes', type: 'tags', full: true, ph: 'comma separated, e.g. office, weekend, date night', hint: 'Used when mixing outfits.' },
       { k: 'season', label: 'Season', type: 'select', options: opts({ all: 'All year', warm: 'Warm weather', cool: 'Cool weather' }) },
-      { k: 'photoId', label: 'Photo', type: 'photo' },
+      PHOTO,
       { k: 'notes', label: 'Notes', type: 'textarea', full: true, ph: 'Fit, care, what it goes with…' },
     ]},
     logprice: { title: 'price check', fields: [
       { k: 'price', label: 'Price today (AUD)', type: 'number', req: true },
       { k: 'stock', label: 'Stock', type: 'select', options: opts(STOCK) },
     ]},
+    swap: { title: 'swap', fields: [
+      { k: 'name', label: 'Replacing it with', type: 'text', req: true, full: true },
+      { k: 'brand', label: 'Brand', type: 'text' },
+      { k: 'shade', label: 'Shade', type: 'text', only: 'beauty' },
+      { k: 'reason', label: 'Why the old one is going', type: 'textarea', full: true, ph: 'e.g. broke me out, too drying, oxidised orange' },
+      PHOTO,
+    ]},
+    profile: { title: 'About me', fields: [
+      { k: 'skinType', label: 'Skin type', type: 'text', ph: 'e.g. combination, sensitive' },
+      { k: 'undertone', label: 'Undertone / shade notes', type: 'text', ph: 'e.g. neutral-warm, NC20 in winter' },
+      { k: 'concerns', label: 'Skin concerns', type: 'text', full: true, ph: 'e.g. redness, texture, pigmentation' },
+      { k: 'avoid', label: 'Ingredients to avoid', type: 'text', full: true, ph: 'e.g. fragrance, coconut oil' },
+      { k: 'sizes', label: 'Clothing sizes', type: 'text', ph: 'e.g. AU 10, shoe 39' },
+      { k: 'budget', label: 'Budget', type: 'text', ph: 'e.g. mid-range, splurge on SPF' },
+      { k: 'style', label: 'Style', type: 'textarea', full: true, ph: 'e.g. minimal, neutral palette, oversized tailoring' },
+      { k: 'shops', label: 'Shops to check', type: 'text', full: true, ph: 'e.g. Mecca, Sephora, Adore Beauty, Myer, The Iconic, COS' },
+    ]},
   };
 
   // ---------- state ----------
   const S = {
-    wishlist: [], beauty: [], routine: [], wardrobe: [], outfits: [], log: {},
-    loaded: new Set(), status: 'connecting',
-    tab: 'today', wantCat: 'All', wantSort: 'alert', showBought: false, beautyStatus: 'All', wardCat: 'All',
-    cardAi: {}, suggestions: [],
+    wishlist: [], finds: [], routine: [], beauty: [], wardrobe: [], outfits: [], meta: {},
+    status: 'connecting',
+    tab: 'today', wantCat: 'All', wantSort: 'alert', showBought: false, findKind: 'All', wardCat: 'All',
+    cardAi: {}, suggestions: [], gaps: [],
   };
-  let db = null, assets = null, sample = null, canWrite = true;
+  let db = null, assets = null, sample = null, mcp = null, canWrite = true;
 
   // ---------- utils ----------
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const safeUrl = (u) => /^https?:\/\//i.test(String(u || '')) ? String(u) : '';
   const money = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' });
   const fmt = (n) => (n == null || n === '' || isNaN(n)) ? '—' : money.format(Number(n));
   const pad = (n) => String(n).padStart(2, '0');
   const dayKey = (d = new Date()) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-  const daysSince = (k) => k ? Math.floor((new Date(dayKey()) - new Date(k)) / 864e5) : null;
-  const photoUrl = (id) => id ? '/_blob/' + encodeURIComponent(id) : '';
+  const daysSince = (k) => k ? Math.floor((new Date(dayKey()) - new Date(String(k).slice(0, 10))) / 864e5) : null;
+  const nameOf = (x) => x.name || x.product || 'Untitled';
+  const live = (col) => S[col].filter(x => !x.deleted);
+  const photoSrc = (x) => safeUrl(x.photoUrl) || (/^[0-9a-f]{32}$/.test(x.photoId || '') ? '/_blob/' + x.photoId : '');
   const initial = (s) => esc((s || '?').trim().charAt(0).toUpperCase());
+  const thumb = (x, extra = '') => { const src = photoSrc(x); return src ? `<img class="thumb ${extra}" src="${esc(src)}" alt="" loading="lazy" data-fallback="${initial(nameOf(x))}">` : `<div class="thumb ${extra}">${initial(x.brand || nameOf(x))}</div>`; };
   const stars = (n) => { n = Number(n) || 0; if (!n) return ''; return `<span class="stars" aria-label="${n} out of 5">${'★'.repeat(n)}<span class="off">${'★'.repeat(5 - n)}</span></span>`; };
-  let toastT;
-  const toast = (msg) => { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 2600); };
+  const ago = (iso) => {
+    if (!iso) return '';
+    const m = Math.round((Date.now() - new Date(iso)) / 6e4);
+    if (m < 2) return 'just now'; if (m < 60) return `${m} min ago`;
+    const h = Math.round(m / 60); if (h < 24) return `${h} hr ago`;
+    const d = Math.round(h / 24); return d === 1 ? 'yesterday' : `${d} days ago`;
+  };
   const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
+  let toastT, undoFn = null;
+  function toast(msg, undo) {
+    const t = $('#toast'); $('#toast-msg').textContent = msg;
+    undoFn = undo || null; $('#toast-undo').hidden = !undo; t.classList.toggle('has-undo', !!undo);
+    t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; undoFn = null; }, undo ? 6000 : 2600);
+  }
+  $('#toast-undo').addEventListener('click', () => { const f = undoFn; $('#toast').hidden = true; undoFn = null; if (f) f(); });
+  // broken product images fall back to a monogram tile
+  document.addEventListener('error', (e) => {
+    const img = e.target;
+    if (img.tagName !== 'IMG' || img.dataset.fallback == null) return;
+    const d = document.createElement('div'); d.className = img.className; d.textContent = img.dataset.fallback; img.replaceWith(d);
+  }, true);
 
   const AI_ERR = {
     not_granted: 'Claude isn’t switched on for this page. Allow it from the artifact’s permissions menu to get recommendations.',
@@ -462,16 +562,17 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     const offPeak = peak != null && last != null && peak > last ? peak - last : 0;
     const atTarget = it.target != null && it.target !== '' && last != null && Number(last) <= Number(it.target);
     const lastChecked = it.lastChecked || (h.length ? h[h.length - 1].d : null);
-    return { h, last, prev, peak, drop, rise, offPeak, atTarget, lastChecked, stale: daysSince(lastChecked) };
+    const offers = (it.offers || []).filter(o => o && o.price != null).slice().sort((a, b) => a.price - b.price);
+    return { h, last, prev, peak, drop, rise, offPeak, atTarget, lastChecked, stale: daysSince(lastChecked), offers, best: offers[0] };
   }
   function wantAlerts(it) {
     const p = priceInfo(it), out = [];
-    if (p.atTarget) out.push({ tone: 'good', label: 'Hit your target', detail: `${fmt(p.last)} (target ${fmt(it.target)})`, rank: 0 });
+    if (p.atTarget) out.push({ tone: 'good', label: 'Hit your target', detail: `${fmt(p.last)}${p.best ? ' at ' + p.best.shop : ''} (target ${fmt(it.target)})`, rank: 0 });
     if (p.drop) out.push({ tone: 'good', label: `Down ${fmt(p.drop)}`, detail: `${Math.round(p.drop / p.prev * 100)}% since last check`, rank: 1 });
     if (it.stock === 'out') out.push({ tone: 'bad', label: 'Out of stock', detail: 'Check for restocks or a similar piece', rank: 2 });
     if (it.stock === 'low' || it.stock === 'selling') out.push({ tone: 'warn', label: STOCK[it.stock], detail: 'Might go soon', rank: 2 });
     if (p.rise) out.push({ tone: 'bad', label: `Up ${fmt(p.rise)}`, detail: 'Price went up since last check', rank: 3 });
-    if (p.stale != null && p.stale >= 14) out.push({ tone: '', label: `Checked ${p.stale} days ago`, detail: 'Log a fresh price', rank: 4 });
+    if (p.stale != null && p.stale >= 7) out.push({ tone: '', label: `Checked ${p.stale} days ago`, detail: 'The next refresh will check it', rank: 4 });
     return out;
   }
   function spark(h) {
@@ -481,15 +582,26 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     const pts = ps.map((p, i) => [pd + i * (w - pd * 2) / (ps.length - 1), pd + (1 - (p - min) / span) * (ht - pd * 2)]);
     const line = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
     const area = line + ` L${pts[pts.length - 1][0].toFixed(1)} ${ht} L${pts[0][0].toFixed(1)} ${ht} Z`;
-    const down = ps[ps.length - 1] < ps[0];
-    const col = down ? 'var(--good)' : 'var(--accent)';
+    const col = ps[ps.length - 1] < ps[0] ? 'var(--good)' : 'var(--accent)';
     const [ex, ey] = pts[pts.length - 1];
     return `<svg class="spark" viewBox="0 0 ${w} ${ht}" aria-label="Price history, ${ps.length} checks"><line x1="0" x2="${w}" y1="${ht - 0.5}" y2="${ht - 0.5}" stroke="var(--line)" stroke-width="1"/><path d="${area}" fill="${col}" fill-opacity="0.12"/><path d="${line}" fill="none" stroke="${col}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${ex}" cy="${ey}" r="3" fill="${col}"/></svg>`;
   }
+  function reviewBlock(r) {
+    if (!r || !(r.summary || (r.pros || []).length)) return '';
+    const v = VERDICT[r.verdict];
+    const src = (r.sources || []).filter(s => safeUrl(s.url)).slice(0, 5);
+    return `<div class="review">
+      ${v ? `<div class="pills"><span class="pill ${v[0]}">${esc(r.verdictLabel || v[1])}</span>${r.checked ? `<span class="meta">${esc(ago(r.checked))}</span>` : ''}</div>` : ''}
+      ${r.summary ? `<span>${esc(r.summary)}</span>` : ''}
+      ${(r.pros || []).length || (r.cons || []).length ? `<ul>${(r.pros || []).slice(0, 3).map(p => `<li>${esc(p)}</li>`).join('')}${(r.cons || []).slice(0, 3).map(p => `<li class="meta">${esc(p)}</li>`).join('')}</ul>` : ''}
+      ${src.length ? `<div class="sources">${src.map(s => `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title || new URL(s.url).hostname)}</a>`).join('')}</div>` : ''}
+    </div>`;
+  }
 
   // ---------- rendering ----------
-  const activeWants = () => S.wishlist.filter(w => w.status !== 'bought');
-  const hasData = () => COLS.some(c => S[c].length);
+  const activeWants = () => live('wishlist').filter(w => w.status !== 'bought');
+  const newFinds = () => live('finds').filter(f => f.status !== 'added');
+  const binItems = () => COLS.flatMap(c => S[c].filter(x => x.deleted).map(x => ({ col: c, x }))).sort((a, b) => String(b.x.deletedAt || '').localeCompare(String(a.x.deletedAt || '')));
 
   function renderChrome() {
     $('#today-date').textContent = new Date().toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -498,86 +610,74 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     sync.textContent = S.status === 'live' ? (canWrite ? 'Saved to your Edit' : 'View only') : S.status === 'off' ? 'Not connected' : 'Connecting…';
     $$('.tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.tab === S.tab)));
     $$('[data-panel]').forEach(p => p.hidden = p.dataset.panel !== S.tab);
+    const stackCount = (c) => live(c).filter(x => !['out', 'shelf'].includes(statusOf(x))).length;
     $('#n-wants').textContent = activeWants().length || '';
-    $('#n-beauty').textContent = S.beauty.length || '';
-    $('#n-skin').textContent = S.routine.length || '';
-    $('#n-wardrobe').textContent = S.wardrobe.length || '';
+    $('#n-finds').textContent = newFinds().length || '';
+    $('#n-skin').textContent = stackCount('routine') || '';
+    $('#n-makeup').textContent = stackCount('beauty') || '';
+    $('#n-wardrobe').textContent = live('wardrobe').length || '';
+    const nb = binItems().length;
+    $('#bin-btn').textContent = nb ? `Bin (${nb})` : 'Bin';
+    $('#profile-btn').hidden = !db || !canWrite;
     $$('.needs-ai').forEach(el => el.hidden = !sample);
     $$('[data-add]').forEach(b => b.hidden = !canWrite || !db);
 
-    const ex = COLS.reduce((n, c) => n + S[c].filter(x => x.example).length, 0);
+    const ex = COLS.reduce((n, c) => n + live(c).filter(x => x.example).length, 0);
     const b = $('#banner');
-    if (S.status === 'off') {
-      b.innerHTML = `<div class="banner"><span>Your Edit saves to your Claude account. Open this page on claude.ai while signed in to load and save your things.</span></div>`;
-    } else if (ex && canWrite) {
-      b.innerHTML = `<div class="banner"><span>The things marked <span class="pill ex">Example</span> are samples to show how it works. Add your own, then clear them.</span><button class="btn small" data-act="clear-examples">Clear ${ex} examples</button></div>`;
-    } else b.innerHTML = '';
+    if (S.status === 'off') b.innerHTML = `<div class="banner"><span>Your Edit saves to your Claude account. Open this page on claude.ai while signed in to load and save your things.</span></div>`;
+    else if (ex && canWrite) b.innerHTML = `<div class="banner"><span>Things marked <span class="pill ex">Example</span> are samples to show how it works. Add your own, then clear them (they go to the bin, so you can bring them back).</span><button class="btn small" data-act="clear-examples">Clear ${ex} examples</button></div>`;
+    else b.innerHTML = '';
   }
 
   function renderToday() {
+    const r = S.meta.refresh || {};
+    const canRefresh = !!(mcp && r.triggerId && canWrite);
+    $('#refresh').innerHTML = `<div style="display:grid;gap:4px;min-width:0">
+        <p class="eyebrow">Daily refresh · prices, stock, reviews & new finds</p>
+        <p class="when">${r.lastRun ? `Last checked ${esc(ago(r.lastRun))}` : 'Hasn’t run yet'}${r.requestedAt && (!r.lastRun || r.requestedAt > r.lastRun) ? ' · a refresh is running' : ''}</p>
+        ${r.summary ? `<p class="meta">${esc(r.summary)}</p>` : `<p class="meta">Each morning Claude checks your wants across shops, reads Reddit and independent reviews, and adds new finds here.</p>`}
+      </div>
+      ${canRefresh ? `<button class="btn" data-act="refresh-now">Refresh now</button>` : ''}`;
+
     const wants = activeWants();
     const totalWant = wants.reduce((s, w) => s + (Number(priceInfo(w).last) || 0), 0);
     const deals = wants.filter(w => { const p = priceInfo(w); return p.atTarget || p.drop; }).length;
-    const grails = S.beauty.filter(x => x.status === 'grail').length;
     $('#stats').innerHTML = [
-      [fmt(totalWant).replace(/\.00$/, ''), `on the want list (${wants.length} things)`],
+      [fmt(totalWant).replace(/\.00$/, ''), `on the want list (${wants.length})`],
       [deals, deals === 1 ? 'deal to look at' : 'deals to look at'],
-      [grails, 'holy grail products'],
-      [S.wardrobe.length, 'pieces in the wardrobe'],
+      [newFinds().length, 'new finds'],
+      [live('wardrobe').length, 'pieces in the wardrobe'],
     ].map(([v, k]) => `<div class="stat"><span class="v">${esc(v)}</span><span class="k">${esc(k)}</span></div>`).join('');
 
     const rows = [];
     wants.forEach(w => wantAlerts(w).forEach(a => rows.push({ w, a })));
     rows.sort((x, y) => x.a.rank - y.a.rank);
-    $('#alerts').innerHTML = rows.length ? rows.slice(0, 8).map(({ w, a }) => `
-      <li><span class="pill ${a.tone}">${esc(a.label)}</span>
-        <span class="what"><b>${esc(w.name)}</b><span class="meta">${esc([w.brand, a.detail].filter(Boolean).join(' · '))}</span></span>
-        <button class="btn small" data-act="logprice" data-id="${esc(w.id)}">Log price</button></li>`).join('')
-      : `<li style="display:block"><span class="meta">${wants.length ? 'Nothing has dropped or is running low. Log prices on your wants to start tracking.' : 'Add things you want and their prices. Drops, target prices and low stock show up here.'}</span></li>`;
+    const seen = new Set();
+    const uniq = rows.filter(({ w }) => !seen.has(w.id) && seen.add(w.id));
+    $('#alerts').innerHTML = uniq.length ? uniq.slice(0, 7).map(({ w, a }) => `
+      <li>${thumb(w)}
+        <span class="what"><b>${esc(w.name)}</b><span class="pills"><span class="pill ${a.tone}">${esc(a.label)}</span><span class="meta">${esc(a.detail)}</span></span></span>
+        ${w.url && safeUrl(w.url) ? `<a class="btn small ghost" href="${esc(w.url)}" target="_blank" rel="noopener">Shop ↗</a>` : '<span></span>'}</li>`).join('')
+      : `<li style="display:block"><span class="meta">${wants.length ? 'Nothing has dropped or is running low.' : 'Add things you want. Drops, target prices and low stock show up here.'}</span></li>`;
 
-    // routine
-    const key = dayKey(), today = S.log[key] || {};
-    const slot = (s, label) => {
-      const steps = stepsFor(s);
-      if (!steps.length) return `<div class="slot"><h3>${label}</h3><p class="meta" style="margin:0">No ${label.toLowerCase()} steps yet.</p></div>`;
-      const done = new Set(today[s] || []);
-      return `<div class="slot"><h3>${label} · ${done.size}/${steps.length}</h3><ul class="ticks">${steps.map(st => `
-        <li><label class="tick ${done.has(st.id) ? 'done' : ''}"><input type="checkbox" data-act="tick" data-slot="${s}" data-id="${esc(st.id)}" ${done.has(st.id) ? 'checked' : ''} ${canWrite ? '' : 'disabled'}>
-        <span class="p">${esc(st.product)}</span><span class="s">${esc(st.freq && st.freq !== 'daily' ? FREQ[st.freq] : st.step || '')}</span></label></li>`).join('')}</ul></div>`;
-    };
-    $('#today-routine').innerHTML = S.routine.length
-      ? `<div class="slots">${slot('am', 'Morning')}${slot('pm', 'Night')}</div>`
-      : `<div class="empty"><span>Add your skincare steps to tick them off each day.</span><button class="btn small" data-go="skin">Set up routine</button></div>`;
-
-    // dots + streak
-    let html = '', streak = 0, counting = true;
-    for (let i = 13; i >= 0; i--) {
-      const d = new Date(); d.setDate(d.getDate() - i);
-      const l = S.log[dayKey(d)] || {};
-      const am = (l.am || []).length > 0, pm = (l.pm || []).length > 0;
-      const cls = am && pm ? 'full' : (am || pm) ? 'half' : '';
-      html += `<span class="dot" title="${d.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })}"><i class="${cls}"></i>${'SMTWTFS'[d.getDay()]}</span>`;
-    }
-    for (let i = 0; i < 365 && counting; i++) {
-      const d = new Date(); d.setDate(d.getDate() - i);
-      const l = S.log[dayKey(d)] || {};
-      if ((l.am || []).length || (l.pm || []).length) streak++;
-      else if (i > 0) counting = false;
-    }
-    $('#dots').innerHTML = html;
-    $('#streak').textContent = streak ? `${streak}-day streak` : '';
+    const nf = newFinds().sort((a, b) => String(b.foundOn || '').localeCompare(String(a.foundOn || ''))).slice(0, 4);
+    $('#today-finds').innerHTML = nf.length ? nf.map(f => {
+      const v = VERDICT[(f.review || f).verdict];
+      return `<li>${thumb(f)}<span class="what"><b>${esc(f.name)}</b><span class="meta">${esc([f.brand, FIND_KINDS[f.kind], f.price != null ? fmt(f.price) : ''].filter(Boolean).join(' · '))}</span>${v ? `<span class="pills"><span class="pill ${v[0]}">${esc(v[1])}</span></span>` : ''}</span><button class="btn small ghost" data-tab="finds">View</button></li>`;
+    }).join('') : `<li style="display:block"><span class="meta">New skincare, makeup and other finds from the daily refresh will land here, with what real reviewers say.</span></li>`;
   }
 
   function chipRow(el, list, cur, act) {
     el.innerHTML = [['All', 'All'], ...list].map(([v, l]) => `<button class="chip" aria-pressed="${v === cur}" data-act="${act}" data-v="${esc(v)}">${esc(l)}</button>`).join('');
   }
+  const delBtn = (col, id, label = 'Delete') => canWrite ? `<button class="btn small ghost danger" data-act="del" data-col="${col}" data-id="${esc(id)}">${label}</button>` : '';
 
   function renderWants() {
-    const present = WANT_CATS.filter(c => S.wishlist.some(w => w.category === c));
-    chipRow($('#wants-chips'), present.map(c => [c, c]), S.wantCat, 'want-cat');
+    const all = live('wishlist');
+    chipRow($('#wants-chips'), WANT_CATS.filter(c => all.some(w => w.category === c)).map(c => [c, c]), S.wantCat, 'want-cat');
     $('#wants-sort').value = S.wantSort;
     $('#wants-bought').checked = S.showBought;
-    let list = S.wishlist.filter(w => (S.showBought || w.status !== 'bought') && (S.wantCat === 'All' || w.category === S.wantCat));
+    const list = all.filter(w => (S.showBought || w.status !== 'bought') && (S.wantCat === 'All' || w.category === S.wantCat));
     const pr = { must: 0, want: 1, maybe: 2 };
     const sorters = {
       alert: (a, b) => (Math.min(9, ...wantAlerts(a).map(x => x.rank)) - Math.min(9, ...wantAlerts(b).map(x => x.rank))) || (pr[a.priority] ?? 1) - (pr[b.priority] ?? 1),
@@ -588,13 +688,11 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     };
     list.sort(sorters[S.wantSort] || sorters.alert);
     const el = $('#wants-list');
-    if (!list.length) { el.innerHTML = emptyState('wishlist', S.wishlist.length ? 'Nothing in this category.' : 'Paste in things you’re eyeing: clothes, beauty, office bits. Log the price now and then to catch drops.'); return; }
+    if (!list.length) { el.innerHTML = emptyState('wishlist', all.length ? 'Nothing in this category.' : 'Add things you’re eyeing: clothes, beauty, office bits. The daily refresh checks prices and stock across shops.'); return; }
     el.innerHTML = list.map(w => {
       const p = priceInfo(w), al = wantAlerts(w);
-      const isClothes = ['Clothes'].includes(w.category);
       return `<article class="card ${w.status === 'bought' ? 'faded' : ''}">
-        <div class="card-top">
-          ${w.photoId ? `<img class="thumb" src="${photoUrl(w.photoId)}" alt="">` : `<div class="thumb">${initial(w.brand || w.name)}</div>`}
+        <div class="card-top">${thumb(w)}
           <div class="card-title">
             <h3>${esc(w.name)}</h3>
             <span class="meta">${esc([w.brand, w.variant].filter(Boolean).join(' · '))}</span>
@@ -602,107 +700,155 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
           </div>
         </div>
         <div class="price-row">
-          <div class="price">${fmt(p.last)}<small>${w.target ? `Target ${fmt(w.target)}` : 'No target set'}${p.offPeak ? ` · ${fmt(p.offPeak)} off peak` : ''}</small></div>
+          <div class="price">${fmt(p.last)}<small>${p.best ? `Best at ${esc(p.best.shop)} · ` : ''}${w.target ? `Target ${fmt(w.target)}` : 'No target set'}${p.offPeak ? ` · ${fmt(p.offPeak)} off peak` : ''}</small></div>
           ${spark(p.h)}
         </div>
         ${al.length ? `<div class="pills">${al.map(a => `<span class="pill ${a.tone}">${esc(a.label)}</span>`).join('')}</div>` : ''}
+        ${p.offers.length ? `<details class="more"><summary>${p.offers.length} ${p.offers.length === 1 ? 'shop' : 'shops'} checked${p.lastChecked ? ` · ${esc(ago(p.lastChecked))}` : ''}</summary><ul class="offers">${p.offers.map(o => `<li>${safeUrl(o.url) ? `<a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(o.shop)}</a>` : esc(o.shop)}<span class="meta">${esc(STOCK[o.stock] || '')}</span><span class="mono">${fmt(o.price)}</span></li>`).join('')}</ul></details>` : ''}
+        ${reviewBlock(w.reviews)}
         ${w.notes ? `<p class="notes">${esc(w.notes)}</p>` : ''}
         ${aiBox(w.id)}
         <div class="actions">
-          ${canWrite && w.status !== 'bought' ? `<button class="btn small" data-act="logprice" data-id="${esc(w.id)}">Log price</button>` : ''}
-          ${w.url ? `<a class="btn small ghost" href="${esc(w.url)}" target="_blank" rel="noopener">Open shop ↗</a>` : ''}
-          ${sample && isClothes && S.wardrobe.length ? `<button class="btn small ghost" data-act="ai-pairs" data-id="${esc(w.id)}">Goes with?</button>` : ''}
-          ${canWrite ? `<button class="btn small ghost push" data-act="edit" data-col="wishlist" data-id="${esc(w.id)}">Edit</button>` : ''}
-          ${canWrite ? `<button class="btn small ghost" data-act="bought" data-id="${esc(w.id)}">${w.status === 'bought' ? 'Undo bought' : 'Bought it'}</button>` : ''}
+          ${safeUrl(w.url) ? `<a class="btn small" href="${esc(w.url)}" target="_blank" rel="noopener">Shop ↗</a>` : ''}
+          ${canWrite && w.status !== 'bought' ? `<button class="btn small ghost" data-act="logprice" data-id="${esc(w.id)}">Log price</button>` : ''}
+          ${sample && w.category === 'Clothes' && live('wardrobe').length ? `<button class="btn small ghost" data-act="ai-pairs" data-id="${esc(w.id)}">Goes with?</button>` : ''}
+          ${canWrite ? `<button class="btn small ghost push" data-act="bought" data-id="${esc(w.id)}">${w.status === 'bought' ? 'Undo bought' : 'Bought it'}</button>` : ''}
+          ${canWrite ? `<button class="btn small ghost" data-act="edit" data-col="wishlist" data-id="${esc(w.id)}">Edit</button>` : ''}
+          ${delBtn('wishlist', w.id)}
         </div>
       </article>`;
     }).join('');
   }
 
-  function renderBeauty() {
-    chipRow($('#beauty-chips'), Object.entries(BEAUTY_STATUS).filter(([k]) => S.beauty.some(b => b.status === k)), S.beautyStatus, 'beauty-status');
-    const order = { grail: 0, using: 1, totry: 2, nope: 3 };
-    const list = S.beauty.filter(b => S.beautyStatus === 'All' || b.status === S.beautyStatus)
-      .sort((a, b) => (order[a.status] ?? 5) - (order[b.status] ?? 5) || (Number(b.rating) || 0) - (Number(a.rating) || 0));
-    const el = $('#beauty-list');
-    if (!list.length) { el.innerHTML = emptyState('beauty', S.beauty.length ? 'Nothing with this status.' : 'Log your favourite products with their shades and how they went. Claude uses your feedback to suggest what to try next.'); return; }
-    const tone = { grail: 'accent', using: 'good', totry: '', nope: 'bad' };
-    el.innerHTML = list.map(b => `<article class="card">
-      <div class="card-top">
-        ${b.photoId ? `<img class="thumb" src="${photoUrl(b.photoId)}" alt="">` : `<div class="swatch" style="background:${/^#[0-9a-f]{6}$/i.test(b.shadeHex || '') ? b.shadeHex : 'var(--sunk)'}" aria-hidden="true"></div>`}
-        <div class="card-title">
-          <h3>${esc(b.name)}</h3>
-          <span class="meta">${esc([b.brand, b.type].filter(Boolean).join(' · '))}</span>
-          <span><b>${esc(b.shade || 'No shade')}</b>${b.finish ? `<span class="meta"> · ${esc(b.finish)}</span>` : ''}</span>
+  function renderFinds() {
+    const all = newFinds();
+    chipRow($('#finds-chips'), Object.entries(FIND_KINDS).filter(([k]) => all.some(f => f.kind === k)), S.findKind, 'find-kind');
+    const list = all.filter(f => S.findKind === 'All' || f.kind === S.findKind).sort((a, b) => String(b.foundOn || '').localeCompare(String(a.foundOn || '')));
+    const el = $('#finds-list');
+    if (!list.length) { el.innerHTML = `<div class="empty" style="grid-column:1/-1"><span>${all.length ? 'Nothing in this category.' : 'No finds yet. The daily refresh adds new products here with genuine reviews, skincare first.'}</span></div>`; return; }
+    el.innerHTML = list.map(f => {
+      const swapTarget = f.swapFor && [...live('routine'), ...live('beauty')].find(x => x.id === f.swapFor);
+      return `<article class="card">
+        <div class="card-top">${thumb(f)}
+          <div class="card-title">
+            <h3>${esc(f.name)}</h3>
+            <span class="meta">${esc([f.brand, f.category].filter(Boolean).join(' · '))}</span>
+            <div class="pills">${f.example ? '<span class="pill ex">Example</span>' : ''}<span class="pill">${esc(FIND_KINDS[f.kind] || 'Find')}</span>${f.price != null ? `<span class="pill">${fmt(f.price)}${f.shop ? ' · ' + esc(f.shop) : ''}</span>` : ''}</div>
+          </div>
         </div>
-      </div>
-      <div class="pills">${b.example ? '<span class="pill ex">Example</span>' : ''}${b.status ? `<span class="pill ${tone[b.status] || ''}">${esc(BEAUTY_STATUS[b.status])}</span>` : ''}${b.repurchase ? `<span class="pill">Repurchase: ${esc(b.repurchase)}</span>` : ''}${stars(b.rating)}</div>
-      ${b.feedback ? `<p class="notes">“${esc(b.feedback)}”</p>` : ''}
-      ${aiBox(b.id)}
-      <div class="actions">
-        ${sample ? `<button class="btn small" data-act="ai-alt" data-id="${esc(b.id)}">${b.status === 'nope' ? 'Find something better' : 'Similar or dupes'}</button>` : ''}
-        ${canWrite ? `<button class="btn small ghost push" data-act="edit" data-col="beauty" data-id="${esc(b.id)}">Edit</button>` : ''}
-      </div>
-    </article>`).join('');
+        ${f.fitNote ? `<p class="notes"><b>Why you:</b> ${esc(f.fitNote)}</p>` : ''}
+        ${swapTarget ? `<p class="notes"><b>Could replace:</b> ${esc(nameOf(swapTarget))}</p>` : ''}
+        ${reviewBlock(f.review || f)}
+        <div class="actions">
+          ${safeUrl(f.url) ? `<a class="btn small" href="${esc(f.url)}" target="_blank" rel="noopener">Shop ↗</a>` : ''}
+          ${canWrite ? `<button class="btn small ghost" data-act="find-want" data-id="${esc(f.id)}">Add to wants</button>` : ''}
+          ${canWrite && (f.kind === 'skincare' || f.kind === 'makeup') ? `<button class="btn small ghost" data-act="find-stack" data-id="${esc(f.id)}">${swapTarget ? 'Swap it in' : 'Add to my stack'}</button>` : ''}
+          ${delBtn('finds', f.id, 'Not for me')}
+        </div>
+      </article>`;
+    }).join('');
   }
 
-  function stepsFor(slot) {
-    return S.routine.filter(r => r.when === slot || r.when === 'both' || (!r.when && slot === 'am'))
-      .sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0) || String(a.product).localeCompare(String(b.product)));
+  function stackItem(col, x) {
+    const st = statusOf(x), isSkin = col === 'routine';
+    const sub = isSkin ? [x.brand, WHEN[x.when], x.freq && x.freq !== 'daily' ? FREQ[x.freq] : ''] : [x.brand, x.finish];
+    const swatch = !isSkin && /^#[0-9a-f]{6}$/i.test(x.shadeHex || '') ? `<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${x.shadeHex};border:1px solid var(--line);vertical-align:-1px;margin-right:5px"></span>` : '';
+    return `<div class="sitem ${st === 'out' ? 'out' : ''}">
+      ${thumb(x, isSkin ? '' : 'round')}
+      <div class="body">
+        <b>${esc(nameOf(x))}</b>
+        <span class="meta">${esc(sub.filter(Boolean).join(' · '))}</span>
+        ${!isSkin && x.shade ? `<span>${swatch}${esc(x.shade)}</span>` : ''}
+        ${isSkin && x.actives ? `<span class="meta">Actives: ${esc(x.actives)}</span>` : ''}
+        <div class="pills">${x.example ? '<span class="pill ex">Example</span>' : ''}<span class="pill ${STACK_TONE[st]}">${esc(STACK[st])}</span>${stars(x.rating)}</div>
+        ${st === 'out' && (x.swapReason || x.swappedFor) ? `<p class="notes">${x.swappedFor ? `Swapped for ${esc(x.swappedFor)}. ` : ''}${esc(x.swapReason || '')}</p>` : ''}
+        ${x.feedback ? `<p class="notes">“${esc(x.feedback)}”</p>` : ''}
+        ${aiBox(x.id)}
+      </div>
+      <div class="actions">
+        ${canWrite && st !== 'out' && st !== 'shelf' ? `<button class="btn small" data-act="swap" data-col="${col}" data-id="${esc(x.id)}">Swap out</button>` : ''}
+        ${canWrite && (st === 'out' || st === 'shelf') ? `<button class="btn small" data-act="restack" data-col="${col}" data-id="${esc(x.id)}">Back in my stack</button>` : ''}
+        ${sample && st !== 'out' ? `<button class="btn small ghost" data-act="ai-alt" data-col="${col}" data-id="${esc(x.id)}">${st === 'testing' ? 'Is it worth it?' : 'Alternatives'}</button>` : ''}
+        ${canWrite ? `<button class="btn small ghost push" data-act="edit" data-col="${col}" data-id="${esc(x.id)}">Edit</button>` : ''}
+        ${delBtn(col, x.id)}
+      </div>
+    </div>`;
+  }
+  function renderStack(col, el, groups, groupOf) {
+    const items = live(col);
+    if (!items.length) { el.innerHTML = emptyState(col, col === 'routine' ? 'Add the skincare you use. You’ll see it by step and can swap things out as you go.' : 'Add your makeup with shades and how it went. Claude uses your notes to suggest swaps.'); return; }
+    const active = items.filter(x => !['out', 'shelf'].includes(statusOf(x)));
+    const rank = { grail: 0, current: 1, testing: 2 };
+    let html = '';
+    for (const [label, members] of groups) {
+      const g = active.filter(x => members.includes(groupOf(x))).sort((a, b) => members.indexOf(groupOf(a)) - members.indexOf(groupOf(b)) || (rank[statusOf(a)] ?? 3) - (rank[statusOf(b)] ?? 3));
+      if (!g.length) continue;
+      html += `<section class="stack-group"><div class="gh"><h3>${esc(label)}</h3><span class="meta">${g.length}</span></div><div class="stack-list">${g.map(x => stackItem(col, x)).join('')}</div></section>`;
+    }
+    if (!active.length) html += `<div class="empty"><span>Nothing in your stack right now.</span></div>`;
+    for (const st of ['shelf', 'out']) {
+      const g = items.filter(x => statusOf(x) === st);
+      if (g.length) html += `<details class="shelf" data-key="${col}-${st}" ${store.get('edit.open.' + col + st) ? 'open' : ''}><summary>${esc(STACK[st])} (${g.length})</summary><div class="stack-list">${g.map(x => stackItem(col, x)).join('')}</div></details>`;
+    }
+    el.innerHTML = html;
   }
   function renderSkin() {
-    for (const slot of ['am', 'pm']) {
-      const steps = stepsFor(slot), el = $('#skin-' + slot);
-      if (!steps.length) { el.innerHTML = `<li class="empty">No ${slot === 'am' ? 'morning' : 'night'} steps yet.${canWrite && db ? ` <button class="btn small" data-add="routine" data-when="${slot}">+ Add a step</button>` : ''}</li>`; continue; }
-      el.innerHTML = steps.map((s, i) => `<li class="step">
-        <div class="body">
-          <b>${esc(s.product)}</b>
-          <span class="meta">${esc([s.brand, s.step, FREQ[s.freq]].filter(Boolean).join(' · '))}</span>
-          ${s.actives ? `<span class="meta">Actives: ${esc(s.actives)}</span>` : ''}
-          <div class="pills">${s.example ? '<span class="pill ex">Example</span>' : ''}${s.when === 'both' ? '<span class="pill">AM & PM</span>' : ''}${stars(s.rating)}</div>
-          ${s.feedback ? `<p class="notes">${esc(s.feedback)}</p>` : ''}
-        </div>
-        ${canWrite ? `<div class="ctl">
-          <button class="icon" data-act="move" data-slot="${slot}" data-dir="-1" data-id="${esc(s.id)}" aria-label="Move up" ${i === 0 ? 'disabled' : ''}>↑</button>
-          <button class="icon" data-act="move" data-slot="${slot}" data-dir="1" data-id="${esc(s.id)}" aria-label="Move down" ${i === steps.length - 1 ? 'disabled' : ''}>↓</button>
-          <button class="icon" data-act="edit" data-col="routine" data-id="${esc(s.id)}" aria-label="Edit">✎</button>
-        </div>` : '<span></span>'}
-      </li>`).join('');
-    }
+    const known = new Set(SKIN_STEPS);
+    renderStack('routine', $('#skin-stack'), SKIN_STEPS.map(s => [s, [s]]), x => known.has(x.step) ? x.step : 'Other');
+  }
+  function renderMakeup() {
+    const known = new Set(MAKEUP_TYPES);
+    renderStack('beauty', $('#makeup-stack'), MAKEUP_AREAS, x => known.has(x.type) ? x.type : 'Other');
   }
 
-  function pieceTile(p, cls = 'mini') {
-    return `<div class="${cls}"><div class="img">${p.photoId ? `<img src="${photoUrl(p.photoId)}" alt="">` : initial(p.name)}</div><span>${esc(p.name)}</span></div>`;
+  function pieceTile(p) {
+    const src = photoSrc(p);
+    return `<div class="mini"><div class="img">${src ? `<img src="${esc(src)}" alt="" loading="lazy">` : initial(p.name)}</div><span>${esc(p.name)}</span></div>`;
   }
   function outfitCard(o, i, saved) {
-    const items = (o.itemIds || []).map(id => S.wardrobe.find(w => w.id === id)).filter(Boolean);
+    const items = (o.itemIds || []).map(id => live('wardrobe').find(w => w.id === id)).filter(Boolean);
     return `<article class="outfit">
       <div class="section-h"><h3>${esc(o.title || 'Outfit')}</h3>${o.vibe ? `<span class="meta">${esc(o.vibe)}</span>` : ''}</div>
-      <div class="outfit-items">${items.map(p => pieceTile(p)).join('') || '<span class="meta">These pieces have been removed.</span>'}</div>
+      <div class="outfit-items">${items.map(pieceTile).join('') || '<span class="meta">These pieces have been removed.</span>'}</div>
       ${o.note ? `<p class="notes">${esc(o.note)}</p>` : ''}
       ${o.missing ? `<p class="notes"><b>Would finish it:</b> ${esc(o.missing)}</p>` : ''}
-      <div class="actions">${saved
-        ? (canWrite ? `<button class="btn small ghost danger push" data-act="del-outfit" data-id="${esc(o.id)}">Remove</button>` : '')
+      <div class="actions">${saved ? delBtn('outfits', o.id, 'Remove')
         : (canWrite ? `<button class="btn small" data-act="save-outfit" data-i="${i}">Save outfit</button>` : '')}</div>
     </article>`;
   }
   function renderWardrobe() {
-    const present = WARD_CATS.filter(c => S.wardrobe.some(w => w.category === c));
-    chipRow($('#wardrobe-chips'), present.map(c => [c, c]), S.wardCat, 'ward-cat');
-    const list = S.wardrobe.filter(w => S.wardCat === 'All' || w.category === S.wardCat)
+    const all = live('wardrobe');
+    chipRow($('#wardrobe-chips'), WARD_CATS.filter(c => all.some(w => w.category === c)).map(c => [c, c]), S.wardCat, 'ward-cat');
+    const list = all.filter(w => S.wardCat === 'All' || w.category === S.wardCat)
       .sort((a, b) => WARD_CATS.indexOf(a.category) - WARD_CATS.indexOf(b.category) || String(a.name).localeCompare(String(b.name)));
-    const el = $('#wardrobe-list');
-    el.innerHTML = list.length ? list.map(p => `<button class="piece" data-act="${canWrite ? 'edit' : ''}" data-col="wardrobe" data-id="${esc(p.id)}">
-        <div class="img">${p.photoId ? `<img src="${photoUrl(p.photoId)}" alt="">` : `<span>${esc(p.name)}</span>`}</div>
+    $('#wardrobe-list').innerHTML = list.length ? list.map(p => {
+      const src = photoSrc(p);
+      return `<button class="piece" data-act="${canWrite ? 'edit' : ''}" data-col="wardrobe" data-id="${esc(p.id)}">
+        <div class="img">${src ? `<img src="${esc(src)}" alt="" loading="lazy">` : `<span>${esc(p.name)}</span>`}</div>
         <div class="cap"><b>${esc(p.name)}</b><span class="meta">${esc([p.colour, p.category].filter(Boolean).join(' · '))}</span>
         ${(p.vibes || []).length || p.example ? `<div class="pills">${p.example ? '<span class="pill ex">Example</span>' : ''}${(p.vibes || []).slice(0, 3).map(v => `<span class="pill">${esc(v)}</span>`).join('')}</div>` : ''}</div>
-      </button>`).join('')
-      : emptyState('wardrobe', 'Add what’s in your wardrobe (a photo helps). Then describe a vibe and Claude will put outfits together from your own pieces.');
-    const saved = S.outfits.slice().sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+      </button>`;
+    }).join('') : emptyState('wardrobe', 'Add what’s in your wardrobe (a photo helps). Then Claude can mix outfits from your own pieces and spot missing basics.');
+    const saved = live('outfits').sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
     $('#saved-h').hidden = !saved.length;
     $('#outfits').innerHTML = saved.map((o, i) => outfitCard(o, i, true)).join('');
     const vo = $('#vibe-out');
     if (S.suggestions.length) { vo.hidden = false; vo.innerHTML = S.suggestions.map((o, i) => outfitCard(o, i, false)).join(''); }
+    const go = $('#gaps-out');
+    if (S.gaps.length) {
+      go.hidden = false;
+      const tone = { high: 'bad', medium: 'warn', low: '' };
+      go.innerHTML = `<p class="eyebrow" style="margin-bottom:8px">Missing basics</p><ul class="gaps">${S.gaps.map((g, i) => `<li><span class="pill ${tone[g.priority] || ''}">${esc(g.priority === 'high' ? 'Gap' : g.priority === 'medium' ? 'Nice to have' : 'Optional')}</span><span><b>${esc(g.item)}</b><br><span class="meta">${esc(g.why)}</span></span>${canWrite ? (g.added ? '<span class="meta">Added</span>' : `<button class="btn small" data-act="gap-want" data-i="${i}">Add to wants</button>`) : '<span></span>'}</li>`).join('')}</ul>`;
+    }
+  }
+
+  function renderBin() {
+    const items = binItems();
+    $('#empty-bin').hidden = !items.length || !canWrite;
+    $('#bin-list').innerHTML = items.length ? items.map(({ col, x }) => `<li>${thumb(x)}
+      <span class="what"><b>${esc(nameOf(x))}</b><span class="meta">${esc(COL_LABEL[col])} · deleted ${esc(ago(x.deletedAt) || '')}</span></span>
+      <span class="tools">${canWrite ? `<button class="btn small" data-act="restore" data-col="${col}" data-id="${esc(x.id)}">Restore</button><button class="btn small ghost danger" data-act="purge" data-col="${col}" data-id="${esc(x.id)}">Delete for good</button>` : ''}</span></li>`).join('')
+      : `<li style="display:block" class="empty">The bin is empty.</li>`;
   }
 
   function emptyState(col, msg) {
@@ -710,61 +856,86 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
   }
   function aiBox(id) {
     const a = S.cardAi[id];
-    if (!a) return '';
-    return `<div class="ai-out ${a.err ? 'err' : ''}" id="ai-${esc(id)}"><span class="by">Claude</span>${esc(a.text)}</div>`;
+    return a ? `<div class="ai-out ${a.err ? 'err' : ''}" id="ai-${esc(id)}"><span class="by">Claude</span>${esc(a.text)}</div>` : '';
   }
 
   function render() {
     renderChrome();
-    renderToday(); renderWants(); renderBeauty(); renderSkin(); renderWardrobe();
+    renderToday(); renderWants(); renderFinds(); renderSkin(); renderMakeup(); renderWardrobe(); renderBin();
+  }
+
+  // ---------- writes ----------
+  const now = () => new Date().toISOString();
+  async function softDelete(col, id) {
+    await db.collection(col).doc(id).update({ deleted: true, deletedAt: now() });
+    delete S.cardAi[id];
+    toast('Moved to the bin', () => restore(col, id));
+  }
+  async function restore(col, id) {
+    try { await db.collection(col).doc(id).update({ deleted: false, deletedAt: null }); toast('Restored'); }
+    catch { toast('Couldn’t restore that. Try again.'); }
+  }
+  async function purge(col, x) {
+    await db.collection(col).doc(x.id).delete();
   }
 
   // ---------- form dialog ----------
   const dlg = $('#dlg');
-  let editing = null; // {col, item, pendingPhoto}
-  function fieldHtml(f, v) {
+  let editing = null; // {col, item, ctx, pendingPhoto}
+  function fieldHtml(f, v, src) {
     const id = 'f-' + f.k, base = `id="${id}" name="${f.k}"`;
     let ctl = '';
     if (f.type === 'textarea') ctl = `<textarea ${base} rows="3" placeholder="${esc(f.ph || '')}">${esc(v)}</textarea>`;
     else if (f.type === 'select') ctl = `<select ${base}>${f.options.map(([val, l]) => `<option value="${esc(val)}" ${String(v ?? '') === val ? 'selected' : ''}>${esc(l || '—')}</option>`).join('')}</select>`;
     else if (f.type === 'rating') ctl = `<select ${base}><option value="">Not rated</option>${[5, 4, 3, 2, 1].map(n => `<option value="${n}" ${Number(v) === n ? 'selected' : ''}>${'★'.repeat(n)}${'☆'.repeat(5 - n)}</option>`).join('')}</select>`;
-    else if (f.type === 'colour') ctl = `<div class="colour-row"><input type="color" ${base} value="${/^#[0-9a-f]{6}$/i.test(v || '') ? v : '#c79a86'}"><span class="hint">Pick something close to the shade</span></div>`;
+    else if (f.type === 'colour') ctl = `<div class="colour-row"><input type="color" ${base} value="${/^#[0-9a-f]{6}$/i.test(v || '') ? v : '#c79a86'}"><span class="hint">Close to the shade</span></div>`;
     else if (f.type === 'tags') ctl = `<input type="text" ${base} value="${esc((v || []).join(', '))}" placeholder="${esc(f.ph || '')}">`;
     else if (f.type === 'photo') {
       if (!assets) return '';
-      ctl = `<div class="photo-row">${v ? `<img src="${photoUrl(v)}" alt="" id="f-photo-prev">` : '<img alt="" id="f-photo-prev" hidden>'}<input type="file" id="${id}" accept="image/*"></div>`;
+      const cur = src ? photoSrc(src) : '';
+      return `<label class="drop" id="drop" for="${id}">
+        <span id="drop-prev">${cur ? `<img class="thumb" src="${esc(cur)}" alt="">` : '<div class="thumb">+</div>'}</span>
+        <span><b>${cur ? 'Change photo' : 'Add a photo'}</b><br><span class="meta">Choose a file, drag one in, or paste a screenshot.</span></span>
+        <input type="file" id="${id}" accept="image/*">
+      </label>`;
     }
     else ctl = `<input type="${f.type === 'number' ? 'number' : f.type === 'url' ? 'url' : 'text'}" ${base} ${f.type === 'number' ? 'step="0.01" min="0" inputmode="decimal"' : ''} value="${esc(v ?? '')}" placeholder="${esc(f.ph || '')}" ${f.req ? 'required' : ''}>`;
     return `<label class="field ${f.full ? 'full' : ''}" for="${id}"><span>${esc(f.label)}</span>${ctl}${f.hint ? `<span class="hint">${esc(f.hint)}</span>` : ''}</label>`;
   }
-  function openForm(col, item, preset = {}) {
+  function openForm(col, item, preset = {}, ctx = {}) {
     if (!db || !canWrite) return;
     const def = FORMS[col];
-    editing = { col, item, pendingPhoto: null };
-    const isNew = !item;
-    $('#dlg-title').textContent = col === 'logprice' ? `Log price · ${item.name}` : (isNew ? 'Add a ' : 'Edit ') + def.title;
-    const src = col === 'logprice' ? { price: priceInfo(item).last ?? '', stock: item.stock || 'in' } : (item || preset);
-    $('#dlg-body').innerHTML = def.fields.map(f => fieldHtml(f, src[f.k])).join('');
+    editing = { col, item, ctx, pendingPhoto: null };
+    let title, src, note = '';
+    if (col === 'logprice') { title = `Log price · ${item.name}`; src = { price: priceInfo(item).last ?? '', stock: item.stock || 'in' }; }
+    else if (col === 'swap') { title = `Swap out ${nameOf(item)}`; src = preset; note = `It moves to “Swapped out” with your reason. The new one goes in as Testing${ctx.fromCol === 'routine' ? `, in the same step (${item.step || 'Other'}, ${WHEN[item.when] || 'AM'})` : `, as a ${item.type || 'product'}`}.`; }
+    else if (col === 'profile') { title = 'About me'; src = S.meta.profile || {}; note = 'Used for recommendations and by the daily refresh when it looks for finds.'; }
+    else { title = (item ? 'Edit ' : 'Add a ') + def.title; src = item || preset; }
+    $('#dlg-title').textContent = title;
+    const fields = def.fields.filter(f => !f.only || f.only === ctx.fromCol);
+    $('#dlg-body').innerHTML = (note ? `<p class="dlg-note">${esc(note)}</p>` : '') + fields.map(f => fieldHtml(f, src[f.k], f.type === 'photo' ? (item && col !== 'swap' ? item : null) : null)).join('');
     const del = $('#dlg-del');
-    del.hidden = isNew || col === 'logprice';
-    del.textContent = 'Delete'; del.dataset.armed = '';
+    del.hidden = !item || ['logprice', 'swap', 'profile'].includes(col);
     $('#dlg-save').disabled = false;
     dlg.showModal();
-    const first = $('#dlg-body input, #dlg-body select, #dlg-body textarea');
+    const first = $('#dlg-body input:not([type=file]), #dlg-body select, #dlg-body textarea');
     if (first) first.focus();
   }
-  $('#dlg-body').addEventListener('change', (e) => {
-    if (e.target.type === 'file' && e.target.files[0]) {
-      editing.pendingPhoto = e.target.files[0];
-      const prev = $('#f-photo-prev');
-      prev.src = URL.createObjectURL(editing.pendingPhoto); prev.hidden = false;
-    }
-  });
+  function setPendingPhoto(file) {
+    if (!file || !/^image\//.test(file.type) || !editing || !$('#drop')) return;
+    editing.pendingPhoto = file;
+    $('#drop-prev').innerHTML = `<img class="thumb" src="${URL.createObjectURL(file)}" alt="">`;
+  }
+  $('#dlg-body').addEventListener('change', (e) => { if (e.target.type === 'file') setPendingPhoto(e.target.files[0]); });
+  dlg.addEventListener('paste', (e) => { const f = [...(e.clipboardData?.files || [])].find(f => /^image\//.test(f.type)); if (f) { e.preventDefault(); setPendingPhoto(f); } });
+  dlg.addEventListener('dragover', (e) => { const d = $('#drop'); if (d) { e.preventDefault(); d.classList.add('over'); } });
+  dlg.addEventListener('dragleave', () => $('#drop')?.classList.remove('over'));
+  dlg.addEventListener('drop', (e) => { const d = $('#drop'); if (!d) return; e.preventDefault(); d.classList.remove('over'); setPendingPhoto(e.dataTransfer.files[0]); });
   $$('[data-close]').forEach(b => b.addEventListener('click', () => dlg.close()));
 
   $('#dlg-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const { col, item, pendingPhoto } = editing;
+    const { col, item, ctx, pendingPhoto } = editing;
     const def = FORMS[col], form = e.target, data = {};
     for (const f of def.fields) {
       if (f.type === 'photo') continue;
@@ -780,7 +951,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       if (pendingPhoto && assets) {
         save.textContent = 'Uploading photo…';
         const up = await assets.upload(pendingPhoto);
-        data.photoId = up.id;
+        data.photoId = up.id; data.photoUrl = up.url;
       }
       save.textContent = 'Saving…';
       const today = dayKey();
@@ -789,7 +960,21 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
         if (data.price != null) hist.push({ d: today, p: data.price });
         await db.collection('wishlist').doc(item.id).update({ priceHistory: hist, price: data.price, stock: data.stock, lastChecked: today });
         const p = priceInfo({ ...item, priceHistory: hist });
-        toast(p.atTarget ? 'At or under your target!' : p.drop ? `Down ${fmt(p.drop)} — logged` : 'Price logged');
+        toast(p.atTarget ? 'At or under your target!' : p.drop ? `Down ${fmt(p.drop)}. Logged.` : 'Price logged');
+      } else if (col === 'profile') {
+        await db.doc('meta/profile').set({ ...(S.meta.profile || {}), ...data, updatedAt: now() });
+        toast('Saved');
+      } else if (col === 'swap') {
+        const fc = ctx.fromCol, old = item;
+        const fresh = fc === 'routine'
+          ? { product: data.name, brand: data.brand, step: old.step, when: old.when, freq: old.freq, status: 'testing', replaces: old.id, createdAt: now() }
+          : { name: data.name, brand: data.brand, shade: data.shade, type: old.type, status: 'testing', replaces: old.id, createdAt: now() };
+        if (data.photoId) { fresh.photoId = data.photoId; fresh.photoUrl = data.photoUrl; }
+        if (ctx.find) Object.assign(fresh, { photoId: ctx.find.photoId, photoUrl: ctx.find.photoUrl, photoShared: true, ...(data.photoId ? { photoId: data.photoId, photoUrl: data.photoUrl, photoShared: false } : {}) });
+        await db.collection(fc).add(fresh);
+        await db.collection(fc).doc(old.id).update({ status: 'out', swappedFor: [data.brand, data.name].filter(Boolean).join(' '), swapReason: data.reason, swappedOn: today });
+        if (ctx.find) await db.collection('finds').doc(ctx.find.id).update({ status: 'added' });
+        toast(`Swapped. ${nameOf(old)} is in “Swapped out”.`);
       } else if (item) {
         if (col === 'wishlist' && data.price != null && data.price !== priceInfo(item).last) {
           const hist = (item.priceHistory || []).filter(h => h.d !== today);
@@ -799,26 +984,28 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
         await db.collection(col).doc(item.id).update(data);
         toast('Saved');
       } else {
-        data.createdAt = new Date().toISOString();
+        data.createdAt = now();
         if (col === 'wishlist') { data.status = 'want'; data.priceHistory = data.price != null ? [{ d: today, p: data.price }] : []; data.lastChecked = data.price != null ? today : null; }
-        if (col === 'routine') data.order = (Math.max(0, ...S.routine.map(r => Number(r.order) || 0)) + 1);
         await db.collection(col).add(data);
         toast('Added');
       }
       dlg.close();
     } catch (err) {
-      toast(err?.code === 'quota_exceeded' ? 'Your Edit is full. Delete a few old things first.' : 'Couldn’t save that. Check your connection and try again.');
+      toast(err?.code === 'quota_exceeded' ? 'Your Edit is full. Empty the bin first.' : 'Couldn’t save that. Check your connection and try again.');
     } finally { save.disabled = false; save.textContent = 'Save'; }
   });
-  $('#dlg-del').addEventListener('click', async (e) => {
-    const b = e.currentTarget;
-    if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = 'Tap again to delete'; return; }
+  $('#dlg-del').addEventListener('click', async () => {
     const { col, item } = editing;
-    try { await db.collection(col).doc(item.id).delete(); delete S.cardAi[item.id]; toast('Deleted'); dlg.close(); }
-    catch { toast('Couldn’t delete that. Try again.'); }
+    try { await softDelete(col, item.id); dlg.close(); } catch { toast('Couldn’t delete that. Try again.'); }
   });
 
   // ---------- Claude ----------
+  const STYLE = 'Write in Australian English. Plain text only: no markdown, no asterisks, no headings. Use "–" for list items. Be specific and candid, like a knowledgeable friend. Prefer products sold in Australia (Mecca, Sephora AU, Adore Beauty, Priceline, Chemist Warehouse, Myer, David Jones). If you are guessing a shade match, say so.';
+  const profileText = () => { const p = S.meta.profile; if (!p) return ''; const t = Object.entries(p).filter(([k, v]) => v && k !== 'updatedAt').map(([k, v]) => `${k}: ${v}`).join('; '); return t ? `\n\nAbout me: ${t}` : ''; };
+  const slimMakeup = (b) => ({ product: b.name, brand: b.brand, type: b.type, shade: b.shade, finish: b.finish, status: STACK[statusOf(b)], rating: b.rating, feedback: b.feedback, swapReason: b.swapReason });
+  const slimSkin = (r) => ({ product: r.product, brand: r.brand, step: r.step, when: WHEN[r.when], freq: FREQ[r.freq], actives: r.actives, status: STACK[statusOf(r)], rating: r.rating, feedback: r.feedback, swapReason: r.swapReason });
+  const slimPiece = (p) => ({ id: p.id, name: p.name, category: p.category, colour: p.colour, vibes: p.vibes, season: p.season, notes: p.notes });
+
   async function cardAsk(id, prompt) {
     if (!sample) return;
     S.cardAi[id] = { text: 'Thinking…' }; render();
@@ -828,15 +1015,10 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     } catch (e) { S.cardAi[id] = e.text ? { text: e.text } : { text: aiErr(e), err: true }; }
     render();
   }
-  const slimBeauty = (b) => ({ product: b.name, brand: b.brand, type: b.type, shade: b.shade, finish: b.finish, status: BEAUTY_STATUS[b.status], rating: b.rating, repurchase: b.repurchase, feedback: b.feedback });
-  const slimPiece = (p) => ({ id: p.id, name: p.name, category: p.category, colour: p.colour, vibes: p.vibes, season: p.season, notes: p.notes });
-  const STYLE = 'Write in Australian English. Plain text only: no markdown, no asterisks, no headings. Use "–" for list items. Be specific and candid, like a knowledgeable friend. Prefer products sold in Australia (Mecca, Sephora AU, Adore Beauty, Priceline, Myer, David Jones). If you are guessing a shade match, say so.';
-
-  async function streamInto(outEl, btn, prompt, opts = {}) {
+  async function streamInto(outEl, btn, prompt) {
     btn.disabled = true; outEl.hidden = false; outEl.className = 'ai-out'; outEl.innerHTML = '<span class="by">Claude</span>Thinking…';
-    try {
-      await sample(prompt, { ...opts, onText: ({ text }) => { outEl.innerHTML = `<span class="by">Claude</span>${esc(text)}`; } });
-    } catch (e) {
+    try { await sample(prompt, { onText: ({ text }) => { outEl.innerHTML = `<span class="by">Claude</span>${esc(text)}`; } }); }
+    catch (e) {
       if (e.text) outEl.innerHTML = `<span class="by">Claude</span>${esc(e.text)}`;
       else { outEl.className = 'ai-out err'; outEl.textContent = aiErr(e); }
     } finally { btn.disabled = false; }
@@ -845,105 +1027,177 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
   $('#beauty-ask-go').addEventListener('click', (e) => {
     const ask = $('#beauty-ask').value.trim() || 'Recommend 3 products I should try next, based on what I love and what didn’t work for me.';
     streamInto($('#beauty-ask-out'), e.currentTarget,
-      `You are a beauty advisor. ${STYLE}\n\nMy beauty products, shades and feedback (JSON):\n${JSON.stringify(S.beauty.map(slimBeauty))}\n\nMy skincare routine: ${JSON.stringify(S.routine.map(r => ({ product: r.product, brand: r.brand, step: r.step, actives: r.actives, feedback: r.feedback })))}\n\nWhat I’m after: ${ask}\n\nGive at most 3 suggestions. For each: product and brand, the shade to try (relative to shades I already wear), and why, tied to my feedback. Keep it under 220 words.`);
+      `You are a beauty advisor. ${STYLE}${profileText()}\n\nMy makeup, shades and feedback (JSON):\n${JSON.stringify(live('beauty').map(slimMakeup))}\n\nWhat I’m after: ${ask}\n\nGive at most 3 suggestions. For each: product and brand, the shade to try (relative to shades I already wear), why (tied to my feedback), and what reviewers commonly complain about. Under 230 words.`);
   });
-
   $('#skin-check').addEventListener('click', (e) => {
-    if (!S.routine.length) { toast('Add a few steps first.'); return; }
-    const fmtSteps = (slot) => stepsFor(slot).map((s, i) => `${i + 1}. ${s.product}${s.brand ? ' (' + s.brand + ')' : ''} – ${s.step || ''}${s.actives ? ', actives: ' + s.actives : ''}, ${FREQ[s.freq] || 'daily'}${s.feedback ? '. Notes: ' + s.feedback : ''}`).join('\n');
+    const items = live('routine').filter(x => !['out', 'shelf'].includes(statusOf(x)));
+    if (!items.length) { toast('Add a few products first.'); return; }
     streamInto($('#skin-ai'), e.currentTarget,
-      `Review this skincare routine. ${STYLE}\n\nMorning:\n${fmtSteps('am') || '(none)'}\n\nNight:\n${fmtSteps('pm') || '(none)'}\n\nCheck: step order, ingredient clashes (e.g. retinoids with acids or benzoyl peroxide on the same night), gaps (especially daily SPF in Australia), and frequency. At most 7 short points, most important first. End with one line noting this isn’t medical advice and to see a GP or dermatologist for ongoing skin concerns.`);
+      `Review my skincare stack. ${STYLE}${profileText()}\n\nCurrent stack (JSON):\n${JSON.stringify(items.map(slimSkin))}\n\nThings I swapped out and why: ${JSON.stringify(live('routine').filter(x => statusOf(x) === 'out').map(slimSkin))}\n\nCheck: ingredient clashes, overlap or redundancy (products doing the same job), gaps (especially daily SPF in Australia), and which one product is the weakest link and what to swap it for. At most 7 short points, most important first. End with one line noting this isn’t medical advice and to see a GP or dermatologist for ongoing skin concerns.`);
   });
 
-  $('#vibe-go').addEventListener('click', async (e) => {
+  async function styleMe(mode) {
     const vibe = $('#vibe-ask').value.trim();
-    if (!vibe) { $('#vibe-ask').focus(); toast('Describe the vibe or occasion first.'); return; }
-    if (S.wardrobe.length < 2) { toast('Add a few wardrobe pieces first.'); return; }
-    const btn = e.currentTarget, out = $('#vibe-out');
+    const pieces = live('wardrobe');
+    if (pieces.length < 2) { toast('Add a few wardrobe pieces first.'); return; }
+    const btn = $('#vibe-go'), out = $('#vibe-out');
     btn.disabled = true; btn.textContent = 'Styling…'; out.hidden = false;
-    out.innerHTML = '<div class="ai-out"><span class="by">Claude</span>Pulling outfits from your wardrobe…</div>';
+    out.innerHTML = '<div class="ai-out" style="grid-column:1/-1"><span class="by">Claude</span>Mixing outfits from your wardrobe…</div>';
+    const savedCombos = live('outfits').map(o => o.itemIds);
+    const ask = vibe
+      ? `Vibe / occasion: ${vibe}`
+      : `No occasion given: mix it up. Favour pieces I rarely put together, unexpected but wearable combinations, and avoid repeating these saved outfits: ${JSON.stringify(savedCombos)}.`;
     try {
-      const res = await sample.json(`You are a personal stylist working only from my wardrobe. Write in Australian English.\n\nMy wardrobe (JSON):\n${JSON.stringify(S.wardrobe.map(slimPiece))}\n\nVibe / occasion: ${vibe}\n\nBuild up to 3 distinct outfits using ONLY ids from my wardrobe. Reply with only a JSON array like:\n[{"title":"Short evocative name","itemIds":["id1","id2"],"note":"One sentence styling tip","missing":"One piece I don't own that would finish it, or empty string"}]`, { cache: false });
-      const ids = new Set(S.wardrobe.map(w => w.id));
+      const res = await sample.json(`You are a personal stylist working only from my wardrobe. Write in Australian English.${profileText()}\n\nMy wardrobe (JSON):\n${JSON.stringify(pieces.map(slimPiece))}\n\n${ask}\n\nBuild up to 3 distinct outfits using ONLY ids from my wardrobe. Reply with only a JSON array like:\n[{"title":"Short evocative name","itemIds":["id1","id2"],"note":"One sentence styling tip","missing":"One piece I don't own that would finish it, or empty string"}]`, { cache: false });
+      const ids = new Set(pieces.map(w => w.id));
       S.suggestions = (Array.isArray(res) ? res : []).slice(0, 3).map(o => ({
-        title: String(o.title || 'Outfit'), note: String(o.note || ''), missing: String(o.missing || ''), vibe,
+        title: String(o.title || 'Outfit'), note: String(o.note || ''), missing: String(o.missing || ''), vibe: vibe || 'Mixed up',
         itemIds: (Array.isArray(o.itemIds) ? o.itemIds : []).map(String).filter(id => ids.has(id)),
       })).filter(o => o.itemIds.length);
-      if (!S.suggestions.length) out.innerHTML = '<div class="ai-out err">Claude couldn’t build outfits from those pieces. Try a different vibe or add more pieces.</div>';
+      if (!S.suggestions.length) out.innerHTML = '<div class="ai-out err" style="grid-column:1/-1">Claude couldn’t build outfits from those pieces. Try a different vibe or add more pieces.</div>';
       else renderWardrobe();
-    } catch (err) {
-      out.innerHTML = `<div class="ai-out err">${esc(aiErr(err))}</div>`;
-    } finally { btn.disabled = false; btn.textContent = 'Style me'; }
+    } catch (err) { out.innerHTML = `<div class="ai-out err" style="grid-column:1/-1">${esc(aiErr(err))}</div>`; }
+    finally { btn.disabled = false; btn.textContent = 'Style me'; }
+  }
+  $('#vibe-go').addEventListener('click', () => styleMe());
+  $('#gaps-go').addEventListener('click', async (e) => {
+    const btn = e.currentTarget, out = $('#gaps-out');
+    btn.disabled = true; out.hidden = false; out.innerHTML = '<div class="ai-out"><span class="by">Claude</span>Checking your wardrobe against the basics…</div>';
+    try {
+      const res = await sample.json(`You are a personal stylist. Write in Australian English.${profileText()}\n\nMy wardrobe (JSON):\n${JSON.stringify(live('wardrobe').map(slimPiece))}\n\nThings already on my want list: ${JSON.stringify(activeWants().map(w => w.name))}\n\nCompare my wardrobe with a hard-working capsule for my style and an Australian climate. List up to 6 missing basics, most useful first, skipping anything already on my want list. A basic is missing if nothing I own does that job. Reply with only a JSON array like:\n[{"item":"Specific piece, e.g. Black straight-leg trousers","why":"One sentence: what it unlocks with pieces I own","priority":"high|medium|low"}]`, { cache: false });
+      S.gaps = (Array.isArray(res) ? res : []).slice(0, 6).map(g => ({ item: String(g.item || ''), why: String(g.why || ''), priority: ['high', 'medium', 'low'].includes(g.priority) ? g.priority : 'medium' })).filter(g => g.item);
+      if (!S.gaps.length) out.innerHTML = '<div class="ai-out">Nothing obvious is missing. Nice work.</div>'; else renderWardrobe();
+    } catch (err) { out.innerHTML = `<div class="ai-out err">${esc(aiErr(err))}</div>`; }
+    finally { btn.disabled = false; }
   });
+
+  async function refreshNow(btn) {
+    const tid = S.meta.refresh?.triggerId;
+    if (!mcp || !tid) return;
+    btn.disabled = true; btn.textContent = 'Starting…';
+    try {
+      await mcp.callTool('Claude Code Remote', 'fire_trigger', { trigger_id: tid, text: 'Manual refresh requested from The Edit page.' }, { cache: false });
+      await db.doc('meta/refresh').update({ requestedAt: now() }).catch(() => {});
+      toast('Refresh started. Results land here in about 10–20 minutes.');
+    } catch (e) {
+      toast(e?.code === 'not_granted' || e?.code === 'consent_required' ? 'Allow the Claude Code connection to refresh from here.' : 'Couldn’t start the refresh. The daily one still runs each morning.');
+      btn.disabled = false; btn.textContent = 'Refresh now';
+    }
+  }
 
   // ---------- actions ----------
   async function act(fn, fail = 'Couldn’t save that. Try again.') { try { await fn(); } catch { toast(fail); } }
+  function setTab(tab) { S.tab = tab; store.set('edit.tab', tab); history.replaceState(null, '', '#' + tab); render(); window.scrollTo({ top: 0 }); }
+  document.addEventListener('toggle', (e) => { const d = e.target; if (d.matches?.('details.shelf')) store.set('edit.open.' + d.dataset.key.replace('-', ''), d.open ? '1' : ''); }, true);
   document.addEventListener('click', (e) => {
-    const t = e.target.closest('[data-tab],[data-go],[data-add],[data-act]');
+    const t = e.target.closest('[data-tab],[data-add],[data-act]');
     if (!t || t.tagName === 'INPUT') return;
-    if (t.dataset.tab || t.dataset.go) { S.tab = t.dataset.tab || t.dataset.go; store.set('edit.tab', S.tab); history.replaceState(null, '', '#' + S.tab); render(); window.scrollTo({ top: 0 }); return; }
-    if (t.dataset.add) { openForm(t.dataset.add, null, t.dataset.when ? { when: t.dataset.when } : {}); return; }
-    const a = t.dataset.act, id = t.dataset.id;
+    if (t.dataset.tab) { setTab(t.dataset.tab); return; }
+    if (t.dataset.add) { openForm(t.dataset.add, null, {}); return; }
+    const a = t.dataset.act, id = t.dataset.id, col = t.dataset.col;
     if (!a) return;
-    const find = (col) => S[col].find(x => x.id === id);
+    const find = (c) => S[c].find(x => x.id === id);
     switch (a) {
       case 'want-cat': S.wantCat = t.dataset.v; renderWants(); break;
-      case 'beauty-status': S.beautyStatus = t.dataset.v; renderBeauty(); break;
+      case 'find-kind': S.findKind = t.dataset.v; renderFinds(); break;
       case 'ward-cat': S.wardCat = t.dataset.v; renderWardrobe(); break;
-      case 'edit': { const it = find(t.dataset.col); if (it) openForm(t.dataset.col, it); break; }
+      case 'profile': openForm('profile', null); break;
+      case 'refresh-now': refreshNow(t); break;
+      case 'edit': { const it = find(col); if (it) openForm(col, it); break; }
       case 'logprice': { const it = find('wishlist'); if (it) openForm('logprice', it); break; }
+      case 'swap': { const it = find(col); if (it) openForm('swap', it, {}, { fromCol: col }); break; }
+      case 'restack': act(() => db.collection(col).doc(id).update({ status: 'current' })); break;
       case 'bought': { const it = find('wishlist'); if (it) act(() => db.collection('wishlist').doc(id).update({ status: it.status === 'bought' ? 'want' : 'bought', boughtOn: it.status === 'bought' ? null : dayKey() })); break; }
-      case 'move': {
-        const steps = stepsFor(t.dataset.slot), i = steps.findIndex(s => s.id === id), j = i + Number(t.dataset.dir);
-        if (i < 0 || j < 0 || j >= steps.length) break;
-        const swapped = steps.slice(); [swapped[i], swapped[j]] = [swapped[j], swapped[i]];
-        act(async () => { for (let k = 0; k < swapped.length; k++) if (Number(swapped[k].order) !== k + 1) await db.collection('routine').doc(swapped[k].id).update({ order: k + 1 }); });
+      case 'del': act(() => softDelete(col, id), 'Couldn’t delete that. Try again.'); break;
+      case 'restore': restore(col, id); break;
+      case 'purge': {
+        if (!t.dataset.armed) { t.dataset.armed = '1'; t.textContent = 'Tap again'; break; }
+        const it = find(col); if (it) act(() => purge(col, it)); break;
+      }
+      case 'empty-bin': {
+        if (!t.dataset.armed) { t.dataset.armed = '1'; t.textContent = 'Tap again to empty'; break; }
+        t.disabled = true;
+        act(async () => { for (const { col: c, x } of binItems()) await purge(c, x); toast('Bin emptied'); });
+        break;
+      }
+      case 'clear-examples': {
+        t.disabled = true;
+        const exs = COLS.flatMap(c => live(c).filter(x => x.example).map(x => [c, x.id]));
+        act(async () => { const at = now(); for (const [c, i] of exs) await db.collection(c).doc(i).update({ deleted: true, deletedAt: at }); toast('Examples moved to the bin', async () => { for (const [c, i] of exs) await db.collection(c).doc(i).update({ deleted: false, deletedAt: null }); }); });
+        break;
+      }
+      case 'find-want': {
+        const f = find('finds'); if (!f) break;
+        act(async () => {
+          const today = dayKey();
+          await db.collection('wishlist').add({
+            name: f.name, brand: f.brand || '', category: { skincare: 'Skincare', makeup: 'Beauty', clothes: 'Clothes', office: 'Office' }[f.kind] || 'Other',
+            url: f.url || '', price: f.price ?? null, priceHistory: f.price != null ? [{ d: today, p: f.price }] : [], lastChecked: f.price != null ? today : null,
+            offers: f.price != null && f.shop ? [{ shop: f.shop, price: f.price, url: f.url || '', stock: 'unknown', checked: today }] : [],
+            reviews: f.review || { verdict: f.verdict, summary: f.summary, pros: f.pros, cons: f.cons, sources: f.sources },
+            photoId: f.photoId || null, photoUrl: f.photoUrl || null, photoShared: true,
+            priority: 'want', status: 'want', stock: 'unknown', notes: f.fitNote || '', createdAt: now(), fromFind: f.id,
+          });
+          await db.collection('finds').doc(f.id).update({ status: 'added' });
+          toast('Added to your wants');
+        });
+        break;
+      }
+      case 'find-stack': {
+        const f = find('finds'); if (!f) break;
+        const fc = f.kind === 'skincare' ? 'routine' : 'beauty';
+        const target = f.swapFor && live(fc).find(x => x.id === f.swapFor);
+        if (target) { openForm('swap', target, { name: f.name, brand: f.brand }, { fromCol: fc, find: f }); break; }
+        act(async () => {
+          const base = fc === 'routine'
+            ? { product: f.name, step: SKIN_STEPS.includes(f.category) ? f.category : 'Other', when: 'both', freq: 'daily' }
+            : { name: f.name, type: MAKEUP_TYPES.includes(f.category) ? f.category : 'Other' };
+          await db.collection(fc).add({ ...base, brand: f.brand || '', status: 'testing', photoId: f.photoId || null, photoUrl: f.photoUrl || null, photoShared: true, createdAt: now(), fromFind: f.id });
+          await db.collection('finds').doc(f.id).update({ status: 'added' });
+          toast(`Added to your ${fc === 'routine' ? 'skin' : 'makeup'} stack as Testing`);
+        });
         break;
       }
       case 'ai-alt': {
-        const b = find('beauty'); if (!b) break;
-        cardAsk(id, `You are a beauty advisor. ${STYLE}\n\nProduct: ${JSON.stringify(slimBeauty(b))}\n\nMy other products for context: ${JSON.stringify(S.beauty.filter(x => x.id !== id).map(slimBeauty).slice(0, 40))}\n\n${b.status === 'nope' ? 'This didn’t work for me. Suggest 2–3 alternatives that fix what I didn’t like, with the shade to try.' : 'Suggest 2–3 similar products or cheaper dupes, with the closest shade, and one line on how each differs.'} Under 140 words.`);
+        const x = find(col); if (!x) break;
+        const isSkin = col === 'routine', st = statusOf(x);
+        const others = live(col).filter(o => o.id !== id).map(isSkin ? slimSkin : slimMakeup).slice(0, 40);
+        const ask = st === 'testing'
+          ? 'I’m testing this. Based on genuine reviews (Reddit, independent reviewers) and my notes, is it worth keeping? Name what it’s known for, common complaints, and one alternative if it isn’t working.'
+          : 'Suggest 2–3 alternatives or cheaper dupes worth swapping in, each with one line on how it differs and what real reviewers say' + (isSkin ? '.' : ', and the closest shade.');
+        cardAsk(id, `You are a ${isSkin ? 'skincare' : 'makeup'} advisor. ${STYLE}${profileText()}\n\nProduct: ${JSON.stringify(isSkin ? slimSkin(x) : slimMakeup(x))}\n\nThe rest of my ${isSkin ? 'skincare' : 'makeup'}: ${JSON.stringify(others)}\n\n${ask} Under 150 words.`);
         break;
       }
       case 'ai-pairs': {
         const w = find('wishlist'); if (!w) break;
-        cardAsk(id, `You are a personal stylist. ${STYLE}\n\nI’m thinking of buying: ${JSON.stringify({ name: w.name, brand: w.brand, variant: w.variant, notes: w.notes, price: priceInfo(w).last })}\n\nMy wardrobe: ${JSON.stringify(S.wardrobe.map(slimPiece))}\n\nUnder 110 words: does it fill a gap or duplicate something I own, and name 2–3 outfits it makes with my pieces by name.`);
+        cardAsk(id, `You are a personal stylist. ${STYLE}${profileText()}\n\nI’m thinking of buying: ${JSON.stringify({ name: w.name, brand: w.brand, variant: w.variant, notes: w.notes, price: priceInfo(w).last })}\n\nMy wardrobe: ${JSON.stringify(live('wardrobe').map(slimPiece))}\n\nUnder 110 words: does it fill a gap or duplicate something I own, and name 2–3 outfits it makes with my pieces by name.`);
         break;
       }
-      case 'save-outfit': { const o = S.suggestions[Number(t.dataset.i)]; if (!o) break; act(async () => { await db.collection('outfits').add({ ...o, createdAt: new Date().toISOString() }); S.suggestions.splice(Number(t.dataset.i), 1); toast('Outfit saved'); render(); }); break; }
-      case 'del-outfit': act(() => db.collection('outfits').doc(id).delete()); break;
-      case 'clear-examples': {
-        if (!t.dataset.armed) { t.dataset.armed = '1'; t.textContent = 'Tap again to clear'; break; }
-        t.disabled = true;
-        act(async () => { for (const c of COLS) for (const x of S[c].filter(x => x.example)) await db.collection(c).doc(x.id).delete(); for (const [k, v] of Object.entries(S.log)) if (v.example) await db.collection('routineLog').doc(k).delete(); toast('Examples cleared'); });
+      case 'save-outfit': { const i = Number(t.dataset.i), o = S.suggestions[i]; if (!o) break; act(async () => { await db.collection('outfits').add({ ...o, createdAt: now() }); S.suggestions.splice(i, 1); toast('Outfit saved'); render(); }); break; }
+      case 'gap-want': {
+        const g = S.gaps[Number(t.dataset.i)]; if (!g) break;
+        act(async () => { await db.collection('wishlist').add({ name: g.item, category: 'Clothes', priority: g.priority === 'high' ? 'must' : 'want', notes: g.why, status: 'want', stock: 'unknown', priceHistory: [], createdAt: now() }); g.added = true; renderWardrobe(); toast('Added to your wants. The refresh will price it.'); });
         break;
       }
     }
   });
   document.addEventListener('change', (e) => {
     const t = e.target;
-    if (t.dataset.act === 'tick') {
-      const key = dayKey(), cur = S.log[key] || {}, slot = t.dataset.slot;
-      const set = new Set(cur[slot] || []); t.checked ? set.add(t.dataset.id) : set.delete(t.dataset.id);
-      const next = { am: cur.am || [], pm: cur.pm || [], date: key, [slot]: [...set] };
-      S.log[key] = next; renderToday();
-      act(() => db.collection('routineLog').doc(key).set(next));
-    }
     if (t.id === 'wants-sort') { S.wantSort = t.value; renderWants(); }
     if (t.id === 'wants-bought') { S.showBought = t.checked; renderWants(); }
   });
 
   // ---------- boot ----------
   const startTab = (location.hash || '').slice(1) || store.get('edit.tab');
-  if (['today', 'wants', 'beauty', 'skin', 'wardrobe'].includes(startTab)) S.tab = startTab;
+  if (['today', 'wants', 'finds', 'skin', 'makeup', 'wardrobe', 'bin'].includes(startTab)) S.tab = startTab;
   render();
 
   (async () => {
     const C = window.claude;
     if (!C || !C.use) { S.status = 'off'; render(); return; }
     const use = (n) => C.use(n).catch(() => null);
-    const [d, a, s, u] = await Promise.all([use('db'), use('assets'), use('sample'), use('user')]);
-    db = d; assets = a; sample = s;
+    const [d, a, s, u, m] = await Promise.all([use('db'), use('assets'), use('sample'), use('user'), use('mcp')]);
+    db = d; assets = a; sample = s; mcp = m;
     if (!db) { S.status = 'off'; render(); return; }
     if (u) { try { canWrite = (await u.isOwner()) || (await u.canEdit()); } catch {} }
     const onErr = () => { S.status = 'off'; render(); };
@@ -953,9 +1207,9 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
         S.status = 'live'; render();
       }, onErr);
     }
-    db.collection('routineLog').onSnapshot(snap => {
-      S.log = Object.fromEntries(snap.docs.map(x => [x.id, x.data()]));
-      renderToday();
+    db.collection('meta').onSnapshot(snap => {
+      S.meta = Object.fromEntries(snap.docs.map(x => [x.id, x.data()]));
+      render();
     }, onErr);
   })();
 })();
