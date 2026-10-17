@@ -797,7 +797,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
           ${sample && w.category === 'Clothes' && live('wardrobe').length ? `<button class="btn small ghost" data-act="ai-pairs" data-id="${esc(w.id)}">Goes with?</button>` : ''}
           ${sample && (w.variants || []).length ? `<button class="btn small ghost" data-act="ai-compare" data-col="wishlist" data-id="${esc(w.id)}">Compare with what I own</button>` : ''}
           ${canResearch() && w.research !== 'queued' ? `<button class="btn small ghost" data-act="research" data-col="wishlist" data-id="${esc(w.id)}">${w.research === 'done' ? 'Research again' : 'Research it'}</button>` : ''}
-          ${canWrite ? `<button class="btn small ghost push" data-act="bought" data-id="${esc(w.id)}">${w.status === 'bought' ? 'Undo bought' : 'Bought it'}</button>` : ''}
+          ${canWrite ? `<button class="btn small ghost push" data-act="bought" data-id="${esc(w.id)}">${w.status === 'bought' ? 'Undo' : 'I have it'}</button>` : ''}
           ${canWrite ? `<button class="btn small ghost" data-act="edit" data-col="wishlist" data-id="${esc(w.id)}">Edit</button>` : ''}
           ${delBtn('wishlist', w.id)}
         </div>
@@ -826,6 +826,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
         ${reviewBlock(f.review || f)}
         <div class="actions">
           ${safeUrl(f.url) ? `<a class="btn small" href="${esc(f.url)}" target="_blank" rel="noopener">Shop ↗</a>` : ''}
+          ${canWrite ? `<button class="btn small" data-act="find-own" data-id="${esc(f.id)}">I have it</button>` : ''}
           ${canWrite ? `<button class="btn small ghost" data-act="find-want" data-id="${esc(f.id)}">Add to wants</button>` : ''}
           ${canWrite && (f.kind === 'skincare' || f.kind === 'makeup') ? `<button class="btn small ghost" data-act="find-stack" data-id="${esc(f.id)}">${swapTarget ? 'Swap it in' : 'Add to my stack'}</button>` : ''}
           ${delBtn('finds', f.id, 'Not for me')}
@@ -1312,6 +1313,32 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     finally { btn.disabled = false; }
   });
 
+  // "I have it": copy a want or find into the matching stack (or wardrobe)
+  async function ownIt(src, srcCol) {
+    const kind = srcCol === 'finds' ? src.kind : ({ Beauty: 'makeup', Skincare: 'skincare', Clothes: 'clothes' }[src.category] || 'other');
+    const photo = { photoId: src.photoId || null, photoShared: true };
+    const base = { brand: src.brand || '', ...photo, reviews: src.reviews || src.review || null, variants: src.variants || [], createdAt: now(), [srcCol === 'finds' ? 'fromFind' : 'fromWant']: src.id };
+    let col = null, doc = null;
+    if (kind === 'skincare') {
+      col = 'routine';
+      const step = SKIN_STEPS.includes(src.category) ? src.category : (src.step || 'Other');
+      doc = { ...base, product: src.name, step, when: step === 'SPF' ? 'am' : 'both', freq: 'daily', status: 'current' };
+      const placeholder = live('routine').find(r => r.step === step && /\?/.test(r.product || ''));
+      if (placeholder) { await db.collection('routine').doc(placeholder.id).update({ ...doc, createdAt: placeholder.createdAt || now() }); col = 'routine-placeholder'; }
+    } else if (kind === 'makeup') {
+      col = 'beauty';
+      doc = { ...base, name: src.name, type: MAKEUP_TYPES.includes(src.category) ? src.category : (src.type || 'Other'), shade: src.shade || src.variant || '', shadeHex: src.shadeHex || '', status: 'current' };
+    } else if (kind === 'clothes') {
+      col = 'wardrobe';
+      doc = { name: src.name, brand: src.brand || '', ...photo, category: 'Top', colour: src.variant || '', vibes: [], season: 'all', createdAt: now(), fromWant: src.id };
+    }
+    if (doc && col && col !== 'routine-placeholder') await db.collection(col).add(doc);
+    if (srcCol === 'finds') await db.collection('finds').doc(src.id).update({ status: 'added' });
+    else await db.collection('wishlist').doc(src.id).update({ status: 'bought', boughtOn: dayKey() });
+    const where = { routine: 'skin stack', 'routine-placeholder': 'skin stack', beauty: 'makeup bag', wardrobe: 'wardrobe' }[col];
+    toast(where ? `Added to your ${where}${col === 'wardrobe' ? '. Edit it to set the category.' : ''}` : 'Marked as yours');
+  }
+
   // ---------- actions ----------
   async function act(fn, fail = 'Couldn’t save that. Try again.') { try { await fn(); } catch { toast(fail); } }
   function setTab(tab) { S.tab = tab; store.set('edit.tab', tab); history.replaceState(null, '', '#' + tab); render(); window.scrollTo({ top: 0 }); }
@@ -1334,7 +1361,13 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       case 'logprice': { const it = find('wishlist'); if (it) openForm('logprice', it); break; }
       case 'swap': { const it = find(col); if (it) openForm('swap', it, {}, { fromCol: col }); break; }
       case 'restack': act(() => db.collection(col).doc(id).update({ status: 'current' })); break;
-      case 'bought': { const it = find('wishlist'); if (it) act(() => db.collection('wishlist').doc(id).update({ status: it.status === 'bought' ? 'want' : 'bought', boughtOn: it.status === 'bought' ? null : dayKey() })); break; }
+      case 'bought': {
+        const it = find('wishlist'); if (!it) break;
+        if (it.status === 'bought') act(() => db.collection('wishlist').doc(id).update({ status: 'want', boughtOn: null }));
+        else { t.disabled = true; act(() => ownIt(it, 'wishlist')); }
+        break;
+      }
+      case 'find-own': { const f = find('finds'); if (f) { t.disabled = true; act(() => ownIt(f, 'finds')); } break; }
       case 'del': act(() => softDelete(col, id), 'Couldn’t delete that. Try again.'); break;
       case 'restore': restore(col, id); break;
       case 'purge': {
