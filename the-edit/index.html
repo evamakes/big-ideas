@@ -119,6 +119,11 @@ select.plain { border: 1px solid var(--line); background: var(--surface); border
 .pill.accent { background: var(--accent-soft); color: var(--accent); }
 .pill.ex { background: transparent; border: 1px dashed var(--line); }
 .pill.pay { background: transparent; border: 1px solid var(--tan); color: var(--tan); font-weight: 500; padding: 0 7px; margin-left: 4px; }
+.more-menu { position: relative; }
+.more-menu > summary { list-style: none; cursor: pointer; }
+.more-menu > summary::-webkit-details-marker { display: none; }
+.more-menu .menu { position: absolute; right: 0; top: calc(100% + 4px); z-index: 30; display: grid; gap: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 8px; box-shadow: 0 10px 24px rgba(0,0,0,.12); white-space: nowrap; }
+@media (max-width: 520px) { .more-menu .menu { right: auto; left: 0; } }
 .restock-tools { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; max-width: 330px; }
 @media (max-width: 520px) { .restock-tools { grid-column: 1 / -1; justify-content: flex-start; max-width: none; } }
 .sizes { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px 18px; margin: 0; }
@@ -156,6 +161,8 @@ select.plain { border: 1px solid var(--line); background: var(--surface); border
 .bundles summary::after { content: '▾'; color: var(--muted); margin-left: auto; transition: transform .2s; }
 .bundles[open] summary::after { transform: rotate(180deg); }
 @media (max-width: 600px) {
+  [data-panel="today"] > #stats { order: 5; }
+  [data-panel="today"]:not([hidden]) { display: flex; flex-direction: column; }
   .alerts li { grid-template-columns: 40px minmax(0, 1fr); }
   .alerts li > .tools { grid-column: 2; justify-content: flex-start; flex-wrap: wrap; }
 }
@@ -312,6 +319,10 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
 
 /* Style me */
 .style-grid { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 20px; align-items: start; }
+.me-tags { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.me-tag { display: grid; gap: 2px; background: var(--sunk); border-radius: 10px; padding: 10px 12px; }
+.me-tag b { font-family: var(--f-display); font-size: 1.15rem; font-weight: 500; }
+.me-tag .meta { font-size: 0.78rem; line-height: 1.35; }
 .me-photos { display: flex; gap: 8px; flex-wrap: wrap; }
 .me-photos img { width: 76px; height: 100px; object-fit: cover; border-radius: 8px; }
 .palette { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -616,19 +627,19 @@ details.dna[open] > summary { margin-bottom: 10px; }
       <p class="meta" style="margin:0">What your Pinterest looks keep coming back to that your wardrobe doesn't have yet.</p>
       <ul class="gaps" id="igaps-list"></ul>
     </section>
-    <section class="block" id="sizes-block">
-      <div class="block-h"><h2>My sizes</h2><span class="tools"><button class="btn small ghost" data-act="sizes">Edit</button></span></div>
-      <div id="sizes-body"></div>
-    </section>
     <section class="block">
-      <div class="block-h"><h2>Me</h2></div>
+      <div class="block-h"><h2>Colour &amp; body</h2></div>
       <div class="me-photos" id="me-photos"></div>
       <div class="tools">
         <label class="btn small" for="me-file">Add photos of me</label><input type="file" id="me-file" accept="image/*" multiple hidden>
-        <button class="btn small primary needs-img" id="me-read">Read my colouring and shape</button>
+        <button class="btn small primary needs-ai" id="me-read">Read my colouring and shape</button>
       </div>
-      <p class="meta" style="margin:0">A full-length photo in fitted clothes against a plain wall, plus a close-up in daylight with no makeup, gives the best read. Only you can see these.</p>
+      <p class="meta" style="margin:0">A full-length photo in fitted clothes against a plain wall, plus a close-up in daylight with no makeup, gives the best read. Your measurements and frame answers in My sizes sharpen it. Only you can see these.</p>
       <div id="me-analysis"></div>
+    </section>
+    <section class="block" id="sizes-block">
+      <div class="block-h"><h2>My sizes</h2><span class="tools"><button class="btn small ghost" data-act="sizes">Edit</button></span></div>
+      <div id="sizes-body"></div>
     </section>
   </section>
 
@@ -820,6 +831,12 @@ details.dna[open] > summary { margin-bottom: 10px; }
       { k: 'bottomSize', label: 'Usual bottoms size', type: 'text', ph: 'e.g. AU 10' },
       { k: 'jeansSize', label: 'Usual jeans size', type: 'text', ph: 'e.g. 28' },
       { k: 'shoeSize', label: 'Usual shoe size', type: 'text', ph: 'e.g. AU 8 / EU 39' },
+      { k: 'frame', label: 'Frame', type: 'select', options: [['', 'Not sure'], ['delicate', 'Delicate, small-boned'], ['moderate', 'Moderate, in between'], ['broad', 'Broad or strong-boned']] },
+      { k: 'shoulders', label: 'Shoulders', type: 'select', options: [['', 'Not sure'], ['narrow', 'Narrow or sloped'], ['even', 'In line with hips'], ['broad', 'Broad or square']] },
+      { k: 'flesh', label: 'Where you carry softness', type: 'select', options: [['', 'Not sure'], ['soft-all', 'Soft and curvy all over'], ['bust-hips', 'Bust and hips, defined waist'], ['hips', 'Mostly hips and thighs'], ['middle', 'Mostly the middle'], ['lean', 'Lean, little curve']] },
+      { k: 'vertical', label: 'Overall look (not height)', type: 'select', options: [['', 'Not sure'], ['short', 'Compact, petite-looking'], ['moderate', 'Average'], ['long', 'Long-lined, tall-looking']] },
+      { k: 'hairColour', label: 'Natural hair colour', type: 'text', ph: 'e.g. strawberry blonde, auburn' },
+      { k: 'eyeColour', label: 'Eye colour', type: 'text', ph: 'e.g. green-hazel' },
       { k: 'fitNotes', label: 'Fit notes', type: 'textarea', full: true, ph: 'e.g. long torso, size up in Shein, Abrand 29 fits perfectly, like a relaxed fit in tops' },
     ]},
     profile: { title: 'About me', fields: [
@@ -1054,7 +1071,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     $('#refresh').innerHTML = `<div style="display:grid;gap:4px;min-width:0">
         <p class="eyebrow">Daily refresh · prices, stock, reviews & new finds</p>
         <p class="when">${r.lastRun ? `Last checked ${esc(ago(r.lastRun))}` : 'Hasn’t run yet'}${r.requestedAt && (!r.lastRun || r.requestedAt > r.lastRun) ? ' · a refresh is running' : ''}</p>
-        ${r.summary ? `<p class="meta clamp${S.refreshOpen ? ' open' : ''}">${esc(r.summary)}</p>${r.summary.length > 160 ? `<button class="link" data-act="refresh-more" style="justify-self:start;font-size:0.82rem">${S.refreshOpen ? 'Less' : 'More'}</button>` : ''}` : `<p class="meta">Each morning Claude checks your wants across shops, reads Reddit and independent reviews, and adds new finds here.</p>`}
+        ${r.summary ? `<p class="meta ${S.refreshOpen ? '' : 'clamp1'}">${esc(r.summary)}</p>${r.summary.length > 60 ? `<button class="link" data-act="refresh-more" style="justify-self:start;font-size:0.82rem">${S.refreshOpen ? 'Less' : 'More'}</button>` : ''}` : `<p class="meta">Each morning Claude checks your wants across shops, reads Reddit and independent reviews, and adds new finds here.</p>`}
       </div>
       ${canRefresh ? `<button class="btn" data-act="refresh-now">Refresh now</button>` : ''}`;
 
@@ -1403,8 +1420,14 @@ details.dna[open] > summary { margin-bottom: 10px; }
     const mp = (me.photoIds || []).filter(id => /^[0-9a-f]{32}$/.test(id));
     $('#me-photos').innerHTML = mp.length ? mp.map(id => `<img src="/_blob/${id}" alt="Photo of you">`).join('') : '<span class="meta">No photos yet.</span>';
     const a = me.analysis;
-    $('#me-analysis').innerHTML = S.meBusy ? `<div class="ai-out"><span class="by">Claude</span>${esc(S.meBusy)}</div>` : a ? `<div style="display:grid;gap:10px">
+    const tag = (l, v, why) => v ? `<div class="me-tag"><span class="eyebrow">${l}</span><b>${esc(v)}</b>${why ? `<span class="meta">${esc(why)}</span>` : ''}</div>` : '';
+    const list = (h, arr) => (arr || []).length ? `<div><p class="eyebrow" style="margin-bottom:6px">${h}</p><ul class="recreate">${arr.map(t => `<li style="grid-template-columns:1fr"><span>${typeof t === 'string' ? esc(t) : `<b>${esc(t.item || '')}</b>${t.why ? ` <span class="meta">${esc(t.why)}</span>` : ''}`}</span></li>`).join('')}</ul></div>` : '';
+    $('#me-analysis').innerHTML = S.meBusy ? `<div class="ai-out"><span class="by">Claude</span>${esc(S.meBusy)}</div>` : a ? `<div style="display:grid;gap:14px">
+        ${a.season || a.kibbe || a.bodyShape ? `<div class="me-tags">${tag('Colour season', a.season, a.seasonWhy)}${tag('Kibbe', a.kibbe, a.kibbeWhy)}${tag('Body shape', a.bodyShape, a.bodyShapeWhy)}${tag('Metals', a.metals, '')}</div>` : ''}
         <p style="margin:0">${esc(a.summary || '')}</p>
+        ${list('Your best features', a.bestFeatures)}
+        ${list('Shop for your body: look for', a.shopFor)}
+        ${list('Usually skip', a.skipCuts)}
         ${(a.colours || []).length ? `<div><p class="eyebrow" style="margin-bottom:6px">Your best colours</p><div class="palette">${a.colours.map(c => `<span><i style="background:${isHex(c.hex) ? c.hex : 'var(--sunk)'}"></i>${esc(c.name)}</span>`).join('')}</div></div>` : ''}
         ${(a.avoid || []).length ? `<div><p class="eyebrow" style="margin-bottom:6px">Go easy on</p><div class="palette">${a.avoid.map(c => `<span><i style="background:${isHex(c.hex) ? c.hex : 'var(--sunk)'}"></i>${esc(c.name)}</span>`).join('')}</div></div>` : ''}
         ${(a.silhouettes || []).length ? `<div><p class="eyebrow" style="margin-bottom:6px">Shapes that suit you</p><ul class="recreate">${a.silhouettes.map(t => `<li style="grid-template-columns:1fr"><span>${esc(t)}</span></li>`).join('')}</ul></div>` : ''}
@@ -1508,7 +1531,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
       return `<li>${thumb(x)}
         <span class="what"><b>${esc(shortOf(x))}</b><span class="pills"><span class="pill ${SUPPLY[x.supply][0]}">${SUPPLY[x.supply][1]}</span><span class="meta">${esc([x.brand, x.shade, COL_LABEL[x._col]].filter(Boolean).join(' · '))}</span></span>
         ${total ? `<span class="meta">${fmt(total)}${best ? `${best.delivery == null ? '+' : ''} delivered from ${esc(best.shop)}` : ' (last known price)'}</span>` : '<span class="meta">Price not checked yet</span>'}</span>
-        <span class="tools restock-tools">${url ? `<a class="btn small ghost" href="${esc(url)}" target="_blank" rel="noopener">Shop ↗</a>` : ''}${canWrite ? `<button class="btn small" data-act="supply" data-v="ok" data-col="${x._col}" data-id="${esc(x.id)}">Bought</button><button class="btn small ghost" data-act="supply" data-v="dismiss" data-col="${x._col}" data-id="${esc(x.id)}" title="Take it off the list">Dismiss</button><button class="btn small ghost danger" data-act="no-rebuy" data-col="${x._col}" data-id="${esc(x.id)}" title="Moves it to Swapped out">Won't buy again</button>` : ''}</span></li>`;
+        <span class="tools restock-tools">${url ? `<a class="btn small ghost" href="${esc(url)}" target="_blank" rel="noopener">Shop ↗</a>` : ''}${canWrite ? `<button class="btn small" data-act="supply" data-v="ok" data-col="${x._col}" data-id="${esc(x.id)}">Bought</button><details class="more-menu"><summary class="btn small ghost" aria-label="More options">⋯</summary><div class="menu"><button class="btn small ghost" data-act="supply" data-v="dismiss" data-col="${x._col}" data-id="${esc(x.id)}" title="Take it off the list">Dismiss for now</button><button class="btn small ghost danger" data-act="no-rebuy" data-col="${x._col}" data-id="${esc(x.id)}" title="Moves it to Swapped out">Won't buy again</button></div></details>` : ''}</span></li>`;
     });
     const amz = live('basket').filter(b => !b.ordered);
     if (amz.length) rows.push(`<li><div class="thumb">a</div><span class="what"><b>Amazon list</b><span class="meta">${amz.length} ${amz.length === 1 ? 'thing' : 'things'} waiting for the next order</span></span><button class="btn small ghost" data-tab="amazon">Open</button></li>`);
@@ -1763,7 +1786,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
   const profileText = () => {
     const p = S.meta.profile || {}, a = S.meta.me?.analysis;
     let t = Object.entries(p).filter(([k, v]) => v && k !== 'updatedAt').map(([k, v]) => `${k}: ${v}`).join('; ');
-    if (a) t += `${t ? '; ' : ''}colouring: ${a.summary || ''} Best colours: ${(a.colours || []).map(c => c.name).join(', ')}. Go easy on: ${(a.avoid || []).map(c => c.name).join(', ')}. Shapes: ${(a.silhouettes || []).join(' / ')}`;
+    if (a) t += `${t ? '; ' : ''}${a.season ? `colour season: ${a.season}; ` : ''}${a.kibbe ? `Kibbe type: ${a.kibbe}; ` : ''}${a.bodyShape ? `body shape: ${a.bodyShape}; ` : ''}${(a.shopFor || []).length ? `cuts that suit me: ${a.shopFor.map(x => x.item).join(' / ')}; ` : ''}${(a.skipCuts || []).length ? `cuts I usually skip: ${a.skipCuts.join(' / ')}; ` : ''}colouring: ${a.summary || ''} Best colours: ${(a.colours || []).map(c => c.name).join(', ')}. Go easy on: ${(a.avoid || []).map(c => c.name).join(', ')}. Shapes: ${(a.silhouettes || []).join(' / ')}`;
     const d = S.meta.style;
     if (d && (d.summary || (d.rules || []).length)) t += `${t ? '; ' : ''}MY STYLE DNA (follow this closely, it is my actual taste): ${d.summary || ''} Rules: ${(d.rules || []).join(' / ')}. Signature pieces and pairings: ${(d.signatures || []).join(' / ')}. Palette: ${(d.palette || []).join(', ')}. Avoid: ${(d.avoid || []).join(' / ')}`;
     const fb = fbItems().slice(-24), fmtFb = (x) => x.names.join(' + ') + (x.note ? ` (${x.note})` : '');
@@ -2158,12 +2181,17 @@ details.dna[open] > summary { margin-bottom: 10px; }
   });
   $('#me-read').addEventListener('click', async (e) => {
     const ids = (S.meta.me?.photoIds || []).slice(-(await maxImages()));
-    if (!ids.length) { toast('Add a photo of you first.'); return; }
-    const btn = e.currentTarget; btn.disabled = true; S.meBusy = 'Looking at your colouring and shape…'; renderStyle();
+    const p = S.meta.profile || {}, hasBody = ['bust', 'waist', 'hips', 'frame', 'shoulders', 'flesh', 'vertical', 'hairColour', 'eyeColour'].some(k => p[k]);
+    if (!ids.length && !hasBody) { toast('Add a photo of you, or your measurements and frame in My sizes, first.'); return; }
+    const btn = e.currentTarget; btn.disabled = true; S.meBusy = 'Looking at your colouring, frame and proportions…'; renderStyle();
     try {
-      const imgs = await Promise.all(ids.map(blobOf));
-      const a = await sample.json(`You are a personal stylist and colour analyst. These are photos of me. Australian English. Be warm, specific and practical, never critical of my body.${profileText()}\n\nReply with only JSON:\n{"summary":"2 sentences on my colouring (undertone, contrast, seasonal palette) and body proportions in neutral, kind terms","colours":[{"name":"colour name","hex":"#rrggbb"}],"avoid":[{"name":"colour name","hex":"#rrggbb"}],"silhouettes":["one short tip on shapes, rises, lengths or necklines that flatter me", "... up to 5"]}\nGive 10 best colours and 4 to go easy on.`, { images: imgs, cache: false });
-      const clean = { summary: String(a.summary || ''), colours: (a.colours || []).slice(0, 12).map(c => ({ name: String(c.name || ''), hex: isHex(c.hex) ? c.hex : '' })), avoid: (a.avoid || []).slice(0, 6).map(c => ({ name: String(c.name || ''), hex: isHex(c.hex) ? c.hex : '' })), silhouettes: (a.silhouettes || []).slice(0, 5).map(String), at: now() };
+      const imgs = S.canImages && ids.length ? await Promise.all(ids.map(blobOf)) : [];
+      const body = ['height', 'bust', 'underbust', 'waist', 'hips', 'inseam', 'frame', 'shoulders', 'flesh', 'vertical', 'hairColour', 'eyeColour', 'undertone', 'fitNotes'].filter(k => p[k]).map(k => `${k}: ${p[k]}`).join('; ');
+      const a = await sample.json(`You are an experienced personal stylist and colour analyst. ${imgs.length ? 'These are photos of me. ' : ''}Australian English. Be warm, specific and practical, and never critical of my body: every body has great features and this is about dressing to enjoy them.${profileText()}\n\nMy body and colouring notes: ${body || '(none, use the photos)'}\n\nWork out:\n- my 12-season colour analysis (e.g. Soft Autumn, True Spring, Deep Winter), from skin undertone, hair, eyes and contrast;\n- my Kibbe body type (Dramatic, Soft Dramatic, Flamboyant Natural, Soft Natural, Dramatic Classic, Soft Classic, Flamboyant Gamine, Soft Gamine, Romantic, Theatrical Romantic), from frame, bone structure, flesh and vertical line;\n- my body shape (hourglass, pear/triangle, inverted triangle, rectangle, round/apple), using the bust/waist/hips numbers when given;\n- my best features to show off, and the cuts, rises, lengths, necklines and fabrics to look for and to skip when shopping.\nWhere you are inferring from little information, say so in the why line rather than sounding certain.\n\nReply with only JSON:\n{"season":"e.g. Soft Autumn","seasonWhy":"one short line","kibbe":"e.g. Soft Natural","kibbeWhy":"one short line","bodyShape":"e.g. Hourglass","bodyShapeWhy":"one short line","metals":"gold, silver or both","summary":"2 sentences tying it together","bestFeatures":["3-5 short lines, each a feature and how to show it off"],"shopFor":[{"item":"specific cut or piece, e.g. High-rise wide-leg jeans with a fitted waist","why":"short reason"}],"skipCuts":["3-5 short lines"],"colours":[{"name":"colour name","hex":"#rrggbb"}],"avoid":[{"name":"colour name","hex":"#rrggbb"}],"silhouettes":["up to 5 short shape tips"]}\nGive 6-8 shopFor items, 10 best colours and 4 to go easy on.`, imgs.length ? { images: imgs, cache: false } : { cache: false });
+      const str = (v, n = 200) => String(v || '').slice(0, n);
+      const clean = { season: str(a.season, 40), seasonWhy: str(a.seasonWhy), kibbe: str(a.kibbe, 40), kibbeWhy: str(a.kibbeWhy), bodyShape: str(a.bodyShape, 40), bodyShapeWhy: str(a.bodyShapeWhy), metals: str(a.metals, 30), summary: str(a.summary, 600),
+        bestFeatures: (a.bestFeatures || []).slice(0, 6).map(x => str(x)), shopFor: (a.shopFor || []).slice(0, 10).map(x => ({ item: str(x?.item ?? x, 120), why: str(x?.why) })), skipCuts: (a.skipCuts || []).slice(0, 6).map(x => str(x)),
+        colours: (a.colours || []).slice(0, 12).map(c => ({ name: str(c.name, 40), hex: isHex(c.hex) ? c.hex : '' })), avoid: (a.avoid || []).slice(0, 6).map(c => ({ name: str(c.name, 40), hex: isHex(c.hex) ? c.hex : '' })), silhouettes: (a.silhouettes || []).slice(0, 5).map(x => str(x)), fromPhotos: imgs.length, at: now() };
       await db.doc('meta/me').set({ ...(S.meta.me || {}), analysis: clean, updatedAt: now() });
     } catch (err) { toast(aiErr(err)); }
     finally { S.meBusy = null; btn.disabled = false; renderStyle(); }
