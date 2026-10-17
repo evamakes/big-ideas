@@ -283,9 +283,14 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
 .palette { display: flex; gap: 6px; flex-wrap: wrap; }
 .palette span { display: grid; justify-items: center; gap: 3px; font-size: 0.68rem; color: var(--muted); width: 56px; text-align: center; line-height: 1.15; }
 .palette i { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--line); display: block; }
-.picks { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; max-height: 420px; overflow-y: auto; }
+.picks { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); grid-auto-rows: max-content; align-items: start; gap: 8px; }
+.dna-form { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.dna-form input { border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 7px 14px; font: inherit; min-width: 0; }
+.dna-list { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.pick-tools { display: grid; gap: 8px; }
+.pick-tools input { border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 7px 14px; font: inherit; width: 100%; }
 .pick { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 0; cursor: pointer; overflow: hidden; text-align: left; display: grid; }
-.pick .img { aspect-ratio: 4 / 5; max-width: 100%; background: var(--sunk); display: grid; place-items: center; overflow: hidden; font-family: var(--f-display); font-style: italic; color: var(--muted); }
+.pick .img { aspect-ratio: 4 / 5; width: 100%; height: auto; background: var(--sunk); display: grid; place-items: center; overflow: hidden; font-family: var(--f-display); font-style: italic; color: var(--muted); }
 .pick .img img { width: 100%; height: 100%; object-fit: cover; }
 .pick span { font-size: 0.7rem; padding: 4px 6px; overflow-wrap: anywhere; line-height: 1.2; }
 .pick[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
@@ -512,13 +517,25 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       <section class="block">
         <div class="block-h"><h2>Jump to a piece</h2><span class="meta" id="pick-count"></span></div>
         <p class="meta" style="margin:0">Tap anything from your wardrobe or wants to put it on the board. Use the arrows on the board to flip through each row.</p>
+        <div class="pick-tools"><div class="chips" id="pick-chips"></div><input type="search" id="pick-q" placeholder="Search your pieces" aria-label="Search your pieces"></div>
         <div class="picks" id="style-picks"></div>
+        <button class="link" id="pick-more" hidden></button>
       </section>
     </div>
+    <section class="block" id="dna-block">
+      <div class="block-h"><h2>Your style DNA</h2><span class="meta" id="dna-when"></span></div>
+      <div id="dna-body"></div>
+      <div class="dna-form">
+        <input type="url" id="dna-pin" placeholder="Paste a public Pinterest board link" aria-label="Pinterest board link">
+        <button class="btn small primary" id="dna-go">Learn my style</button>
+      </div>
+      <p class="meta" style="margin:0">Claude studies your Pinterest board, your Inspo pictures and your profile, then every outfit follows it. Keep the board public.</p>
+    </section>
     <section class="block">
       <div class="block-h"><h2>Style board</h2>
         <div class="tools">
-          <button class="btn small" id="board-shuffle">Shuffle</button>
+          <div class="chips" id="board-weather" role="group" aria-label="Weather"></div>
+          <button class="btn small" id="board-shuffle">Style me</button>
           <button class="btn small primary needs-img" id="board-ask">Claude’s take</button>
           <button class="btn small" id="board-save">Save outfit</button>
           <button class="btn small ghost" id="board-clear">Clear</button>
@@ -632,7 +649,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
   const WHEN = { am: 'AM', pm: 'PM', both: 'AM & PM' };
   const FREQ = { daily: 'Daily', alt: 'Every other day', few: '2–3× a week', weekly: 'Weekly' };
   const OCCASIONS = { work: 'Work', casual: 'Casual', fun: 'Fun' };
-  const WARD_CATS = ['Top', 'Knit', 'Shirt', 'Bottoms', 'Jeans', 'Skirt', 'Dress', 'Outerwear', 'Shoes', 'Bag', 'Accessory', 'Active'];
+  const WARD_CATS = ['Top', 'Shirt', 'Knit', 'Jumper', 'Cardigan', 'Jacket', 'Bottoms', 'Jeans', 'Skirt', 'Dress', 'Outerwear', 'Shoes', 'Bag', 'Accessory', 'Active'];
   const FIND_KINDS = { skincare: 'Skincare', makeup: 'Makeup', clothes: 'Clothes', office: 'Office', other: 'Other' };
   const VERDICT = { loved: ['good', 'Reviewers love it'], mixed: ['warn', 'Mixed reviews'], skip: ['bad', 'Probably skip'] };
   const opts = (list) => Array.isArray(list) ? list.map(v => [v, v]) : Object.entries(list);
@@ -732,7 +749,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
   const S = {
     wishlist: [], finds: [], briefs: [], routine: [], beauty: [], hair: [], wardrobe: [], outfits: [], inspo: [], basket: [], meta: {}, canImages: false, inspoBusy: {},
     status: 'connecting',
-    tab: 'today', wardOcc: 'All', wantCat: 'All', wantSort: 'alert', showBought: false, findKind: 'All', wardCat: 'All',
+    tab: 'today', weather: 'any', pickGroup: 'All', pickQ: '', pickAll: false, wardOcc: 'All', wantCat: 'All', wantSort: 'alert', showBought: false, findKind: 'All', wardCat: 'All',
     cardAi: {}, suggestions: [], gaps: [],
   };
   let db = null, assets = null, sample = null, mcp = null, canWrite = true;
@@ -1201,14 +1218,20 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     const known = new Set(HAIR_STEPS);
     renderStack('hair', $('#hair-stack'), HAIR_STEPS.map(s => [s, [s]]), x => known.has(x.step) ? x.step : 'Other');
   }
-  const FLIP_ROWS = [['Top', ['Top', 'Knit', 'Shirt']], ['Layer', ['Outerwear']], ['Bottom', ['Bottoms', 'Jeans', 'Skirt']], ['Dress', ['Dress']], ['Shoes', ['Shoes']], ['Bag', ['Bag', 'Accessory']], ['Active', ['Active']], ['Want', null]];
-  const rowItems = (cats) => cats ? wearable().filter(p => cats.includes(p.category)).map(p => ({ ...p, _col: 'wardrobe' })) : live('wishlist').filter(w => ['Clothes', 'Activewear'].includes(w.category) && w.status !== 'bought').map(w => ({ ...w, _col: 'wishlist' }));
+  const LAYER_CATS = ['Knit', 'Jumper', 'Cardigan', 'Jacket', 'Outerwear'];
+  const FLIP_ROWS = [['Top', ['Top', 'Shirt']], ['Layer', LAYER_CATS], ['Bottom', ['Bottoms', 'Jeans', 'Skirt']], ['Dress', ['Dress']], ['Shoes', ['Shoes']], ['Bag', ['Bag', 'Accessory']], ['Active', ['Active']], ['Want', null]];
+  // Weather: hot leaves out cool-season pieces and layers; cold leaves out warm-season pieces
+  const WEATHER = { any: 'Any weather', hot: 'Hot', mild: 'Mild', cold: 'Cold' };
+  const WEATHER_TEXT = { hot: 'Hot day, 27°C or more', mild: 'Mild day, around 18–24°C', cold: 'Cold day, under 15°C' };
+  const weatherOk = (p) => S.weather === 'hot' ? p.season !== 'cool' && !LAYER_CATS.includes(p.category) : S.weather === 'cold' ? p.season !== 'warm' : true;
+  const rowItems = (cats) => cats ? wearable().filter(weatherOk).filter(p => cats.includes(p.category)).map(p => ({ ...p, _col: 'wardrobe' })) : live('wishlist').filter(w => ['Clothes', 'Activewear'].includes(w.category) && w.status !== 'bought').map(w => ({ ...w, _col: 'wishlist' }));
   function flipState() { if (!S.flip) { S.flip = { Top: 0, Bottom: 0, Shoes: 0 }; } return S.flip; }
   function flipChosen() {
     const f = flipState(), out = [];
     for (const [row, cats] of FLIP_ROWS) { const items = rowItems(cats); const i = f[row]; if (i != null && i >= 0 && items.length) out.push(items[((i % items.length) + items.length) % items.length]); }
     return out;
   }
+  const PICK_GROUPS = [['Tops', ['Top', 'Shirt']], ['Jumpers & jackets', LAYER_CATS], ['Bottoms', ['Bottoms', 'Jeans', 'Skirt']], ['Dresses', ['Dress']], ['Shoes', ['Shoes']], ['Bags & extras', ['Bag', 'Accessory']], ['Active', ['Active']]];
   const pickable = () => [...wearable().map(p => ({ ...p, _col: 'wardrobe' })), ...live('wishlist').filter(w => ['Clothes', 'Activewear'].includes(w.category) && w.status !== 'bought').map(w => ({ ...w, _col: 'wishlist' }))];
   function renderStyle() {
     const me = S.meta.me || {};
@@ -1221,19 +1244,36 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
         ${(a.avoid || []).length ? `<div><p class="eyebrow" style="margin-bottom:6px">Go easy on</p><div class="palette">${a.avoid.map(c => `<span><i style="background:${isHex(c.hex) ? c.hex : 'var(--sunk)'}"></i>${esc(c.name)}</span>`).join('')}</div></div>` : ''}
         ${(a.silhouettes || []).length ? `<div><p class="eyebrow" style="margin-bottom:6px">Shapes that suit you</p><ul class="recreate">${a.silhouettes.map(t => `<li style="grid-template-columns:1fr"><span>${esc(t)}</span></li>`).join('')}</ul></div>` : ''}
       </div>` : '';
-    const all = pickable();
+    const everything = pickable();
     const chosen = flipChosen(), chosenIds = new Set(chosen.map(x => x.id));
+    const groupOf = (x) => x._col === 'wishlist' ? 'Wants' : (PICK_GROUPS.find(g => g[1].includes(x.category)) || ['Other'])[0];
+    const groups = PICK_GROUPS.map(g => g[0]).concat('Wants').filter(g => everything.some(x => groupOf(x) === g));
+    if (S.pickGroup !== 'All' && !groups.includes(S.pickGroup)) S.pickGroup = 'All';
+    $('#pick-chips').innerHTML = ['All', ...groups].map(g => `<button class="chip" aria-pressed="${g === S.pickGroup}" data-act="pick-group" data-v="${esc(g)}">${esc(g)}${g === 'All' ? '' : ` ${everything.filter(x => groupOf(x) === g).length}`}</button>`).join('');
+    const q = (S.pickQ || '').toLowerCase();
+    const filtered = everything.filter(x => (S.pickGroup === 'All' || groupOf(x) === S.pickGroup) && (!q || [x.label, x.name, x.brand, x.colour, x.category].join(' ').toLowerCase().includes(q)));
+    const LIMIT = 18, all = S.pickAll || q ? filtered : filtered.slice(0, LIMIT);
+    $('#pick-more').hidden = filtered.length <= LIMIT || !!q;
+    $('#pick-more').textContent = S.pickAll ? 'Show fewer' : `Show all ${filtered.length}`;
     $('#pick-count').textContent = chosen.length ? `${chosen.length} on the board` : '';
     $('#style-picks').innerHTML = all.length ? all.map(x => { const src = photoSrc(x); return `<button class="pick" data-act="pick" data-id="${esc(x.id)}" aria-pressed="${chosenIds.has(x.id)}" title="${esc((x._col === 'wishlist' ? 'Want: ' : '') + shortOf(x))}" aria-label="${esc((x._col === 'wishlist' ? 'Want: ' : '') + shortOf(x))}"><div class="img">${src ? `<img src="${esc(src)}" alt="" loading="lazy">` : initial(shortOf(x))}</div></button>`; }).join('') : '<span class="meta">Add clothes to your wardrobe or wants first.</span>';
+    const dna = S.meta.style || {};
+    $('#dna-when').textContent = dna.status === 'queued' ? 'Studying your board…' : dna.updatedAt ? `Updated ${ago(dna.updatedAt)}` : '';
+    if (dna.pinterest && document.activeElement !== $('#dna-pin')) $('#dna-pin').value = dna.pinterest;
+    $('#dna-body').innerHTML = dna.summary ? `<p class="notes" style="margin:0">${esc(dna.summary)}</p>
+      ${(dna.palette || []).length ? `<p class="meta" style="margin:0"><b>Palette:</b> ${esc(dna.palette.join(', '))}</p>` : ''}
+      ${(dna.rules || []).length ? `<ul class="dna-list">${dna.rules.map(r => `<li>${esc(r)}</li>`).join('')}</ul>` : ''}
+      ${(dna.avoid || []).length ? `<p class="meta" style="margin:0"><b>Not you:</b> ${esc(dna.avoid.join(' · '))}</p>` : ''}` : '<p class="meta" style="margin:0">No style DNA yet. Add your Pinterest board below (and a few Inspo pictures) so outfits match your taste.</p>';
+    $('#board-weather').innerHTML = Object.entries(WEATHER).map(([k, l]) => `<button class="chip" aria-pressed="${k === S.weather}" data-act="weather" data-v="${k}">${l}</button>`).join('');
     const f = flipState();
     const rows = FLIP_ROWS.map(([row, cats]) => {
       const items = rowItems(cats); if (!items.length) return '';
       const on = f[row] != null && f[row] >= 0, i = on ? ((f[row] % items.length) + items.length) % items.length : 0, x = items[i], src = photoSrc(x);
-      return `<div class="frow ${on ? '' : 'off'}"><span class="lab">${esc(row)}</span>
+      return `<div class="frow ${on ? '' : 'off'}"><span class="lab">${esc(row === 'Layer' ? 'Jumper / jacket' : row)}</span>
         <button class="arrow" data-act="flip" data-row="${row}" data-d="-1" aria-label="Previous ${row.toLowerCase()}">‹</button>
         <div class="card-in"><div class="img">${on ? (src ? `<img src="${esc(src)}" alt="" key="${esc(x.id)}">` : initial(x.name)) : '—'}</div>
           <div class="nm">${on ? `<b>${x._col === 'wishlist' ? 'Want · ' : ''}${esc(shortOf(x))}</b><span class="meta">${i + 1} of ${items.length}</span>` : `<span class="meta">${items.length} to flip through</span>`}
-          <button class="link" data-act="flip-toggle" data-row="${row}" style="justify-self:start">${on ? 'Take off' : row === 'Active' ? 'Add activewear' : 'Add a ' + row.toLowerCase()}</button></div></div>
+          <button class="link" data-act="flip-toggle" data-row="${row}" style="justify-self:start">${on ? 'Take off' : row === 'Active' ? 'Add activewear' : row === 'Layer' ? 'Add a jumper or jacket' : 'Add a ' + row.toLowerCase()}</button></div></div>
         <button class="arrow" data-act="flip" data-row="${row}" data-d="1" aria-label="Next ${row.toLowerCase()}">›</button></div>`;
     }).join('');
     $('#board').innerHTML = `<div class="me${mp.length ? '' : ' empty'}">${mp.length ? `<img src="/_blob/${mp[0]}" alt="You">` : 'Add a full-length photo of you'}</div>
@@ -1525,6 +1565,9 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     const p = S.meta.profile || {}, a = S.meta.me?.analysis;
     let t = Object.entries(p).filter(([k, v]) => v && k !== 'updatedAt').map(([k, v]) => `${k}: ${v}`).join('; ');
     if (a) t += `${t ? '; ' : ''}colouring: ${a.summary || ''} Best colours: ${(a.colours || []).map(c => c.name).join(', ')}. Go easy on: ${(a.avoid || []).map(c => c.name).join(', ')}. Shapes: ${(a.silhouettes || []).join(' / ')}`;
+    const d = S.meta.style;
+    if (d && (d.summary || (d.rules || []).length)) t += `${t ? '; ' : ''}MY STYLE DNA (follow this closely, it is my actual taste): ${d.summary || ''} Rules: ${(d.rules || []).join(' / ')}. Signature pieces and pairings: ${(d.signatures || []).join(' / ')}. Palette: ${(d.palette || []).join(', ')}. Avoid: ${(d.avoid || []).join(' / ')}`;
+    if (S.weather && S.weather !== 'any') t += `${t ? '; ' : ''}weather today: ${WEATHER_TEXT[S.weather]}`;
     return t ? `\n\nAbout me: ${t}` : '';
   };
   const slimMakeup = (b) => ({ product: b.name, brand: b.brand, type: b.type, shade: b.shade, finish: b.finish, status: STACK[statusOf(b)], rating: b.rating, feedback: b.feedback, swapReason: b.swapReason });
@@ -1617,6 +1660,19 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     renderWardrobe();
   }
   $('#vibe-go').addEventListener('click', () => styleMe());
+  $('#dna-go').addEventListener('click', async (e) => {
+    const url = $('#dna-pin').value.trim();
+    if (url && !/pinterest\.|pin\.it/i.test(url)) { toast('That doesn’t look like a Pinterest link.'); return; }
+    const btn = e.currentTarget; btn.disabled = true;
+    try {
+      await db.doc('meta/style').set({ ...(S.meta.style || {}), pinterest: url, status: 'queued', requestedAt: now() });
+      if (canResearch()) { await mcp.callTool('Claude Code Remote', 'fire_trigger', { trigger_id: S.meta.research.triggerId, text: 'Style DNA request: collection=meta doc_id=style' }, { cache: false }); toast('Claude is studying your board. Your style DNA appears here in about 10 minutes.'); }
+      else toast('Saved. The next refresh will build your style DNA.');
+    } catch { toast('Couldn’t start that. Try again.'); }
+    finally { btn.disabled = false; }
+  });
+  $('#pick-q').addEventListener('input', (e) => { S.pickQ = e.target.value.trim(); renderStyle(); });
+  $('#pick-more').addEventListener('click', () => { S.pickAll = !S.pickAll; renderStyle(); });
   $('#gaps-go').addEventListener('click', async (e) => {
     const btn = e.currentTarget, out = $('#gaps-out');
     btn.disabled = true; out.hidden = false; out.innerHTML = '<div class="ai-out"><span class="by">Claude</span>Checking your wardrobe against the basics…</div>';
@@ -1816,13 +1872,28 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     finally { S.meBusy = null; btn.disabled = false; renderStyle(); }
   });
   $('#board-clear').addEventListener('click', () => { S.flip = {}; $('#board-out').hidden = true; renderStyle(); });
-  $('#board-shuffle').addEventListener('click', () => {
+  $('#board-shuffle').addEventListener('click', async (e) => {
+    if (sample && wearable().length >= 3) {
+      const btn = e.currentTarget; btn.disabled = true; btn.textContent = 'Styling…';
+      try {
+        const pool = FLIP_ROWS.filter(r => r[1]).flatMap(([row, cats]) => rowItems(cats).map(p => ({ id: p.id, row, name: shortOf(p), brand: p.brand, colour: p.colour, category: p.category, season: p.season, occasions: p.occasions })));
+        const recent = (S.recentLooks || []).slice(-6);
+        const res = await sample.json(`You are a sharp personal stylist with real taste: think editorial, considered and wearable, never random. Australian English.${profileText()}\n\nMy pieces (JSON, grouped by row):\n${JSON.stringify(pool)}\n\nBuild ONE cohesive outfit from these ids: either a dress, or a top plus a bottom; always shoes; add a jumper/jacket layer if the weather or look needs it; a bag or belt only if it genuinely adds something. Colours, proportions, textures and formality must work together, and it should look like my style DNA. Don't repeat these recent looks: ${JSON.stringify(recent)}. Reply with only JSON: {"ids":["id1","id2"],"why":"one sentence on why it works"}`, { cache: false });
+        const ids = (res?.ids || []).map(String), f = {};
+        for (const [row, cats] of FLIP_ROWS) { if (!cats) continue; const items = rowItems(cats); const i = items.findIndex(x => ids.includes(x.id)); if (i >= 0) f[row] = i; }
+        if (Object.keys(f).length >= 2) {
+          S.flip = f; S.recentLooks = [...(S.recentLooks || []), ids].slice(-10);
+          const out = $('#board-out'); out.hidden = false; out.className = 'ai-out'; out.innerHTML = `<span class="by">Claude</span>${esc(res.why || '')}`;
+          renderStyle(); return;
+        }
+      } catch {} finally { btn.disabled = false; btn.textContent = 'Style me'; }
+    }
     const r = (n) => Math.floor(Math.random() * n), f = {};
     const n = (row) => rowItems(FLIP_ROWS.find(x => x[0] === row)[1]).length;
     const dress = n('Dress') && Math.random() < 0.3;
     if (dress) f.Dress = r(n('Dress')); else { if (n('Top')) f.Top = r(n('Top')); if (n('Bottom')) f.Bottom = r(n('Bottom')); }
     if (n('Shoes')) f.Shoes = r(n('Shoes'));
-    if (n('Layer') && Math.random() < 0.5) f.Layer = r(n('Layer'));
+    if (n('Layer') && (S.weather === 'cold' || (S.weather !== 'hot' && Math.random() < 0.5))) f.Layer = r(n('Layer'));
     if (n('Bag') && Math.random() < 0.5) f.Bag = r(n('Bag'));
     S.flip = f; $('#board-out').hidden = true; renderStyle();
   });
@@ -1998,6 +2069,8 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       case 'find-kind': S.findKind = t.dataset.v; renderFinds(); break;
       case 'ward-cat': S.wardCat = t.dataset.v; renderWardrobe(); break;
       case 'ward-occ': S.wardOcc = t.dataset.v; renderWardrobe(); break;
+      case 'weather': S.weather = t.dataset.v; S.flip = {}; $('#board-out').hidden = true; renderStyle(); break;
+      case 'pick-group': S.pickGroup = t.dataset.v; S.pickAll = false; renderStyle(); break;
       case 'occ': {
         const p = find('wardrobe'); if (!p) break;
         const cur = Array.isArray(p.occasions) ? p.occasions : [], v = t.dataset.v;
