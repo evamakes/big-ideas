@@ -195,6 +195,8 @@ textarea { resize: vertical; min-height: 44px; }
 .occ { display: flex; gap: 4px; padding: 0 12px 12px; flex-wrap: wrap; }
 .occ-t { border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: 999px; padding: 1px 8px; font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; }
 .occ-t[aria-pressed="true"] { background: var(--tan); border-color: var(--tan); color: #fff; }
+.occ-t.fit[aria-pressed="true"] { background: var(--bad); border-color: var(--bad); }
+.piece.nofit .piece-open { opacity: 0.5; }
 .piece .img { aspect-ratio: 4 / 5; max-width: 100%; background: var(--sunk); display: grid; place-items: center; overflow: hidden; }
 .piece .img img { width: 100%; height: 100%; object-fit: cover; }
 .piece .img span { font-family: var(--f-display); font-style: italic; font-size: 1.1rem; color: var(--muted); padding: 10px; text-align: center; }
@@ -693,6 +695,8 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       { k: 'label', label: 'Short name', type: 'text', full: true, ph: 'e.g. Blue gym leggings', hint: 'What shows on the card. The full product name and brand sit underneath.' },
       { k: 'category', label: 'Category', type: 'select', options: opts(WARD_CATS) },
       { k: 'colour', label: 'Colour', type: 'text' },
+      { k: 'size', label: 'Size', type: 'text', ph: 'e.g. S, 10, EU 39' },
+      { k: 'fit', label: 'Fit', type: 'select', options: opts({ '': 'Fits', no: 'Doesn’t fit' }) },
       { k: 'occasions', label: 'Occasions', type: 'tags', full: true, ph: 'work, casual, fun' },
       { k: 'vibes', label: 'Vibes', type: 'tags', full: true, ph: 'comma separated, e.g. office, weekend, date night', hint: 'Used when mixing outfits.' },
       { k: 'season', label: 'Season', type: 'select', options: opts({ all: 'All year', warm: 'Warm weather', cool: 'Cool weather' }) },
@@ -748,6 +752,8 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
   const shortOf = (x) => x.label || nameOf(x);
   const fullOf = (x) => x.label && x.label !== nameOf(x) ? nameOf(x) : '';
   const live = (col) => S[col].filter(x => !x.deleted);
+  // pieces that still fit; ones marked "Doesn't fit" stay in the wardrobe but are left out of styling
+  const wearable = () => live('wardrobe').filter(p => p.fit !== 'no');
   const selName = (x) => x.shade || x.variant || '';
   const photoSrc = (x) => {
     const v = (x.variants || []).find(v => v && v.photoId && v.name === selName(x));
@@ -1185,25 +1191,25 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
   function pieceBtn(p) {
     const src = photoSrc(p);
     const occ = Array.isArray(p.occasions) ? p.occasions : [];
-    return `<div class="piece"><button class="piece-open" data-act="${canWrite ? 'edit' : ''}" data-col="wardrobe" data-id="${esc(p.id)}">
+    return `<div class="piece${p.fit === 'no' ? ' nofit' : ''}"><button class="piece-open" data-act="${canWrite ? 'edit' : ''}" data-col="wardrobe" data-id="${esc(p.id)}">
         <div class="img">${src ? `<img src="${esc(src)}" alt="" loading="lazy">` : `<span>${esc(shortOf(p))}</span>`}</div>
-        <div class="cap"><b>${esc(shortOf(p))}</b><span class="meta">${esc([p.brand, fullOf(p), p.colour].filter(Boolean).join(' · '))}</span>
+        <div class="cap"><b>${esc(shortOf(p))}</b><span class="meta">${esc([p.brand, fullOf(p), p.colour, p.size ? `Size ${p.size}` : ''].filter(Boolean).join(' · '))}</span>
         ${(p.vibes || []).length || p.example || p.research || MATCH[p.match] ? `<div class="pills">${p.example ? '<span class="pill ex">Example</span>' : ''}${researchPill(p)}${matchPill(p)}${(p.vibes || []).slice(0, 3).map(v => `<span class="pill">${esc(v)}</span>`).join('')}</div>` : ''}</div>
-      </button>${p.category === 'Active' ? '' : `<div class="occ">${Object.entries(OCCASIONS).map(([k, l]) => `<button class="occ-t" data-act="${canWrite ? 'occ' : ''}" data-id="${esc(p.id)}" data-v="${k}" aria-pressed="${occ.includes(k)}">${l}</button>`).join('')}</div>`}</div>`;
+      </button><div class="occ">${p.category === 'Active' ? '' : Object.entries(OCCASIONS).map(([k, l]) => `<button class="occ-t" data-act="${canWrite ? 'occ' : ''}" data-id="${esc(p.id)}" data-v="${k}" aria-pressed="${occ.includes(k)}">${l}</button>`).join('')}<button class="occ-t fit" data-act="${canWrite ? 'fit' : ''}" data-id="${esc(p.id)}" aria-pressed="${p.fit === 'no'}" title="Left out of outfits while it doesn't fit">Doesn't fit</button></div></div>`;
   }
   function renderHair() {
     const known = new Set(HAIR_STEPS);
     renderStack('hair', $('#hair-stack'), HAIR_STEPS.map(s => [s, [s]]), x => known.has(x.step) ? x.step : 'Other');
   }
   const FLIP_ROWS = [['Top', ['Top', 'Knit', 'Shirt']], ['Layer', ['Outerwear']], ['Bottom', ['Bottoms', 'Jeans', 'Skirt']], ['Dress', ['Dress']], ['Shoes', ['Shoes']], ['Bag', ['Bag', 'Accessory']], ['Active', ['Active']], ['Want', null]];
-  const rowItems = (cats) => cats ? live('wardrobe').filter(p => cats.includes(p.category)).map(p => ({ ...p, _col: 'wardrobe' })) : live('wishlist').filter(w => ['Clothes', 'Activewear'].includes(w.category) && w.status !== 'bought').map(w => ({ ...w, _col: 'wishlist' }));
+  const rowItems = (cats) => cats ? wearable().filter(p => cats.includes(p.category)).map(p => ({ ...p, _col: 'wardrobe' })) : live('wishlist').filter(w => ['Clothes', 'Activewear'].includes(w.category) && w.status !== 'bought').map(w => ({ ...w, _col: 'wishlist' }));
   function flipState() { if (!S.flip) { S.flip = { Top: 0, Bottom: 0, Shoes: 0 }; } return S.flip; }
   function flipChosen() {
     const f = flipState(), out = [];
     for (const [row, cats] of FLIP_ROWS) { const items = rowItems(cats); const i = f[row]; if (i != null && i >= 0 && items.length) out.push(items[((i % items.length) + items.length) % items.length]); }
     return out;
   }
-  const pickable = () => [...live('wardrobe').map(p => ({ ...p, _col: 'wardrobe' })), ...live('wishlist').filter(w => ['Clothes', 'Activewear'].includes(w.category) && w.status !== 'bought').map(w => ({ ...w, _col: 'wishlist' }))];
+  const pickable = () => [...wearable().map(p => ({ ...p, _col: 'wardrobe' })), ...live('wishlist').filter(w => ['Clothes', 'Activewear'].includes(w.category) && w.status !== 'bought').map(w => ({ ...w, _col: 'wishlist' }))];
   function renderStyle() {
     const me = S.meta.me || {};
     const mp = (me.photoIds || []).filter(id => /^[0-9a-f]{32}$/.test(id));
@@ -1240,10 +1246,11 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     chipRow($('#wardrobe-chips'), WARD_CATS.filter(c => all.some(w => w.category === c)).map(c => [c, c]), S.wardCat, 'ward-cat');
     const occOn = S.wardCat !== 'Active';
     const untagged = all.filter(p => p.category !== 'Active' && !(p.occasions || []).length).length;
-    $('#wardrobe-occ').innerHTML = occOn ? [['All', 'Any occasion'], ...Object.entries(OCCASIONS).map(([k, l]) => [k, `${l} ${all.filter(p => (p.occasions || []).includes(k)).length}`])].map(([v, l]) => `<button class="chip" aria-pressed="${v === S.wardOcc}" data-act="ward-occ" data-v="${esc(v)}">${esc(l)}</button>`).join('')
+    const nofit = all.filter(p => p.fit === 'no').length;
+    $('#wardrobe-occ').innerHTML = occOn ? [['All', 'Any occasion'], ...Object.entries(OCCASIONS).map(([k, l]) => [k, `${l} ${all.filter(p => (p.occasions || []).includes(k)).length}`]), ...(nofit ? [['nofit', `Doesn't fit ${nofit}`]] : [])].map(([v, l]) => `<button class="chip" aria-pressed="${v === S.wardOcc}" data-act="ward-occ" data-v="${esc(v)}">${esc(l)}</button>`).join('')
       + (untagged && sample && canWrite ? `<button class="btn small ghost" data-act="occ-auto"${S.occBusy ? ' disabled' : ''}>${S.occBusy ? 'Tagging…' : `Tag ${untagged} for me`}</button>` : '') : '';
-    const list = all.filter(w => S.wardCat === 'All' || w.category === S.wardCat).filter(w => !occOn || S.wardOcc === 'All' || (w.occasions || []).includes(S.wardOcc))
-      .sort((a, b) => WARD_CATS.indexOf(a.category) - WARD_CATS.indexOf(b.category) || String(a.name).localeCompare(String(b.name)));
+    const list = all.filter(w => S.wardCat === 'All' || w.category === S.wardCat).filter(w => !occOn || S.wardOcc === 'All' || (S.wardOcc === 'nofit' ? w.fit === 'no' : (w.occasions || []).includes(S.wardOcc) && w.fit !== 'no'))
+      .sort((a, b) => (a.fit === 'no') - (b.fit === 'no') || WARD_CATS.indexOf(a.category) - WARD_CATS.indexOf(b.category) || String(a.name).localeCompare(String(b.name)));
     $('#wardrobe-list').innerHTML = list.length ? list.map(pieceBtn).join('') : emptyState('wardrobe', 'Add what’s in your wardrobe (a photo helps). Then Claude can mix outfits from your own pieces and spot missing basics.');
     $('#ward-add').dataset.preset = S.wardCat === 'Active' ? 'Active' : '';
     const activeWants = S.wardCat === 'Active' ? live('wishlist').filter(w => w.category === 'Activewear' && w.status !== 'bought') : [];
@@ -1557,7 +1564,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
 
   async function styleMe(mode) {
     const vibe = $('#vibe-ask').value.trim();
-    const pieces = live('wardrobe');
+    const pieces = wearable();
     if (pieces.length < 2) { toast('Add a few wardrobe pieces first.'); return; }
     const btn = $('#vibe-go'), out = $('#vibe-out');
     btn.disabled = true; btn.textContent = 'Styling…'; out.hidden = false;
@@ -1594,7 +1601,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
   }
   // Swap one suggested outfit for a fresh one, steering away from everything already on screen or saved
   async function rollOutfit(i) {
-    const cur = S.suggestions[i], pieces = live('wardrobe');
+    const cur = S.suggestions[i], pieces = wearable();
     if (!cur || !sample) return;
     cur.rolling = true; renderWardrobe();
     const avoid = [...S.suggestions.map(o => o.itemIds), ...live('outfits').map(o => o.itemIds)];
@@ -1614,7 +1621,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     const btn = e.currentTarget, out = $('#gaps-out');
     btn.disabled = true; out.hidden = false; out.innerHTML = '<div class="ai-out"><span class="by">Claude</span>Checking your wardrobe against the basics…</div>';
     try {
-      const res = await sample.json(`You are a personal stylist. Write in Australian English.${profileText()}\n\nMy wardrobe (JSON):\n${JSON.stringify(live('wardrobe').map(slimPiece))}\n\nThings already on my want list: ${JSON.stringify(activeWants().map(w => w.name))}\n\nCompare my wardrobe with a hard-working capsule for my style and an Australian climate. List up to 6 missing basics, most useful first, skipping anything already on my want list. A basic is missing if nothing I own does that job. Reply with only a JSON array like:\n[{"item":"Specific piece, e.g. Black straight-leg trousers","why":"One sentence: what it unlocks with pieces I own","priority":"high|medium|low"}]`, { cache: false });
+      const res = await sample.json(`You are a personal stylist. Write in Australian English.${profileText()}\n\nMy wardrobe (JSON):\n${JSON.stringify(wearable().map(slimPiece))}\n\nThings already on my want list: ${JSON.stringify(activeWants().map(w => w.name))}\n\nCompare my wardrobe with a hard-working capsule for my style and an Australian climate. List up to 6 missing basics, most useful first, skipping anything already on my want list. A basic is missing if nothing I own does that job. Reply with only a JSON array like:\n[{"item":"Specific piece, e.g. Black straight-leg trousers","why":"One sentence: what it unlocks with pieces I own","priority":"high|medium|low"}]`, { cache: false });
       S.gaps = (Array.isArray(res) ? res : []).slice(0, 6).map(g => ({ item: String(g.item || ''), why: String(g.why || ''), priority: ['high', 'medium', 'low'].includes(g.priority) ? g.priority : 'medium' })).filter(g => g.item);
       if (!S.gaps.length) out.innerHTML = '<div class="ai-out">Nothing obvious is missing. Nice work.</div>'; else renderWardrobe();
     } catch (err) { out.innerHTML = `<div class="ai-out err">${esc(aiErr(err))}</div>`; }
@@ -1876,9 +1883,9 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     S.inspoBusy[x.id] = 'Looking at the picture and your stack…'; renderInspo();
     const isStyle = x.kind === 'style' || x.kind === 'fit';
     const prompt = x.kind === 'fit'
-      ? `You are a kind but honest personal stylist doing a fit check. This is a photo of me wearing an outfit. Australian English.${profileText()}\n\nMy wardrobe (JSON with ids):\n${JSON.stringify(live('wardrobe').map(slimPiece))}\n\n${x.note ? `Context: ${x.note}\n\n` : ''}Reply with only JSON:\n{"title":"short name for the outfit","summary":"2 sentences: overall verdict and the main thing to change, if anything","features":["what is working", "... up to 4"],"recreate":[{"area":"Fit|Colour|Proportion|Shoes|Accessories|Layering","step":"specific tweak","useId":"id of one of MY pieces to swap in, or null","shade":"","tip":"why it helps"}],"missing":[{"item":"specific piece that would finish it","why":"what it adds"}]}\nUp to 4 tweaks, prefer my own pieces. At most 3 missing pieces.`
+      ? `You are a kind but honest personal stylist doing a fit check. This is a photo of me wearing an outfit. Australian English.${profileText()}\n\nMy wardrobe (JSON with ids):\n${JSON.stringify(wearable().map(slimPiece))}\n\n${x.note ? `Context: ${x.note}\n\n` : ''}Reply with only JSON:\n{"title":"short name for the outfit","summary":"2 sentences: overall verdict and the main thing to change, if anything","features":["what is working", "... up to 4"],"recreate":[{"area":"Fit|Colour|Proportion|Shoes|Accessories|Layering","step":"specific tweak","useId":"id of one of MY pieces to swap in, or null","shade":"","tip":"why it helps"}],"missing":[{"item":"specific piece that would finish it","why":"what it adds"}]}\nUp to 4 tweaks, prefer my own pieces. At most 3 missing pieces.`
       : isStyle
-      ? `You are a personal stylist. Look at this outfit inspiration picture. Australian English.${profileText()}\n\nMy wardrobe (JSON with ids):\n${JSON.stringify(live('wardrobe').map(slimPiece))}\n\n${x.note ? `What I love about it: ${x.note}\n\n` : ''}Reply with only JSON:\n{"title":"short name for the look","summary":"2 sentences on the look and what makes it work","features":["key element", "... up to 5"],"outfits":[{"title":"name","itemIds":["ids of MY pieces only"],"note":"how to style it like the picture"}],"missing":[{"item":"specific piece, e.g. Black square-toe ankle boots","why":"what it adds to recreate the look"}]}\nGive up to 2 outfits from my wardrobe (ids only from my list) and at most 4 missing pieces that really matter.`
+      ? `You are a personal stylist. Look at this outfit inspiration picture. Australian English.${profileText()}\n\nMy wardrobe (JSON with ids):\n${JSON.stringify(wearable().map(slimPiece))}\n\n${x.note ? `What I love about it: ${x.note}\n\n` : ''}Reply with only JSON:\n{"title":"short name for the look","summary":"2 sentences on the look and what makes it work","features":["key element", "... up to 5"],"outfits":[{"title":"name","itemIds":["ids of MY pieces only"],"note":"how to style it like the picture"}],"missing":[{"item":"specific piece, e.g. Black square-toe ankle boots","why":"what it adds to recreate the look"}]}\nGive up to 2 outfits from my wardrobe (ids only from my list) and at most 4 missing pieces that really matter.`
       : `You are a makeup artist. Look at this makeup inspiration picture. Australian English.${profileText()}\n\nMy makeup (JSON with ids):\n${JSON.stringify(live('beauty').filter(b => statusOf(b) !== 'out').map(b => ({ id: b.id, ...slimMakeup(b) })))}\n\n${x.note ? `What I love about it: ${x.note}\n\n` : ''}Reply with only JSON:\n{"title":"short name for the look","summary":"2 sentences on the look and what makes it work","features":["key element", "... up to 5"],"recreate":[{"area":"Skin|Cheeks|Eyes|Brows|Lips","step":"what to do","useId":"id of my product to use, or null","shade":"which shade or how to apply","tip":"short tip"}],"missing":[{"item":"specific product type and shade direction, e.g. cool mauve lip liner","why":"what it adds"}]}\nUse my own products wherever they can work, in application order. List at most 4 missing items that really matter.`;
     try {
       const a = await sample.json(prompt, { images: [blob], cache: false });
@@ -1998,6 +2005,12 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
         break;
       }
       case 'occ-auto': autoTagOccasions(); break;
+      case 'fit': {
+        const p = find('wardrobe'); if (!p) break;
+        const no = p.fit !== 'no';
+        act(async () => { await db.collection('wardrobe').doc(p.id).update({ fit: no ? 'no' : null }); if (no) toast('Marked as not fitting. It’s left out of outfits.', async () => { await db.collection('wardrobe').doc(p.id).update({ fit: null }); }); });
+        break;
+      }
       case 'profile': openForm('profile', null); break;
       case 'refresh-now': refreshNow(t); break;
       case 'edit': { const it = find(col); if (it) openForm(col, it); break; }
@@ -2133,7 +2146,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       case 'ai-compare': {
         const x = find(col); if (!x) break;
         const isClothes = col === 'wishlist' && x.category === 'Clothes';
-        const mine = isClothes ? live('wardrobe').map(slimPiece) : live('beauty').filter(b => b.id !== id && statusOf(b) !== 'out').map(slimMakeup);
+        const mine = isClothes ? wearable().map(slimPiece) : live('beauty').filter(b => b.id !== id && statusOf(b) !== 'out').map(slimMakeup);
         cardAsk(id, `${isClothes ? 'You are a personal stylist.' : 'You are a makeup artist.'} ${STYLE}${profileText()}\n\nProduct: ${[x.brand, nameOf(x)].filter(Boolean).join(' ')}\n${isClothes ? 'Colours' : 'Shades'} available: ${JSON.stringify(x.variants)}\nCurrently picked: ${selName(x) || 'none'}\n\n${isClothes ? 'My wardrobe' : 'My makeup'}: ${JSON.stringify(mine)}\n\nIn under 120 words: which ${isClothes ? 'colour works with the most of my pieces' : 'shade best suits me, judging by the shades I already wear and love'}, which options would just duplicate what I own, and a runner-up.`, (text) => db.collection(col).doc(id).update({ stackNote: text }).catch(() => {}));
         break;
       }
