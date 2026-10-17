@@ -2067,9 +2067,9 @@ details.dna[open] > summary { margin-bottom: 10px; }
         added.push({ col, id: ref.id, small });
       } catch {}
     }
-    const ids = added.map(a => `${a.col}/${a.id}`), failed = files.length - added.length;
+    const ids = added.map(a => `${a.col}/${a.id}`), failed = files.length - added.length; let queued = false, nameErr = null;
     if (ids.length && canResearch()) {
-      try { await mcp.callTool('Claude Code Remote', 'fire_trigger', { trigger_id: S.meta.research.triggerId, text: `Research request (several items from photos): ${ids.join(', ')}. Name, label, category, colour and occasions first for any still called New piece or New item. Then follow the PHOTO MATCHING steps for each: look at the photo, read any visible label or logo, find the exact product (brand, style name, colour) online by comparing candidate product photos side by side with theirs, set photoId to the brand's best clean product shot (keeping the user's photo in userPhotoId), and set match to exact, likely or none with a photoNote when it is not exact.` }, { cache: false }); } catch {}
+      try { await mcp.callTool('Claude Code Remote', 'fire_trigger', { trigger_id: S.meta.research.triggerId, text: `Research request (several items from photos): ${ids.join(', ')}. Name, label, category, colour and occasions first for any still called New piece or New item. Then follow the PHOTO MATCHING steps for each: look at the photo, read any visible label or logo, find the exact product (brand, style name, colour) online by comparing candidate product photos side by side with theirs, set photoId to the brand's best clean product shot (keeping the user's photo in userPhotoId), and set match to exact, likely or none with a photoNote when it is not exact.` }, { cache: false }); queued = true; } catch {}
     }
     toast(`Saved ${ids.length} ${ids.length === 1 ? 'photo' : 'photos'}${failed ? `. ${failed} didn’t upload, try those again` : ''}. Naming them now…`);
     // Pass 2 names them here if Claude can; anything left is named by the research run
@@ -2079,7 +2079,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
         const { col, id, small } = added[i];
         quickStatus(`Naming ${i + 1} of ${added.length}…`);
         let info = {};
-        try { info = await sample.json(`Identify the ${col === 'wishlist' ? 'product' : 'clothing item'} in this photo. If it is a screenshot of a shop listing, read the product name, brand and price from it. Australian English.\nReply with only JSON: {"name":"short descriptive name, e.g. Cream cable knit jumper","label":"2-4 word plain description, e.g. Blue gym leggings","brand":"brand if visible or known, else empty","category":"one of ${WARD_CATS.join(', ')}","colour":"main colour","vibes":["2-3 style tags"],"kind":"clothes|activewear|makeup|skincare|hair|home|office|tech|other","price":number or null,${UPRIGHT_ASK}}`, { images: [small], modelTier: 'quick', cache: false }); } catch { break; }
+        try { info = await sample.json(`Identify the ${col === 'wishlist' ? 'product' : 'clothing item'} in this photo. If it is a screenshot of a shop listing, read the product name, brand and price from it. Australian English.\nReply with only JSON: {"name":"short descriptive name, e.g. Cream cable knit jumper","label":"2-4 word plain description, e.g. Blue gym leggings","brand":"brand if visible or known, else empty","category":"one of ${WARD_CATS.join(', ')}","colour":"main colour","vibes":["2-3 style tags"],"kind":"clothes|activewear|makeup|skincare|hair|home|office|tech|other","price":number or null,${UPRIGHT_ASK}}`, { images: [small], modelTier: 'quick', cache: false }); } catch (e) { nameErr = e; break; }
         if (!info?.name) continue;
         const up = { name: String(info.name).slice(0, 140), brand: String(info.brand || ''), ...(info.label ? { label: String(info.label).slice(0, 40) } : {}) };
         if (col === 'wishlist') Object.assign(up, { category: WANT_CAT_OF[info.kind] || 'Clothes', variant: String(info.colour || ''), rrp: Number(info.price) > 0 ? Number(info.price) : null });
@@ -2089,7 +2089,8 @@ details.dna[open] > summary { margin-bottom: 10px; }
       }
     }
     quickStatus('');
-    if (named < added.length) toast(`${named ? `Named ${named}. ` : ''}Claude will name the rest in the next few minutes.`);
+    // Say plainly when Claude couldn't help, so photos never sit there unnamed without a reason
+    if (named < added.length) toast(`${named ? `Named ${named}. ` : ''}${nameErr ? `Claude couldn’t name ${named ? 'the rest' : 'them'} right now: ${aiErr(nameErr)} ` : ''}${queued ? 'A research run is on its way to finish them.' : 'They’re saved; the next refresh will name them.'}`);
   }
 
   for (const [inp, target] of [['#bulk-wardrobe', 'wardrobe']]) {
