@@ -2,41 +2,41 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;1,6..96,500;1,6..96,600&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,500,100,1;1,9..144,500,100,1;1,9..144,700,100,1&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=DM+Mono:wght@400;500&display=swap">
 <style>
 /* Layout: a personal beauty-counter ledger. Masthead + tabs, then one working panel per area. Stacks are grouped by step/area like a shelf. */
 :root {
-  --bg: #F6F4F7;
+  --bg: #FBF8F1;
   --surface: #FFFFFF;
-  --sunk: #EEEAF1;
-  --ink: #1E1A24;
-  --muted: #6C6475;
-  --line: #E2DDE7;
+  --sunk: #F3EEE3;
+  --ink: #1F1A16;
+  --muted: #6E655A;
+  --line: #E8E0D2;
   --accent: #8E1F3F;
   --accent-ink: #FFFFFF;
-  --accent-soft: #F4E3E9;
+  --accent-soft: #F7E7E2;
   --good: #2C7650;
   --good-soft: #E1F1E7;
   --warn: #9A5B05;
   --warn-soft: #FBEFD8;
   --bad: #B02A1E;
   --bad-soft: #FBE4E1;
-  --f-display: "Bodoni Moda", "Didot", "Bodoni 72", Georgia, serif;
-  --f-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --f-display: "Fraunces", "Cooper Black", Georgia, serif;
+  --f-body: "Bricolage Grotesque", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "DM Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
   --r: 10px;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #141218; --surface: #1D1A22; --sunk: #25212B; --ink: #F1EDF4; --muted: #A79FB0; --line: #342F3B;
-    --accent: #E68AA4; --accent-ink: #2A0E17; --accent-soft: #3A1E29;
+    --bg: #17140F; --surface: #201C16; --sunk: #2A251E; --ink: #F5EFE4; --muted: #ADA393; --line: #3A332A;
+    --accent: #E68AA4; --accent-ink: #2A0E17; --accent-soft: #3A2023;
     --good: #74CF9C; --good-soft: #15301F; --warn: #EDB65A; --warn-soft: #33270F; --bad: #F2887D; --bad-soft: #3B1A17;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #141218; --surface: #1D1A22; --sunk: #25212B; --ink: #F1EDF4; --muted: #A79FB0; --line: #342F3B;
-  --accent: #E68AA4; --accent-ink: #2A0E17; --accent-soft: #3A1E29;
+  --bg: #17140F; --surface: #201C16; --sunk: #2A251E; --ink: #F5EFE4; --muted: #ADA393; --line: #3A332A;
+  --accent: #E68AA4; --accent-ink: #2A0E17; --accent-soft: #3A2023;
   --good: #74CF9C; --good-soft: #15301F; --warn: #EDB65A; --warn-soft: #33270F; --bad: #F2887D; --bad-soft: #3B1A17;
   color-scheme: dark;
 }
@@ -44,6 +44,7 @@
 body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5; }
 .wrap { max-width: 1140px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 h1, h2, h3 { text-wrap: balance; margin: 0; }
+h2, .refresh .when, .stat .v, .stack-group > .gh h3 { font-variation-settings: "SOFT" 100, "WONK" 1; }
 h2 { font-family: var(--f-display); font-style: italic; font-weight: 500; font-size: 1.45rem; letter-spacing: -0.01em; }
 h3 { font-size: 1rem; font-weight: 600; }
 button, input, select, textarea { font: inherit; color: inherit; }
@@ -55,7 +56,7 @@ a { color: var(--accent); }
 /* Masthead */
 .top { border-bottom: 1px solid var(--line); background: var(--bg); }
 .top-in { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; padding-block: 28px 12px; }
-.brand { font-family: var(--f-display); font-weight: 500; font-size: clamp(2.6rem, 7vw, 4rem); line-height: 0.95; letter-spacing: -0.02em; }
+.brand { font-family: var(--f-display); font-weight: 600; font-variation-settings: "SOFT" 100, "WONK" 1, "opsz" 144; font-size: clamp(2.6rem, 7vw, 4rem); line-height: 0.95; letter-spacing: -0.02em; }
 .brand em { color: var(--accent); font-weight: 600; }
 .top-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .sync { margin: 0; font-size: 0.82rem; color: var(--muted); display: flex; align-items: center; gap: 6px; }
@@ -591,7 +592,9 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
   const SUPPLY = { low: ['warn', 'Running low'], out: ['bad', 'Run out'] };
   const HAIR_STEPS = ['Shampoo', 'Conditioner', 'Mask', 'Leave-in', 'Oil / serum', 'Styling', 'Scalp', 'Tools', 'Other'];
   const RESEARCH = { queued: ['warn', 'Researching…'], draft: ['', 'Draft from Claude · not checked yet'], failed: ['bad', 'Couldn’t confirm this one'] };
-  const WANT_CATS = ['Clothes', 'Activewear', 'Beauty', 'Skincare', 'Hair', 'Office', 'Home', 'Tech', 'Other'];
+  const WANT_CATS = ['Clothes', 'Activewear', 'Beauty', 'Skincare', 'Hair', 'Health', 'Office', 'Home', 'Tech', 'Other'];
+  const WANT_GROUPS = [['Clothes', ['Clothes', 'Activewear']], ['Tech', ['Tech']], ['Home & living', ['Home', 'Office']], ['Health & wellness', ['Beauty', 'Skincare', 'Hair', 'Health']], ['Other', ['Other']]];
+  const groupOfCat = (c) => (WANT_GROUPS.find(g => g[1].includes(c)) || ['Other'])[0];
   const STOCK = { in: 'In stock', low: 'Low stock', selling: 'Selling fast', out: 'Out of stock', unknown: 'Not sure' };
   const PRIORITY = { must: 'Must have', want: 'Want', maybe: 'Maybe' };
   const STACK = { grail: 'Holy grail', current: 'In my stack', testing: 'Testing', shelf: 'On the shelf', out: 'Swapped out' };
@@ -928,10 +931,11 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
 
   function renderWants() {
     const all = live('wishlist');
-    chipRow($('#wants-chips'), WANT_CATS.filter(c => all.some(w => w.category === c)).map(c => [c, c]), S.wantCat, 'want-cat');
+    const counts = {}; all.filter(w => S.showBought || w.status !== 'bought').forEach(w => { const g = groupOfCat(w.category); counts[g] = (counts[g] || 0) + 1; });
+    chipRow($('#wants-chips'), WANT_GROUPS.map(g => g[0]).filter(g => counts[g]).map(g => [g, `${g} ${counts[g]}`]), S.wantCat, 'want-cat');
     $('#wants-sort').value = S.wantSort;
     $('#wants-bought').checked = S.showBought;
-    const list = all.filter(w => (S.showBought || w.status !== 'bought') && (S.wantCat === 'All' || w.category === S.wantCat));
+    const list = all.filter(w => (S.showBought || w.status !== 'bought') && (S.wantCat === 'All' || groupOfCat(w.category) === S.wantCat));
     const pr = { must: 0, want: 1, maybe: 2 };
     const sorters = {
       alert: (a, b) => (Math.min(9, ...wantAlerts(a).map(x => x.rank)) - Math.min(9, ...wantAlerts(b).map(x => x.rank))) || (pr[a.priority] ?? 1) - (pr[b.priority] ?? 1),
@@ -1510,7 +1514,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       return true;
     } catch { return false; }
   }
-  const WANT_CAT_OF = { makeup: 'Beauty', skincare: 'Skincare', hair: 'Hair', clothes: 'Clothes', activewear: 'Activewear', home: 'Home', office: 'Office', tech: 'Tech' };
+  const WANT_CAT_OF = { makeup: 'Beauty', skincare: 'Skincare', hair: 'Hair', health: 'Health', clothes: 'Clothes', activewear: 'Activewear', home: 'Home', office: 'Office', tech: 'Tech' };
   function quickStatus(msg) { const el = $('#quick-status'); el.textContent = msg || ''; el.hidden = !msg; }
   async function quickAdd(phrase, own, file) {
     let info = {}, photoId = null;
@@ -1519,7 +1523,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       quickStatus(phrase ? `Looking up “${phrase}”…` : 'Working out what’s in the picture…');
       try {
         const withImg = file && S.canImages;
-        info = await sample.json(`Identify this product from a shopper's ${withImg ? 'photo or screenshot' : 'short description'} and fill in its details from what you know. Australian English, prices in AUD.\n\n${phrase ? `Description: "${phrase}"` : 'Description: (none, use the picture)'}\n\nReply with only JSON:\n{"kind":"makeup|skincare|hair|clothes|activewear|home|office|tech|other","name":"official product name","brand":"brand","type":"makeup only, one of: ${MAKEUP_TYPES.join(', ')}","step":"skincare: one of ${SKIN_STEPS.join(', ')}; hair: one of ${HAIR_STEPS.join(', ')}","category":"clothes only, one of: ${WARD_CATS.join(', ')}","rrp":typical Australian price as a number or null,"finish":"makeup finish or empty","actives":"skincare key actives or empty","colour":"clothes colour if named","variants":[{"name":"shade or colour name","hex":"#rrggbb approximate","note":"short descriptor e.g. warm peach, satin"}],"selected":"the shade or colour the shopper named, matching a variant name, or empty","summary":"one sentence on what it is","confidence":"high|medium|low"}\n\nList every shade or colourway you know (up to 24). If unsure, give your best guess and set confidence to low.`, file && S.canImages ? { images: [file] } : undefined);
+        info = await sample.json(`Identify this product from a shopper's ${withImg ? 'photo or screenshot' : 'short description'} and fill in its details from what you know. Australian English, prices in AUD.\n\n${phrase ? `Description: "${phrase}"` : 'Description: (none, use the picture)'}\n\nReply with only JSON:\n{"kind":"makeup|skincare|hair|health|clothes|activewear|home|office|tech|other","name":"official product name","brand":"brand","type":"makeup only, one of: ${MAKEUP_TYPES.join(', ')}","step":"skincare: one of ${SKIN_STEPS.join(', ')}; hair: one of ${HAIR_STEPS.join(', ')}","category":"clothes only, one of: ${WARD_CATS.join(', ')}","rrp":typical Australian price as a number or null,"finish":"makeup finish or empty","actives":"skincare key actives or empty","colour":"clothes colour if named","variants":[{"name":"shade or colour name","hex":"#rrggbb approximate","note":"short descriptor e.g. warm peach, satin"}],"selected":"the shade or colour the shopper named, matching a variant name, or empty","summary":"one sentence on what it is","confidence":"high|medium|low"}\n\nList every shade or colourway you know (up to 24). If unsure, give your best guess and set confidence to low.`, file && S.canImages ? { images: [file] } : undefined);
       } catch (e) { if (e?.code === 'not_granted' || e?.code === 'sampling_disabled') info = {}; else info = {}; }
     }
     const kind = String(info.kind || 'other');
