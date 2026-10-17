@@ -1328,9 +1328,15 @@ details.dna[open] > summary { margin-bottom: 10px; }
   const ROW_LABEL = { Layer: 'Layer', Outer: 'Over that', Want: 'Want' };
   const FLIP_ROWS = [['Top', ['Top', 'Shirt']], ['Layer', LAYERS], ['Outer', LAYERS], ['Bottom', ['Bottoms', 'Jeans', 'Skirt']], ['Dress', ['Dress']], ['Shoes', ['Shoes']], ['Bag', ['Bag', 'Accessory']], ['Active', ['Active']], ['Want', null]];
   // Weather: hot leaves out cool-season pieces and layers; cold leaves out warm-season pieces
-  const WEATHER = { any: 'Any weather', hot: 'Hot', mild: 'Mild', cold: 'Cold' };
-  const WEATHER_TEXT = { hot: 'Hot day, 27°C or more', mild: 'Mild day, around 18–24°C', cold: 'Cold day, under 15°C' };
-  const weatherOk = (p) => S.weather === 'hot' ? p.season !== 'cool' && !LAYER_CATS.includes(p.category) : S.weather === 'cold' ? p.season !== 'warm' : true;
+  const WEATHER = { any: 'Any weather', cold: 'Cold', cool: 'Cool', warm: 'Warm', hot: 'Hot' };
+  const WEATHER_TEXT = { cold: 'Cold day, under 14°C: layer up, a jacket or coat over a jumper or shirt', cool: 'Cool day, around 14–20°C: one or two layers', warm: 'Warm day, around 21–26°C: light layers only, like an open shirt or cardigan', hot: 'Hot day, 27°C or more: no layers beyond an open shirt' };
+  // What each weather leaves out: heavy layers when it's warm, warm-season pieces when it's cold
+  const weatherOk = (p) => ({
+    hot: p.season !== 'cool' && !LAYER_CATS.includes(p.category),
+    warm: p.season !== 'cool' && !['Jumper', 'Knit', 'Outerwear'].includes(p.category),
+    cool: true,
+    cold: p.season !== 'warm',
+  })[S.weather] ?? true;
   const rowItems = (cats) => cats ? wearable().filter(weatherOk).filter(p => cats.includes(p.category)).map(p => ({ ...p, _col: 'wardrobe' })) : live('wishlist').filter(w => ['Clothes', 'Activewear'].includes(w.category) && w.status !== 'bought').map(w => ({ ...w, _col: 'wishlist' }));
   // Board state is kept as indexes per row; today's look is saved by piece id so it survives reloads and devices
   function flipFromIds(ids) {
@@ -1376,7 +1382,9 @@ details.dna[open] > summary { margin-bottom: 10px; }
     return out;
   }
   const PICK_GROUPS = [['Tops', ['Top', 'Shirt']], ['Jumpers & jackets', LAYER_CATS], ['Bottoms', ['Bottoms', 'Jeans', 'Skirt']], ['Dresses', ['Dress']], ['Shoes', ['Shoes']], ['Bags & extras', ['Bag', 'Accessory']], ['Swim', ['Swim']], ['Active', ['Active']]];
-  const pickable = () => [...wearable().map(p => ({ ...p, _col: 'wardrobe' })), ...live('wishlist').filter(w => ['Clothes', 'Activewear'].includes(w.category) && w.status !== 'bought').map(w => ({ ...w, _col: 'wishlist' }))];
+  // Newest uploads first
+  const newestFirst = (a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || ''));
+  const pickable = () => [...wearable().map(p => ({ ...p, _col: 'wardrobe' })), ...live('wishlist').filter(w => ['Clothes', 'Activewear'].includes(w.category) && w.status !== 'bought').map(w => ({ ...w, _col: 'wishlist' }))].sort(newestFirst);
   function renderStyle() {
     const me = S.meta.me || {};
     const mp = (me.photoIds || []).filter(id => /^[0-9a-f]{32}$/.test(id));
@@ -1455,7 +1463,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
       + (untagged && sample && canWrite ? `<button class="btn small ghost" data-act="occ-auto"${S.occBusy ? ' disabled' : ''}>${S.occBusy ? 'Tagging…' : `Tag ${untagged} for me`}</button>` : '') : '';
     const wq = (S.wardQ || '').toLowerCase().split(/\s+/).filter(Boolean);
     const list = all.filter(w => !wq.length || wq.every(q => [w.label, w.name, w.brand, w.colour, w.category, w.size && `size ${w.size}`, ...(w.occasions || [])].join(' ').toLowerCase().includes(q))).filter(w => S.wardCat === 'All' || w.category === S.wardCat).filter(w => !occOn || S.wardOcc === 'All' || (S.wardOcc === 'nofit' ? w.fit === 'no' : (w.occasions || []).includes(S.wardOcc) && w.fit !== 'no'))
-      .sort((a, b) => (a.fit === 'no') - (b.fit === 'no') || WARD_CATS.indexOf(a.category) - WARD_CATS.indexOf(b.category) || String(a.name).localeCompare(String(b.name)));
+      .sort((a, b) => (a.fit === 'no') - (b.fit === 'no') || newestFirst(a, b));
     $('#wardrobe-list').innerHTML = list.length ? list.map(pieceBtn).join('') : emptyState('wardrobe', 'Add what’s in your wardrobe (a photo helps). Then Claude can mix outfits from your own pieces and spot missing basics.');
     $('#ward-add').dataset.preset = S.wardCat === 'Active' ? 'Active' : '';
     const activeWants = S.wardCat === 'Active' ? live('wishlist').filter(w => w.category === 'Activewear' && w.status !== 'bought') : [];
@@ -1618,7 +1626,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
         <span id="drop-prev">${cur ? `<img class="thumb" src="${esc(cur)}" alt="">` : '<div class="thumb">+</div>'}</span>
         <span><b>${cur ? 'Change photo' : 'Add a photo'}</b><br><span class="meta">Choose a file, drag one in, or paste a screenshot.</span></span>
         <input type="file" id="${id}" accept="image/*">
-      </label>${src && ['wardrobe', 'wishlist', 'beauty', 'routine', 'hair'].includes(editing?.col) ? `<label class="field full check-row"><input type="checkbox" name="isLabel"> <span>This is a photo of the <b>label or tag</b>: use it to identify the piece and keep the current picture</span></label>` : ''}`;
+      </label>${cur ? `<button type="button" class="btn small ghost" data-act="photo-rotate" style="justify-self:start">↻ Rotate photo</button>` : ''}${src && ['wardrobe', 'wishlist', 'beauty', 'routine', 'hair'].includes(editing?.col) ? `<label class="field full check-row"><input type="checkbox" name="isLabel"> <span>This is a photo of the <b>label or tag</b>: use it to identify the piece and keep the current picture</span></label>` : ''}`;
     }
     else ctl = `<input type="${f.type === 'number' ? 'number' : f.type === 'url' ? 'url' : 'text'}" ${base} ${f.type === 'number' ? 'step="0.01" min="0" inputmode="decimal"' : ''} value="${esc(v ?? '')}" placeholder="${esc(f.ph || '')}" ${f.req ? 'required' : ''}>`;
     return `<label class="field ${f.full ? 'full' : ''}" for="${id}"><span>${esc(f.label)}</span>${ctl}${f.hint ? `<span class="hint">${esc(f.hint)}</span>` : ''}</label>`;
@@ -1643,9 +1651,9 @@ details.dna[open] > summary { margin-bottom: 10px; }
     const first = $('#dlg-body input:not([type=file]), #dlg-body select, #dlg-body textarea');
     if (first) first.focus();
   }
-  function setPendingPhoto(file) {
+  function setPendingPhoto(file, rotated = false) {
     if (!file || !/^image\//.test(file.type) || !editing || !$('#drop')) return;
-    editing.pendingPhoto = file;
+    editing.pendingPhoto = file; editing.rotated = rotated;
     $('#drop-prev').innerHTML = `<img class="thumb" src="${URL.createObjectURL(file)}" alt="">`;
   }
   $('#dlg-body').addEventListener('change', (e) => { if (e.target.type === 'file') setPendingPhoto(e.target.files[0]); });
@@ -1672,9 +1680,9 @@ details.dna[open] > summary { margin-bottom: 10px; }
     try {
       if (pendingPhoto && assets) {
         save.textContent = 'Uploading photo…';
-        const up = await assets.upload(pendingPhoto);
+        const up = await assets.upload(await shrink(pendingPhoto));
         if (item && form.elements.isLabel?.checked) data.labelPhotoId = up.id;
-        else { data.photoId = up.id; data.photoUrl = up.url; }
+        else { data.photoId = up.id; data.photoUrl = up.url; if (editing.rotated && item?.userPhotoId && item.userPhotoId === item.photoId) data.userPhotoId = up.id; }
       }
       save.textContent = 'Saving…';
       const today = dayKey();
@@ -1905,6 +1913,17 @@ details.dna[open] > summary { margin-bottom: 10px; }
       return b ? new File([b], (file.name || 'photo').replace(/\.\w+$/, '') + '.jpg', { type: 'image/jpeg' }) : file;
     } catch { return file; }
   }
+  // Turn a photo clockwise by 90, 180 or 270 degrees (phones often save flat-lay shots sideways)
+  async function rotateFile(blob, deg) {
+    deg = ((Number(deg) % 360) + 360) % 360; if (!deg || ![90, 180, 270].includes(deg)) return null;
+    const bmp = await createImageBitmap(blob, { imageOrientation: 'from-image' });
+    const side = deg !== 180, c = document.createElement('canvas');
+    c.width = side ? bmp.height : bmp.width; c.height = side ? bmp.width : bmp.height;
+    const g = c.getContext('2d'); g.translate(c.width / 2, c.height / 2); g.rotate(deg * Math.PI / 180); g.drawImage(bmp, -bmp.width / 2, -bmp.height / 2); bmp.close?.();
+    const b = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.88));
+    return b ? new File([b], 'photo.jpg', { type: 'image/jpeg' }) : null;
+  }
+  const UPRIGHT_ASK = '"upright":degrees to turn the photo clockwise so the item is the right way up (neckline or waistband at the top, shoes standing), one of 0, 90, 180, 270';
   // Best-guess category from a typed name, for when Claude couldn't read it
   function guessCat(t) {
     t = String(t || '').toLowerCase();
@@ -1959,9 +1978,10 @@ details.dna[open] > summary { margin-bottom: 10px; }
       quickStatus(phrase ? `Looking up “${phrase}”…` : 'Working out what’s in the picture…');
       try {
         const withImg = file && S.canImages;
-        info = await sample.json(`Identify this product from a shopper's ${withImg ? 'photo or screenshot' : 'short description'} and fill in its details from what you know. Australian English, prices in AUD.\n\n${phrase ? `Description: "${phrase}"` : 'Description: (none, use the picture)'}\n\nReply with only JSON:\n{"kind":"makeup|skincare|hair|health|clothes|activewear|home|office|tech|other","name":"official product name","label":"2-4 word plain description, colour + what it is, e.g. Blue gym leggings, Burgundy Mary Janes, Rice toner","brand":"brand","type":"makeup only, one of: ${MAKEUP_TYPES.join(', ')}","step":"skincare: one of ${SKIN_STEPS.join(', ')}; hair: one of ${HAIR_STEPS.join(', ')}","category":"clothes only, one of: ${WARD_CATS.join(', ')}","rrp":typical Australian price as a number or null,"finish":"makeup finish or empty","actives":"skincare key actives or empty","colour":"clothes colour if named","variants":[{"name":"shade or colour name","hex":"#rrggbb approximate","note":"short descriptor e.g. warm peach, satin"}],"selected":"the shade or colour the shopper named, matching a variant name, or empty","summary":"one sentence on what it is","confidence":"high|medium|low"}\n\nList every shade or colourway you know (up to 24). If unsure, give your best guess and set confidence to low.`, file && S.canImages ? { images: [file] } : undefined);
+        info = await sample.json(`Identify this product from a shopper's ${withImg ? 'photo or screenshot' : 'short description'} and fill in its details from what you know. Australian English, prices in AUD.\n\n${phrase ? `Description: "${phrase}"` : 'Description: (none, use the picture)'}\n\nReply with only JSON:\n{"kind":"makeup|skincare|hair|health|clothes|activewear|home|office|tech|other","name":"official product name","label":"2-4 word plain description, colour + what it is, e.g. Blue gym leggings, Burgundy Mary Janes, Rice toner","brand":"brand","type":"makeup only, one of: ${MAKEUP_TYPES.join(', ')}","step":"skincare: one of ${SKIN_STEPS.join(', ')}; hair: one of ${HAIR_STEPS.join(', ')}","category":"clothes only, one of: ${WARD_CATS.join(', ')}","rrp":typical Australian price as a number or null,"finish":"makeup finish or empty","actives":"skincare key actives or empty","colour":"clothes colour if named","variants":[{"name":"shade or colour name","hex":"#rrggbb approximate","note":"short descriptor e.g. warm peach, satin"}],"selected":"the shade or colour the shopper named, matching a variant name, or empty","summary":"one sentence on what it is","confidence":"high|medium|low"${file && S.canImages ? `,${UPRIGHT_ASK}` : ''}}\n\nList every shade or colourway you know (up to 24). If unsure, give your best guess and set confidence to low.`, file && S.canImages ? { images: [file] } : undefined);
       } catch { info = {}; }
     }
+    if (photoId && info.upright) { try { const turned = await rotateFile(file, info.upright); if (turned) photoId = (await assets.upload(turned)).id; } catch {} }
     const kind = String(info.kind || 'other');
     own = mode === 'own' || (mode === 'try' && ['makeup', 'skincare', 'hair'].includes(kind));
     const stackStatus = mode === 'try' ? 'try' : 'current';
@@ -2059,11 +2079,12 @@ details.dna[open] > summary { margin-bottom: 10px; }
         const { col, id, small } = added[i];
         quickStatus(`Naming ${i + 1} of ${added.length}…`);
         let info = {};
-        try { info = await sample.json(`Identify the ${col === 'wishlist' ? 'product' : 'clothing item'} in this photo. If it is a screenshot of a shop listing, read the product name, brand and price from it. Australian English.\nReply with only JSON: {"name":"short descriptive name, e.g. Cream cable knit jumper","label":"2-4 word plain description, e.g. Blue gym leggings","brand":"brand if visible or known, else empty","category":"one of ${WARD_CATS.join(', ')}","colour":"main colour","vibes":["2-3 style tags"],"kind":"clothes|activewear|makeup|skincare|hair|home|office|tech|other","price":number or null}`, { images: [small], modelTier: 'quick', cache: false }); } catch { break; }
+        try { info = await sample.json(`Identify the ${col === 'wishlist' ? 'product' : 'clothing item'} in this photo. If it is a screenshot of a shop listing, read the product name, brand and price from it. Australian English.\nReply with only JSON: {"name":"short descriptive name, e.g. Cream cable knit jumper","label":"2-4 word plain description, e.g. Blue gym leggings","brand":"brand if visible or known, else empty","category":"one of ${WARD_CATS.join(', ')}","colour":"main colour","vibes":["2-3 style tags"],"kind":"clothes|activewear|makeup|skincare|hair|home|office|tech|other","price":number or null,${UPRIGHT_ASK}}`, { images: [small], modelTier: 'quick', cache: false }); } catch { break; }
         if (!info?.name) continue;
         const up = { name: String(info.name).slice(0, 140), brand: String(info.brand || ''), ...(info.label ? { label: String(info.label).slice(0, 40) } : {}) };
         if (col === 'wishlist') Object.assign(up, { category: WANT_CAT_OF[info.kind] || 'Clothes', variant: String(info.colour || ''), rrp: Number(info.price) > 0 ? Number(info.price) : null });
         else Object.assign(up, { category: target === 'active' || info.kind === 'activewear' ? 'Active' : (WARD_CATS.includes(info.category) ? info.category : 'Top'), colour: String(info.colour || ''), vibes: Array.isArray(info.vibes) ? info.vibes.map(String).slice(0, 3) : [] });
+        try { const turned = await rotateFile(small, info.upright); if (turned) { const pid = (await assets.upload(turned)).id; Object.assign(up, { photoId: pid, userPhotoId: pid }); } } catch {}
         try { await db.collection(col).doc(id).update(up); named++; } catch {}
       }
     }
@@ -2125,8 +2146,9 @@ details.dna[open] > summary { margin-bottom: 10px; }
     const dress = n('Dress') && Math.random() < 0.3;
     if (dress && free('Dress')) f.Dress = r(n('Dress')); else { if (n('Top') && free('Top')) f.Top = r(n('Top')); if (n('Bottom') && free('Bottom')) f.Bottom = r(n('Bottom')); }
     if (n('Shoes') && free('Shoes')) f.Shoes = r(n('Shoes'));
-    if (free('Layer') && n('Layer') && (S.weather === 'cold' || (S.weather !== 'hot' && Math.random() < 0.5))) f.Layer = r(n('Layer'));
-    if (free('Outer') && f.Layer != null && S.weather === 'cold' && Math.random() < 0.5) { const items = rowItems(LAYERS), heavy = items.map((x, i) => [x, i]).filter(([x]) => LAYER_WEIGHT[x.category] >= 3 && x.id !== items[f.Layer % items.length]?.id); if (heavy.length) f.Outer = heavy[r(heavy.length)][1]; }
+    const layerOdds = { cold: 1, cool: 0.75, warm: 0.35, hot: 0.15 }[S.weather] ?? 0.5, outerOdds = { cold: 0.6, cool: 0.25 }[S.weather] || 0;
+    if (free('Layer') && n('Layer') && Math.random() < layerOdds) f.Layer = r(n('Layer'));
+    if (free('Outer') && f.Layer != null && Math.random() < outerOdds) { const items = rowItems(LAYERS), heavy = items.map((x, i) => [x, i]).filter(([x]) => LAYER_WEIGHT[x.category] >= 3 && x.id !== items[f.Layer % items.length]?.id); if (heavy.length) f.Outer = heavy[r(heavy.length)][1]; }
     if (free('Bag') && n('Bag') && Math.random() < 0.5) f.Bag = r(n('Bag'));
     S.flip = f; $('#board-out').hidden = true; renderStyle();
   });
@@ -2322,6 +2344,19 @@ details.dna[open] > summary { margin-bottom: 10px; }
         }
         renderStyle(); renderWardrobe();
         toast(already ? 'Taken out of today’s look' : 'Added and locked in today’s look. Open Style me to build around it.');
+        break;
+      }
+      case 'photo-rotate': {
+        if (!editing) break;
+        t.disabled = true;
+        (async () => {
+          try {
+            const srcBlob = editing.pendingPhoto || (editing.item?.photoId ? await blobOf(editing.item.photoId) : null);
+            const f = srcBlob && await rotateFile(srcBlob, 90);
+            if (f) setPendingPhoto(f, true);
+          } catch { toast('Couldn’t rotate that photo.'); }
+          finally { t.disabled = false; }
+        })();
         break;
       }
       case 'lock': { flipState(); const row = t.dataset.row; S.locked.has(row) ? S.locked.delete(row) : S.locked.add(row); renderStyle(); break; }
