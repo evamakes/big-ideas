@@ -66,7 +66,7 @@ a { color: var(--accent); }
 .sync::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
 .sync.on::before { background: var(--good); }
 .tabs-scroll { overflow-x: auto; scrollbar-width: none; }
-.tabs { display: flex; gap: 4px; }
+.tabs { display: flex; gap: 4px; flex-wrap: wrap; }
 .tab { border: 0; background: none; padding: 10px 14px 12px; cursor: pointer; color: var(--muted); font-weight: 600; border-bottom: 2px solid transparent; white-space: nowrap; }
 .tab:hover { color: var(--ink); }
 .tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
@@ -950,20 +950,20 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     ].map(([v, k]) => `<div class="stat"><span class="v">${esc(v)}</span><span class="k">${esc(k)}</span></div>`).join('');
 
     const rows = [];
-    wants.forEach(w => wantAlerts(w).forEach(a => rows.push({ w, a })));
+    wants.forEach(w => wantAlerts(w).filter(a => w.dismissedAlert !== a.label).forEach(a => rows.push({ w, a })));
     rows.sort((x, y) => x.a.rank - y.a.rank);
     const seen = new Set();
     const uniq = rows.filter(({ w }) => !seen.has(w.id) && seen.add(w.id));
     $('#alerts').innerHTML = uniq.length ? uniq.slice(0, 7).map(({ w, a }) => `
       <li>${thumb(w)}
         <span class="what"><b>${esc(shortOf(w))}</b><span class="pills"><span class="pill ${a.tone}">${esc(a.label)}</span><span class="meta">${esc(a.detail)}</span></span></span>
-        ${w.url && safeUrl(w.url) ? `<a class="btn small ghost" href="${esc(w.url)}" target="_blank" rel="noopener">Shop ↗</a>` : '<span></span>'}</li>`).join('')
-      : `<li style="display:block"><span class="meta">${wants.length ? 'Nothing has dropped or is running low.' : 'Add things you want. Price drops and low stock show up here.'}</span></li>`;
+        <span class="tools">${w.url && safeUrl(w.url) ? `<a class="btn small ghost" href="${esc(w.url)}" target="_blank" rel="noopener">Shop ↗</a>` : ''}${canWrite ? `<button class="btn small ghost" data-act="alert-dismiss" data-id="${esc(w.id)}" data-v="${esc(a.label)}">Dismiss</button>` : ''}</span></li>`).join('')
+      : `<li style="display:block"><span class="meta">${wants.length ? 'Nothing new has dropped or is running low.' : 'Add things you want. Price drops and low stock show up here.'}</span></li>`;
 
     const nf = newFinds().sort((a, b) => String(b.foundOn || '').localeCompare(String(a.foundOn || ''))).slice(0, 4);
     $('#today-finds').innerHTML = nf.length ? nf.map(f => {
       const v = VERDICT[(f.review || f).verdict];
-      return `<li>${thumb(f)}<span class="what"><b>${esc(shortOf(f))}</b><span class="meta">${esc([f.brand, FIND_KINDS[f.kind], f.price != null ? fmt(f.price) : ''].filter(Boolean).join(' · '))}</span>${v ? `<span class="pills"><span class="pill ${v[0]}">${esc(v[1])}</span></span>` : ''}</span><span class="tools"><button class="btn small ghost" data-tab="finds">View</button>${canWrite ? `<button class="x" data-act="find-snooze" data-id="${esc(f.id)}" aria-label="Hide for now" title="Hide for now">×</button>` : ''}</span></li>`;
+      return `<li>${thumb(f)}<span class="what"><b>${esc(shortOf(f))}</b><span class="meta">${esc([f.brand, FIND_KINDS[f.kind], f.price != null ? fmt(f.price) : ''].filter(Boolean).join(' · '))}</span>${v ? `<span class="pills"><span class="pill ${v[0]}">${esc(v[1])}</span></span>` : ''}</span><span class="tools"><button class="btn small ghost" data-tab="finds">View</button>${canWrite ? `<button class="btn small ghost" data-act="find-snooze" data-id="${esc(f.id)}" title="Hide for a month">Not now</button><button class="btn small ghost danger" data-act="find-nope" data-id="${esc(f.id)}" title="Never show me this, or things like it">Never</button>` : ''}</span></li>`;
     }).join('') : `<li style="display:block"><span class="meta">New skincare, makeup and other finds from the daily refresh will land here, with what real reviewers say.</span></li>`;
   }
 
@@ -1090,8 +1090,8 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
           ${canWrite ? `<button class="btn small ghost" data-act="find-want" data-id="${esc(f.id)}">Add to wants</button>` : ''}
           ${canWrite && (f.kind === 'skincare' || f.kind === 'makeup') ? `<button class="btn small ghost" data-act="find-stack" data-id="${esc(f.id)}">${swapTarget ? 'Swap it in' : 'Add to my stack'}</button>` : ''}
           ${canResearch() && f.altResearch !== 'queued' ? `<button class="btn small ghost" data-act="alts" data-col="finds" data-id="${esc(f.id)}">Similar or cheaper</button>` : ''}
-          ${canWrite ? `<button class="btn small ghost" data-act="find-snooze" data-id="${esc(f.id)}">Not now</button>` : ''}
-          ${canWrite ? `<button class="btn small ghost danger" data-act="find-nope" data-id="${esc(f.id)}">Not for me</button>` : ''}
+          ${canWrite ? `<button class="btn small ghost" data-act="find-snooze" data-id="${esc(f.id)}" title="Hide for a month">Not now</button>` : ''}
+          ${canWrite ? `<button class="btn small ghost danger" data-act="find-nope" data-id="${esc(f.id)}" title="Never show me this, or things like it">Never</button>` : ''}
         </div>
       </article>`;
     }).join('');
@@ -1221,7 +1221,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     const all = pickable();
     const chosen = flipChosen(), chosenIds = new Set(chosen.map(x => x.id));
     $('#pick-count').textContent = chosen.length ? `${chosen.length} on the board` : '';
-    $('#style-picks').innerHTML = all.length ? all.map(x => { const src = photoSrc(x); return `<button class="pick" data-act="pick" data-id="${esc(x.id)}" aria-pressed="${chosenIds.has(x.id)}"><div class="img">${src ? `<img src="${esc(src)}" alt="" loading="lazy">` : initial(x.name)}</div><span>${x._col === 'wishlist' ? '<b>Want</b> · ' : ''}${esc(x.name)}</span></button>`; }).join('') : '<span class="meta">Add clothes to your wardrobe or wants first.</span>';
+    $('#style-picks').innerHTML = all.length ? all.map(x => { const src = photoSrc(x); return `<button class="pick" data-act="pick" data-id="${esc(x.id)}" aria-pressed="${chosenIds.has(x.id)}" title="${esc((x._col === 'wishlist' ? 'Want: ' : '') + shortOf(x))}" aria-label="${esc((x._col === 'wishlist' ? 'Want: ' : '') + shortOf(x))}"><div class="img">${src ? `<img src="${esc(src)}" alt="" loading="lazy">` : initial(shortOf(x))}</div></button>`; }).join('') : '<span class="meta">Add clothes to your wardrobe or wants first.</span>';
     const f = flipState();
     const rows = FLIP_ROWS.map(([row, cats]) => {
       const items = rowItems(cats); if (!items.length) return '';
@@ -1279,13 +1279,14 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     $('#restock-btn').hidden = !items.length || !(mcp && S.meta.refresh?.triggerId && canWrite);
     // Shops that can fill the whole restock list (or most of it) in one delivered order
     const ids = new Set(items.map(x => `${x._col}/${x.id}`)), rs = S.meta.restock || {};
-    const bundles = (rs.bundles || []).map(b => ({ ...b, has: (b.covers || []).filter(c => ids.has(c)) })).filter(b => b.has.length >= 2 || (b.has.length && ids.size === 1))
+    const bundles = (rs.bundles || []).map(b => ({ ...b, has: (b.covers || []).filter(c => ids.has(c)) })).filter(b => b.has.length)
       .sort((a, b) => (b.has.length - a.has.length) || ((a.total ?? 1e9) - (b.total ?? 1e9))).slice(0, 4);
     const nm = (c) => { const x = items.find(i => `${i._col}/${i.id}` === c); return x ? shortOf(x) : ''; };
-    $('#shop-bundles').innerHTML = items.length >= 2 && bundles.length ? `<p class="eyebrow" style="margin:6px 0 8px">One order${rs.checked ? ` · checked ${esc(ago(rs.checked))}` : ''}</p><ul class="alerts">${bundles.map(b => `<li style="grid-template-columns:1fr auto">
+    const full = bundles.some(b => b.has.length === ids.size);
+    $('#shop-bundles').innerHTML = items.length >= 2 && bundles.length ? `<p class="eyebrow" style="margin:6px 0 8px">One order${rs.checked ? ` · checked ${esc(ago(rs.checked))}` : ''}</p>${full ? '' : '<p class="meta" style="margin:0 0 6px">No single shop has everything yet. These are the best splits.</p>'}<ul class="alerts">${bundles.map(b => `<li style="grid-template-columns:1fr auto">
         <span class="what"><span><b>${esc(b.shop)}</b>${payPills(b)}</span><span class="meta">${b.has.length === ids.size ? 'Has everything' : `Has ${b.has.length} of ${ids.size}`}: ${esc(b.has.map(nm).filter(Boolean).join(', '))}${(b.missing || []).filter(c => ids.has(c)).length ? ` · not ${esc(b.missing.filter(c => ids.has(c)).map(nm).filter(Boolean).join(', '))}` : ''}</span>
         <span class="meta">${b.subtotal != null ? fmt(b.subtotal) : ''}${b.delivery != null ? ` + ${Number(b.delivery) ? fmt(b.delivery) + ' delivery' : 'free delivery'}` : ' + delivery'}${b.total != null ? ` = <b style="color:var(--ink)">${fmt(b.total)}</b>` : ''}${b.note ? ` · ${esc(b.note)}` : ''}</span></span>
-        ${safeUrl(b.url) ? `<a class="btn small ghost" href="${esc(b.url)}" target="_blank" rel="noopener">Shop ↗</a>` : '<span></span>'}</li>`).join('')}</ul>` : '';
+        ${safeUrl(b.url) ? `<a class="btn small ghost" href="${esc(b.url)}" target="_blank" rel="noopener">Shop ↗</a>` : '<span></span>'}</li>`).join('')}</ul>` : items.length >= 2 ? `<p class="meta" style="margin:6px 0 0">One-order options (a shop that has everything on this list) appear after the next price check.</p>` : '';
   }
   function renderAmazon() {
     const all = live('basket'), open = all.filter(b => !b.ordered).sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)));
@@ -2123,6 +2124,11 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
           const missing = x.analysis.missing.map((mm, j) => j === i ? { ...mm, added: true } : mm);
           await db.collection('inspo').doc(id).update({ analysis: { ...x.analysis, missing } });
         });
+        break;
+      }
+      case 'alert-dismiss': {
+        const w = find('wishlist'); if (!w) break;
+        act(async () => { await db.collection('wishlist').doc(w.id).update({ dismissedAlert: t.dataset.v }); toast('Dismissed. It comes back if the price or stock changes again.', async () => { await db.collection('wishlist').doc(w.id).update({ dismissedAlert: null }); }); });
         break;
       }
       case 'find-snooze': {
