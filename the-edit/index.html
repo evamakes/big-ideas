@@ -71,6 +71,20 @@ a { color: var(--accent); }
 .tab:hover { color: var(--ink); }
 .tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
 .tab .n { font-family: var(--f-mono); font-size: 0.75rem; font-weight: 400; color: var(--muted); margin-left: 4px; }
+.menu-btn { display: none; }
+@media (max-width: 700px) {
+  .tabs-scroll { overflow: visible; position: relative; padding-block: 6px 10px; }
+  .menu-btn { display: flex; align-items: center; gap: 12px; width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 10px 16px; font: inherit; text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.78rem; font-weight: 600; color: var(--ink); cursor: pointer; }
+  .menu-btn .burger { display: grid; gap: 4px; width: 18px; }
+  .menu-btn .burger i { display: block; height: 1.5px; background: currentColor; border-radius: 2px; transition: transform .2s, opacity .2s; }
+  .menu-btn[aria-expanded="true"] .burger i:nth-child(1) { transform: translateY(5.5px) rotate(45deg); }
+  .menu-btn[aria-expanded="true"] .burger i:nth-child(2) { opacity: 0; }
+  .menu-btn[aria-expanded="true"] .burger i:nth-child(3) { transform: translateY(-5.5px) rotate(-45deg); }
+  .tabs { display: none; position: absolute; left: 16px; right: 16px; top: calc(100% - 4px); z-index: 40; flex-direction: column; flex-wrap: nowrap; gap: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 6px; box-shadow: 0 12px 32px rgba(0,0,0,.12); }
+  .tabs-scroll.open .tabs { display: flex; }
+  .tab { text-align: left; border-bottom: 0; border-radius: 10px; padding: 12px 14px; }
+  .tab[aria-selected="true"] { background: var(--sunk); }
+}
 .tab .new { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-left: 5px; vertical-align: middle; }
 
 main.wrap { padding-block: 24px 64px; display: grid; gap: 20px; }
@@ -330,6 +344,8 @@ details.dna[open] > summary { margin-bottom: 10px; }
 .frow.off .card-in { opacity: 0.45; }
 .frow .arrow { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); cursor: pointer; font-size: 1.1rem; color: var(--ink); }
 .frow .lab { display: grid; gap: 4px; align-content: center; }
+.frow-add { padding: 2px 0 2px 2px; }
+.frow-add .link { font-size: 0.82rem; }
 .frow .lock { border: 1px solid var(--line); background: transparent; border-radius: 999px; font: inherit; font-size: 0.68rem; letter-spacing: 0.04em; text-transform: none; padding: 1px 8px; cursor: pointer; color: var(--muted); justify-self: start; }
 .frow .lock[aria-pressed="true"] { background: var(--tan); border-color: var(--tan); color: #fff; }
 .frow.locked .card-in { outline: 2px solid var(--tan); outline-offset: -2px; }
@@ -386,8 +402,9 @@ details.dna[open] > summary { margin-bottom: 10px; }
       <button class="btn small ghost" data-tab="bin" id="bin-btn">Bin</button>
     </div>
   </div>
-  <div class="wrap tabs-scroll">
-    <nav class="tabs" role="tablist" aria-label="Sections">
+  <div class="wrap tabs-scroll" id="tabs-wrap">
+    <button class="menu-btn" id="menu-btn" aria-expanded="false" aria-controls="tabs-nav"><span class="burger" aria-hidden="true"><i></i><i></i><i></i></span><span id="menu-label">Today</span></button>
+    <nav class="tabs" role="tablist" aria-label="Sections" id="tabs-nav">
       <button class="tab" role="tab" data-tab="today">Today</button>
       <button class="tab" role="tab" data-tab="wants">Wants<span class="n" id="n-wants"></span></button>
       <button class="tab" role="tab" data-tab="finds">Finds<span class="n" id="n-finds"></span></button>
@@ -990,6 +1007,8 @@ details.dna[open] > summary { margin-bottom: 10px; }
     sync.className = 'sync' + (S.status === 'live' ? ' on' : '');
     sync.textContent = S.status === 'live' ? (canWrite ? 'Saved to your Edit' : 'View only') : S.status === 'off' ? 'Not connected' : 'Connecting…';
     $$('.tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.tab === S.tab)));
+    const curTab = $(`.tab[data-tab="${S.tab}"]`);
+    $('#menu-label').textContent = curTab ? curTab.firstChild.textContent : S.tab === 'bin' ? 'Bin' : '';
     $$('[data-panel]').forEach(p => p.hidden = p.dataset.panel !== S.tab);
     const stackCount = (c) => live(c).filter(x => !INACTIVE.includes(statusOf(x))).length;
     $('#n-wants').textContent = activeWants().length || '';
@@ -1303,7 +1322,11 @@ details.dna[open] > summary { margin-bottom: 10px; }
     renderStack('hair', $('#hair-stack'), HAIR_STEPS.map(s => [s, [s]]), x => known.has(x.step) ? x.step : 'Other');
   }
   const LAYER_CATS = ['Knit', 'Jumper', 'Cardigan', 'Jacket', 'Outerwear'];
-  const FLIP_ROWS = [['Top', ['Top', 'Shirt']], ['Layer', [...LAYER_CATS, 'Shirt']], ['Bottom', ['Bottoms', 'Jeans', 'Skirt']], ['Dress', ['Dress']], ['Shoes', ['Shoes']], ['Bag', ['Bag', 'Accessory']], ['Active', ['Active']], ['Want', null]];
+  // Layer rows: an open shirt or light knit, then optionally a heavier jacket over it; they appear only when used
+  const LAYERS = ['Shirt', ...LAYER_CATS];
+  const LAYER_WEIGHT = { Shirt: 0, Cardigan: 1, Knit: 2, Jumper: 3, Jacket: 4, Outerwear: 5 };
+  const ROW_LABEL = { Layer: 'Layer', Outer: 'Over that', Want: 'Want' };
+  const FLIP_ROWS = [['Top', ['Top', 'Shirt']], ['Layer', LAYERS], ['Outer', LAYERS], ['Bottom', ['Bottoms', 'Jeans', 'Skirt']], ['Dress', ['Dress']], ['Shoes', ['Shoes']], ['Bag', ['Bag', 'Accessory']], ['Active', ['Active']], ['Want', null]];
   // Weather: hot leaves out cool-season pieces and layers; cold leaves out warm-season pieces
   const WEATHER = { any: 'Any weather', hot: 'Hot', mild: 'Mild', cold: 'Cold' };
   const WEATHER_TEXT = { hot: 'Hot day, 27°C or more', mild: 'Mild day, around 18–24°C', cold: 'Cold day, under 15°C' };
@@ -1311,9 +1334,22 @@ details.dna[open] > summary { margin-bottom: 10px; }
   const rowItems = (cats) => cats ? wearable().filter(weatherOk).filter(p => cats.includes(p.category)).map(p => ({ ...p, _col: 'wardrobe' })) : live('wishlist').filter(w => ['Clothes', 'Activewear'].includes(w.category) && w.status !== 'bought').map(w => ({ ...w, _col: 'wishlist' }));
   // Board state is kept as indexes per row; today's look is saved by piece id so it survives reloads and devices
   function flipFromIds(ids) {
-    const f = {};
-    for (const [row, cats] of FLIP_ROWS) { if (!cats) continue; const i = rowItems(cats).findIndex(x => ids.includes(x.id)); if (i >= 0) f[row] = i; }
+    const f = {}, used = new Set(), want = new Set(ids);
+    const place = (row, pick) => { const items = rowItems(FLIP_ROWS.find(r => r[0] === row)[1]); const cand = items.map((x, i) => [x, i]).filter(([x]) => want.has(x.id) && !used.has(x.id)); const hit = pick(cand); if (hit) { f[row] = hit[1]; used.add(hit[0].id); } };
+    for (const [row, cats] of FLIP_ROWS) if (cats && !['Top', 'Layer', 'Outer'].includes(row)) place(row, c => c[0]);
+    // A shirt is the top only when there's no other top; otherwise it's worn open as a layer
+    place('Top', c => c.find(([x]) => x.category === 'Top') || c[0]);
+    const byWeight = (c) => c.sort((a, b) => LAYER_WEIGHT[a[0].category] - LAYER_WEIGHT[b[0].category]);
+    place('Layer', c => byWeight(c)[0]);
+    place('Outer', c => byWeight(c)[0]);
     return f;
+  }
+  // Which board row a piece goes into: an empty row that takes it, else the row it's already on, else the first that takes it
+  function rowForPiece(id, f) {
+    const rows = FLIP_ROWS.filter(([, cats]) => cats).map(([row, cats]) => { const items = rowItems(cats); const i = items.findIndex(x => x.id === id); return i < 0 ? null : { row, i, on: f[row] != null && f[row] >= 0, cur: f[row] != null && f[row] >= 0 && items[((f[row] % items.length) + items.length) % items.length]?.id === id }; }).filter(Boolean);
+    const cur = rows.find(r => r.cur); if (cur) return cur;
+    const usable = rows.filter(r => r.row !== 'Outer' || (f.Layer != null && f.Layer >= 0));
+    return usable.find(r => !r.on) || usable[0] || null;
   }
   function flipState() {
     if (!S.flip) {
@@ -1379,11 +1415,16 @@ details.dna[open] > summary { margin-bottom: 10px; }
       : `<li style="display:block"><span class="meta">${(S.meta.style || {}).summary ? 'Tap Find my gaps to compare your wardrobe with your style DNA and Pinterest.' : 'Add your Pinterest board above first, then Claude can compare it with your wardrobe.'}</span></li>`;
     $('#board-weather').innerHTML = Object.entries(WEATHER).map(([k, l]) => `<button class="chip" aria-pressed="${k === S.weather}" data-act="weather" data-v="${k}">${l}</button>`).join('');
     const f = flipState();
+    const isOn = (row) => f[row] != null && f[row] >= 0;
     const rows = FLIP_ROWS.map(([row, cats]) => {
       const items = rowItems(cats); if (!items.length) return '';
-      const on = f[row] != null && f[row] >= 0, i = on ? ((f[row] % items.length) + items.length) % items.length : 0, x = items[i], src = photoSrc(x);
+      if ((row === 'Layer' || row === 'Outer') && !isOn(row)) {
+        if (row === 'Outer' && !isOn('Layer')) return '';
+        return `<div class="frow-add"><button class="link" data-act="flip-toggle" data-row="${row}">${row === 'Layer' ? '+ Add a layer' : '+ Add a jacket over it'}</button></div>`;
+      }
+      const on = isOn(row), i = on ? ((f[row] % items.length) + items.length) % items.length : 0, x = items[i], src = photoSrc(x);
       const lk = on && S.locked.has(row);
-      return `<div class="frow ${on ? '' : 'off'} ${lk ? 'locked' : ''}"><span class="lab">${esc(row === 'Layer' ? 'Jumper / jacket' : row)}${on ? `<button class="lock" data-act="lock" data-row="${row}" aria-pressed="${lk}" title="${lk ? 'Unlock' : 'Keep this piece when shuffling'}">${lk ? '🔒 Locked' : 'Lock'}</button>` : ''}</span>
+      return `<div class="frow ${on ? '' : 'off'} ${lk ? 'locked' : ''}"><span class="lab">${esc(ROW_LABEL[row] || row)}${on ? `<button class="lock" data-act="lock" data-row="${row}" aria-pressed="${lk}" title="${lk ? 'Unlock' : 'Keep this piece when shuffling'}">${lk ? '🔒 Locked' : 'Lock'}</button>` : ''}</span>
         <button class="arrow" data-act="flip" data-row="${row}" data-d="-1" aria-label="Previous ${row.toLowerCase()}"${lk ? ' disabled' : ''}>‹</button>
         <div class="card-in"><div class="img">${on ? (src ? `<img src="${esc(src)}" alt="" key="${esc(x.id)}">` : initial(x.name)) : '—'}</div>
           <div class="nm">${on ? `<b>${x._col === 'wishlist' ? 'Want · ' : ''}${esc(shortOf(x))}</b><span class="meta">${i + 1} of ${items.length}</span>` : `<span class="meta">${items.length} to flip through</span>`}
@@ -2066,11 +2107,10 @@ details.dna[open] > summary { margin-bottom: 10px; }
     if (sample && wearable().length >= 3) {
       const btn = e.currentTarget; btn.disabled = true; btn.textContent = 'Styling…';
       try {
-        const pool = FLIP_ROWS.filter(r => r[1]).flatMap(([row, cats]) => rowItems(cats).map(p => ({ id: p.id, row, name: shortOf(p), brand: p.brand, colour: p.colour, category: p.category, season: p.season, occasions: p.occasions })));
+        const seen = new Set(), pool = FLIP_ROWS.filter(r => r[1] && r[0] !== 'Outer').flatMap(([row, cats]) => rowItems(cats).filter(p => !seen.has(p.id) && seen.add(p.id)).map(p => ({ id: p.id, row, name: shortOf(p), brand: p.brand, colour: p.colour, category: p.category, season: p.season, occasions: p.occasions })));
         const recent = (S.recentLooks || []).slice(-6), keep = lockedIds();
-        const res = await sample.json(`You are a sharp personal stylist with real taste: think editorial, considered and wearable, never random. Australian English.${profileText()}\n\nMy pieces (JSON, grouped by row):\n${JSON.stringify(pool)}\n\n${keep.length ? `These locked pieces MUST stay in the outfit, build around them: ${JSON.stringify(keep)}. ` : ''}Build ONE cohesive outfit from these ids: either a dress, or a top plus a bottom; always shoes; add a jumper/jacket layer if the weather or look needs it; a bag or belt only if it genuinely adds something. Colours, proportions, textures and formality must work together, and it should look like my style DNA. Don't repeat these recent looks: ${JSON.stringify(recent)}. Reply with only JSON: {"ids":["id1","id2"],"why":"one sentence on why it works"}`, { cache: false });
-        const ids = [...new Set([...(res?.ids || []).map(String), ...keep])], f = {};
-        for (const [row, cats] of FLIP_ROWS) { if (!cats) continue; const items = rowItems(cats); const i = items.findIndex(x => ids.includes(x.id)); if (i >= 0) f[row] = i; }
+        const res = await sample.json(`You are a sharp personal stylist with real taste: think editorial, considered and wearable, never random. Australian English.${profileText()}\n\nMy pieces (JSON, grouped by row):\n${JSON.stringify(pool)}\n\n${keep.length ? `These locked pieces MUST stay in the outfit, build around them: ${JSON.stringify(keep)}. ` : ''}Build ONE cohesive outfit from these ids: either a dress, or a top plus a bottom; always shoes; layers are flexible: a button-up shirt can be the top, or worn open as a light layer over a fitted plain top, and that light layer can go under a heavier jacket or coat when it's cold (up to two layers, lighter one first in the ids list); a bag or belt only if it genuinely adds something. Colours, proportions, textures and formality must work together, and it should look like my style DNA. Don't repeat these recent looks: ${JSON.stringify(recent)}. Reply with only JSON: {"ids":["id1","id2"],"why":"one sentence on why it works"}`, { cache: false });
+        const ids = [...new Set([...(res?.ids || []).map(String), ...keep])], f = flipFromIds(ids);
         if (Object.keys(f).length >= 2) {
           S.flip = f; S.recentLooks = [...(S.recentLooks || []), ids].slice(-10);
           const out = $('#board-out'); out.hidden = false; out.className = 'ai-out'; out.innerHTML = `<span class="by">Claude</span>${esc(res.why || '')}`;
@@ -2086,6 +2126,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     if (dress && free('Dress')) f.Dress = r(n('Dress')); else { if (n('Top') && free('Top')) f.Top = r(n('Top')); if (n('Bottom') && free('Bottom')) f.Bottom = r(n('Bottom')); }
     if (n('Shoes') && free('Shoes')) f.Shoes = r(n('Shoes'));
     if (free('Layer') && n('Layer') && (S.weather === 'cold' || (S.weather !== 'hot' && Math.random() < 0.5))) f.Layer = r(n('Layer'));
+    if (free('Outer') && f.Layer != null && S.weather === 'cold' && Math.random() < 0.5) { const items = rowItems(LAYERS), heavy = items.map((x, i) => [x, i]).filter(([x]) => LAYER_WEIGHT[x.category] >= 3 && x.id !== items[f.Layer % items.length]?.id); if (heavy.length) f.Outer = heavy[r(heavy.length)][1]; }
     if (free('Bag') && n('Bag') && Math.random() < 0.5) f.Bag = r(n('Bag'));
     S.flip = f; $('#board-out').hidden = true; renderStyle();
   });
@@ -2208,7 +2249,11 @@ details.dna[open] > summary { margin-bottom: 10px; }
 
   // ---------- actions ----------
   async function act(fn, fail = 'Couldn’t save that. Try again.') { try { await fn(); } catch { toast(fail); } }
-  function setTab(tab) { S.tab = tab; store.set('edit.tab', tab); history.replaceState(null, '', '#' + tab); render(); window.scrollTo({ top: 0 }); }
+  function setMenu(open) { $('#tabs-wrap').classList.toggle('open', open); $('#menu-btn').setAttribute('aria-expanded', String(open)); }
+  $('#menu-btn').addEventListener('click', () => setMenu(!$('#tabs-wrap').classList.contains('open')));
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setMenu(false); });
+  document.addEventListener('click', (e) => { if (!e.target.closest('#tabs-wrap')) setMenu(false); });
+  function setTab(tab) { setMenu(false); S.tab = tab; store.set('edit.tab', tab); history.replaceState(null, '', '#' + tab); render(); window.scrollTo({ top: 0 }); }
   document.addEventListener('toggle', (e) => { const d = e.target; if (d.dataset?.var) { S.openVar = S.openVar || {}; S.openVar[d.dataset.var] = d.open; } }, true);
   document.addEventListener('toggle', (e) => { const d = e.target; if (d.dataset?.alts) { S.openAlts = S.openAlts || {}; S.openAlts[d.dataset.alts] = d.open; } }, true);
   document.addEventListener('toggle', (e) => { const d = e.target; if (d.matches?.('details.shelf')) store.set('edit.open.' + d.dataset.key.replace('-', ''), d.open ? '1' : ''); }, true);
@@ -2243,34 +2288,37 @@ details.dna[open] > summary { margin-bottom: 10px; }
       }
       case 'amz-again': { const b = find('basket'); if (b) act(() => db.collection('basket').add({ name: b.name, qty: b.qty || 1, url: b.url || '', price: b.price ?? null, ticked: true, ordered: false, createdAt: now() })); break; }
       case 'pick': {
-        const f = flipState();
-        for (const [row, cats] of FLIP_ROWS) {
-          const items = rowItems(cats), i = items.findIndex(x => x.id === id);
-          if (i < 0) continue;
-          const cur = f[row] != null && f[row] >= 0 && items[((f[row] % items.length) + items.length) % items.length]?.id === id;
-          f[row] = cur ? -1 : i;
-          if (!cur && row === 'Dress') { f.Top = -1; f.Bottom = -1; }
-          if (!cur && (row === 'Top' || row === 'Bottom')) f.Dress = -1;
-          break;
+        const f = flipState(), r = rowForPiece(id, f);
+        if (r) {
+          f[r.row] = r.cur ? -1 : r.i;
+          if (r.cur && r.row === 'Layer' && f.Outer != null && f.Outer >= 0) { f.Layer = f.Outer; f.Outer = -1; }
+          if (!r.cur && r.row === 'Dress') { f.Top = -1; f.Bottom = -1; }
+          if (!r.cur && (r.row === 'Top' || r.row === 'Bottom')) f.Dress = -1;
         }
         $('#board-out').hidden = true; renderStyle(); break;
       }
       case 'flip': { const f = flipState(), row = t.dataset.row; f[row] = (f[row] != null && f[row] >= 0 ? f[row] : 0) + Number(t.dataset.d); if (row === 'Dress') { f.Top = -1; f.Bottom = -1; } $('#board-out').hidden = true; renderStyle(); break; }
-      case 'flip-toggle': { const f = flipState(), row = t.dataset.row; if (f[row] != null && f[row] >= 0) S.locked.delete(row); f[row] = f[row] != null && f[row] >= 0 ? -1 : 0; if (row === 'Dress' && f.Dress === 0) { f.Top = -1; f.Bottom = -1; } $('#board-out').hidden = true; renderStyle(); break; }
+      case 'flip-toggle': {
+        const f = flipState(), row = t.dataset.row, wasOn = f[row] != null && f[row] >= 0;
+        if (wasOn) S.locked.delete(row);
+        if (wasOn && row === 'Layer' && f.Outer != null && f.Outer >= 0) { f.Layer = f.Outer; f.Outer = -1; if (S.locked.delete('Outer')) S.locked.add('Layer'); $('#board-out').hidden = true; renderStyle(); break; }
+        // A new layer starts on the lightest piece for the inner layer, the heaviest for over it
+        if (!wasOn && (row === 'Layer' || row === 'Outer')) { const items = rowItems(LAYERS), w = items.map((x, i) => [LAYER_WEIGHT[x.category], i]).sort((a, b) => a[0] - b[0]); f[row] = (row === 'Layer' ? w[0] : w[w.length - 1])[1]; $('#board-out').hidden = true; renderStyle(); break; }
+        f[row] = wasOn ? -1 : 0; if (row === 'Dress' && f.Dress === 0) { f.Top = -1; f.Bottom = -1; } $('#board-out').hidden = true; renderStyle(); break; }
       case 'find-kind': S.findKind = t.dataset.v; renderFinds(); break;
       case 'ward-cat': S.wardCat = t.dataset.v; renderWardrobe(); break;
       case 'ward-occ': S.wardOcc = t.dataset.v; renderWardrobe(); break;
       case 'weather': { const keep = lockedIds(); S.weather = t.dataset.v; S.flip = flipFromIds(keep); $('#board-out').hidden = true; renderStyle(); break; }
       case 'today-add': {
-        const f = flipState(), already = flipChosen().some(x => x.id === id);
-        for (const [row, cats] of FLIP_ROWS) {
-          if (!cats) continue;
-          const i = rowItems(cats).findIndex(x => x.id === id); if (i < 0) continue;
-          if (already) { f[row] = -1; S.locked.delete(row); break; }
-          f[row] = i; S.locked.add(row);
-          if (row === 'Dress') { if (!S.locked.has('Top')) f.Top = -1; if (!S.locked.has('Bottom')) f.Bottom = -1; }
-          if (row === 'Top' || row === 'Bottom') { if (!S.locked.has('Dress')) f.Dress = -1; }
-          break;
+        const f = flipState(), already = flipChosen().some(x => x.id === id), r = rowForPiece(id, f);
+        if (r) {
+          const row = r.row;
+          if (already) { f[row] = -1; S.locked.delete(row); }
+          else {
+            f[row] = r.i; S.locked.add(row);
+            if (row === 'Dress') { if (!S.locked.has('Top')) f.Top = -1; if (!S.locked.has('Bottom')) f.Bottom = -1; }
+            if (row === 'Top' || row === 'Bottom') { if (!S.locked.has('Dress')) f.Dress = -1; }
+          }
         }
         renderStyle(); renderWardrobe();
         toast(already ? 'Taken out of today’s look' : 'Added and locked in today’s look. Open Style me to build around it.');
@@ -2513,9 +2561,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
       case 'look-wear': {
         const o = find('outfits'); if (!o) break;
         // Put the look on the style board, one piece per row
-        const f = {};
-        for (const [row, cats] of FLIP_ROWS) { if (!cats) continue; const items = rowItems(cats); const i = items.findIndex(x => (o.itemIds || []).includes(x.id)); if (i >= 0) f[row] = i; }
-        S.flip = f; $('#board-out').hidden = true;
+        S.flip = flipFromIds(o.itemIds || []); $('#board-out').hidden = true;
         setTab('style'); setTimeout(() => $('#board')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
         break;
       }
