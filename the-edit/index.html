@@ -301,6 +301,8 @@ details.dna[open] > summary { margin-bottom: 10px; }
 .dna-form input { border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 7px 14px; font: inherit; min-width: 0; }
 .dna-list { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
 .pick-tools { display: grid; gap: 8px; }
+.btn[data-act="look-fav"][aria-pressed="true"] { background: var(--tan); border-color: var(--tan); color: #fff; }
+.search-in { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 8px 16px; font: inherit; width: min(100%, 420px); }
 .pick-tools input { border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 7px 14px; font: inherit; width: 100%; }
 .pick { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 0; cursor: pointer; overflow: hidden; text-align: left; display: grid; }
 .pick .img { aspect-ratio: 4 / 5; width: 100%; height: auto; background: var(--sunk); display: grid; place-items: center; overflow: hidden; font-family: var(--f-display); font-style: italic; color: var(--muted); }
@@ -496,7 +498,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     <div class="outfits" id="outfits"></div>
     <div class="section-h"><h2>In my wardrobe</h2></div>
     <div class="toolbar">
-      <div style="display:grid;gap:8px"><div class="chips" id="wardrobe-chips"></div><div class="chips" id="wardrobe-occ"></div></div>
+      <div style="display:grid;gap:8px"><input type="search" id="ward-q" class="search-in" placeholder="Search your wardrobe: brand, colour, piece…" aria-label="Search your wardrobe"><div class="chips" id="wardrobe-chips"></div><div class="chips" id="wardrobe-occ"></div></div>
       <div class="tools"><label class="btn" for="bulk-wardrobe">Add photos</label><input type="file" id="bulk-wardrobe" accept="image/*" multiple hidden><button class="btn primary" data-add="wardrobe" id="ward-add">+ Add a piece</button></div>
     </div>
     <div class="closet" id="wardrobe-list"></div>
@@ -564,6 +566,10 @@ details.dna[open] > summary { margin-bottom: 10px; }
       <div class="board" id="board"></div>
       <div class="ai-out" id="board-out" hidden></div>
       <div id="board-fb"></div>
+    </section>
+    <section class="block" id="looks-block">
+      <div class="block-h"><h2>My looks</h2><div class="chips" id="looks-chips"></div></div>
+      <div class="outfits" id="looks"></div>
     </section>
     <section class="block needs-img">
       <div class="block-h"><h2>Fit check</h2></div>
@@ -1224,6 +1230,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     if (!canWrite || !ids.length) return '';
     const key = fbKey(ids), cur = fbItems().find(x => x.key === key), idAttr = esc(ids.join(','));
     return `<div class="fb"><span class="meta">How's this?</span><button class="chip" data-act="fb" data-ids="${idAttr}" data-v="love" aria-pressed="${cur?.verdict === 'love'}">Love it</button><button class="chip" data-act="fb" data-ids="${idAttr}" data-v="nope" aria-pressed="${cur?.verdict === 'nope'}">Not me</button>
+      ${cur?.verdict === 'love' && !live('outfits').some(o => fbKey(o.itemIds || []) === key) ? `<button class="btn small" data-act="fb-save" data-ids="${idAttr}">Save to my looks</button>` : ''}
       ${cur ? `<div class="fb-note"><input type="text" placeholder="${cur.verdict === 'love' ? 'What works? (optional)' : 'What’s off? e.g. too busy, wrong shoes'}" value="${esc(cur.note || '')}" aria-label="Why"><button class="btn small ghost" data-act="fb-note" data-ids="${idAttr}">Save</button></div>` : ''}</div>`;
   }
   async function rateOutfit(ids, patch) {
@@ -1241,7 +1248,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
       ${o.note ? `<p class="notes">${esc(o.note)}</p>` : ''}
       ${o.missing ? `<p class="notes"><b>Would finish it:</b> ${esc(o.missing)}</p>` : ''}
       ${fbRow(o.itemIds || [])}
-      <div class="actions">${saved ? delBtn('outfits', o.id, 'Remove')
+      <div class="actions">${saved ? `${canWrite ? `<button class="btn small ${o.fav ? '' : 'ghost'}" data-act="look-fav" data-id="${esc(o.id)}" aria-pressed="${!!o.fav}">${o.fav ? '★ Favourite' : '☆ Favourite'}</button>` : ''}<button class="btn small ghost" data-act="look-wear" data-id="${esc(o.id)}">Wear it</button>${delBtn('outfits', o.id, 'Remove')}`
         : `${canWrite ? `<button class="btn small" data-act="save-outfit" data-i="${i}">Save outfit</button>` : ''}${sample ? `<button class="btn small ghost" data-act="outfit-roll" data-i="${i}"${o.rolling ? ' disabled' : ''}>${o.rolling ? 'Rolling…' : 'Roll again'}</button>` : ''}`}</div>
     </article>`;
   }
@@ -1325,6 +1332,12 @@ details.dna[open] > summary { margin-bottom: 10px; }
       <div class="flip">${rows || '<span class="meta">Add clothes to your wardrobe to start flipping.</span>'}</div>`;
     $('#board-save').hidden = !canWrite || !chosen.length;
     $('#board-fb').innerHTML = fbRow(chosen.map(x => x.id));
+    const looks = live('outfits').sort((a, b) => (!!b.fav - !!a.fav) || String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+    const favN = looks.filter(o => o.fav).length;
+    if (S.looksFav && !favN) S.looksFav = false;
+    $('#looks-chips').innerHTML = looks.length ? `<button class="chip" aria-pressed="${!S.looksFav}" data-act="looks-filter" data-v="">All ${looks.length}</button>${favN ? `<button class="chip" aria-pressed="${!!S.looksFav}" data-act="looks-filter" data-v="1">★ Favourites ${favN}</button>` : ''}` : '';
+    const shown = S.looksFav ? looks.filter(o => o.fav) : looks;
+    $('#looks').innerHTML = shown.length ? shown.map((o, i) => outfitCard(o, i, true)).join('') : '<p class="meta" style="margin:0">Looks you save from the style board or Mix up land here. Star your favourites.</p>';
     $('#board-ask').disabled = !chosen.length;
   }
   function renderWardrobe() {
@@ -1335,14 +1348,15 @@ details.dna[open] > summary { margin-bottom: 10px; }
     const nofit = all.filter(p => p.fit === 'no').length;
     $('#wardrobe-occ').innerHTML = occOn ? [['All', 'Any occasion'], ...Object.entries(OCCASIONS).map(([k, l]) => [k, `${l} ${all.filter(p => (p.occasions || []).includes(k)).length}`]), ...(nofit ? [['nofit', `Doesn't fit ${nofit}`]] : [])].map(([v, l]) => `<button class="chip" aria-pressed="${v === S.wardOcc}" data-act="ward-occ" data-v="${esc(v)}">${esc(l)}</button>`).join('')
       + (untagged && sample && canWrite ? `<button class="btn small ghost" data-act="occ-auto"${S.occBusy ? ' disabled' : ''}>${S.occBusy ? 'Tagging…' : `Tag ${untagged} for me`}</button>` : '') : '';
-    const list = all.filter(w => S.wardCat === 'All' || w.category === S.wardCat).filter(w => !occOn || S.wardOcc === 'All' || (S.wardOcc === 'nofit' ? w.fit === 'no' : (w.occasions || []).includes(S.wardOcc) && w.fit !== 'no'))
+    const wq = (S.wardQ || '').toLowerCase().split(/\s+/).filter(Boolean);
+    const list = all.filter(w => !wq.length || wq.every(q => [w.label, w.name, w.brand, w.colour, w.category, w.size && `size ${w.size}`, ...(w.occasions || [])].join(' ').toLowerCase().includes(q))).filter(w => S.wardCat === 'All' || w.category === S.wardCat).filter(w => !occOn || S.wardOcc === 'All' || (S.wardOcc === 'nofit' ? w.fit === 'no' : (w.occasions || []).includes(S.wardOcc) && w.fit !== 'no'))
       .sort((a, b) => (a.fit === 'no') - (b.fit === 'no') || WARD_CATS.indexOf(a.category) - WARD_CATS.indexOf(b.category) || String(a.name).localeCompare(String(b.name)));
     $('#wardrobe-list').innerHTML = list.length ? list.map(pieceBtn).join('') : emptyState('wardrobe', 'Add what’s in your wardrobe (a photo helps). Then Claude can mix outfits from your own pieces and spot missing basics.');
     $('#ward-add').dataset.preset = S.wardCat === 'Active' ? 'Active' : '';
     const activeWants = S.wardCat === 'Active' ? live('wishlist').filter(w => w.category === 'Activewear' && w.status !== 'bought') : [];
     $('#ward-wants-h').hidden = !activeWants.length;
     $('#ward-wants').innerHTML = activeWants.map(wantCard).join('');
-    const saved = live('outfits').sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+    const saved = live('outfits').sort((a, b) => (!!b.fav - !!a.fav) || String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
     $('#saved-h').hidden = !saved.length;
     $('#outfits').innerHTML = saved.map((o, i) => outfitCard(o, i, true)).join('');
     const vo = $('#vibe-out');
@@ -1735,6 +1749,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     } catch (err) { toast(aiErr(err)); }
     S.igapsBusy = false; renderStyle();
   });
+  $('#ward-q').addEventListener('input', (e) => { S.wardQ = e.target.value.trim(); renderWardrobe(); });
   $('#pick-q').addEventListener('input', (e) => { S.pickQ = e.target.value.trim(); renderStyle(); });
   $('#pick-more').addEventListener('click', () => { S.pickAll = !S.pickAll; renderStyle(); });
   $('#gaps-go').addEventListener('click', async (e) => {
@@ -2360,9 +2375,29 @@ details.dna[open] > summary { margin-bottom: 10px; }
         break;
       }
       case 'save-outfit': { const i = Number(t.dataset.i), o = S.suggestions[i]; if (!o) break; act(async () => { await db.collection('outfits').add({ ...o, createdAt: now() }); S.suggestions.splice(i, 1); toast('Outfit saved'); render(); }); break; }
+      case 'look-fav': {
+        const o = find('outfits'); if (!o) break;
+        act(() => db.collection('outfits').doc(o.id).update({ fav: !o.fav }));
+        break;
+      }
+      case 'looks-filter': S.looksFav = !!t.dataset.v; renderStyle(); break;
+      case 'look-wear': {
+        const o = find('outfits'); if (!o) break;
+        // Put the look on the style board, one piece per row
+        const f = {};
+        for (const [row, cats] of FLIP_ROWS) { if (!cats) continue; const items = rowItems(cats); const i = items.findIndex(x => (o.itemIds || []).includes(x.id)); if (i >= 0) f[row] = i; }
+        S.flip = f; $('#board-out').hidden = true;
+        setTab('style'); setTimeout(() => $('#board')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+        break;
+      }
       case 'fb': {
         const ids = t.dataset.ids.split(',').filter(Boolean), cur = fbItems().find(x => x.key === fbKey(ids));
         act(() => cur?.verdict === t.dataset.v ? db.doc('meta/feedback').set({ items: fbItems().filter(x => x.key !== fbKey(ids)), updatedAt: now() }) : rateOutfit(ids, { verdict: t.dataset.v }));
+        break;
+      }
+      case 'fb-save': {
+        const ids = t.dataset.ids.split(',').filter(Boolean);
+        act(async () => { await db.collection('outfits').add({ title: 'A look I love', itemIds: ids, note: '', vibe: '', fav: true, createdAt: now() }); toast('Saved to My looks as a favourite'); });
         break;
       }
       case 'fb-note': {
