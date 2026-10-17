@@ -73,14 +73,16 @@ a { color: var(--accent); }
 .tab .n { font-family: var(--f-mono); font-size: 0.75rem; font-weight: 400; color: var(--muted); margin-left: 4px; }
 .menu-btn { display: none; }
 @media (max-width: 700px) {
-  .tabs-scroll { overflow: visible; position: relative; padding-block: 6px 10px; }
-  .menu-btn { display: flex; align-items: center; gap: 12px; width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 10px 16px; font: inherit; text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.78rem; font-weight: 600; color: var(--ink); cursor: pointer; }
+  .top { position: relative; }
+  .tabs-scroll { overflow: visible; position: absolute; top: 18px; right: 16px; width: auto; padding: 0; z-index: 41; }
+  .menu-btn { display: flex; align-items: center; gap: 10px; max-width: 46vw; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 10px 16px; font: inherit; text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.78rem; font-weight: 600; color: var(--ink); cursor: pointer; }
   .menu-btn .burger { display: grid; gap: 4px; width: 18px; }
   .menu-btn .burger i { display: block; height: 1.5px; background: currentColor; border-radius: 2px; transition: transform .2s, opacity .2s; }
   .menu-btn[aria-expanded="true"] .burger i:nth-child(1) { transform: translateY(5.5px) rotate(45deg); }
   .menu-btn[aria-expanded="true"] .burger i:nth-child(2) { opacity: 0; }
   .menu-btn[aria-expanded="true"] .burger i:nth-child(3) { transform: translateY(-5.5px) rotate(-45deg); }
-  .tabs { display: none; position: absolute; left: 16px; right: 16px; top: calc(100% - 4px); z-index: 40; flex-direction: column; flex-wrap: nowrap; gap: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 6px; box-shadow: 0 12px 32px rgba(0,0,0,.12); }
+  .menu-btn #menu-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tabs { display: none; position: absolute; right: 0; width: min(280px, calc(100vw - 32px)); top: calc(100% + 6px); z-index: 40; flex-direction: column; flex-wrap: nowrap; gap: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 6px; box-shadow: 0 12px 32px rgba(0,0,0,.12); }
   .tabs-scroll.open .tabs { display: flex; }
   .tab { text-align: left; border-bottom: 0; border-radius: 10px; padding: 12px 14px; }
   .tab[aria-selected="true"] { background: var(--sunk); }
@@ -137,6 +139,8 @@ select.plain { border: 1px solid var(--line); background: var(--surface); border
 /* Today */
 .refresh { display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px 18px; }
 .refresh p { margin: 0; }
+.clamp:not(.open) { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.clamp1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
 .refresh .when { font-family: var(--f-display); font-style: italic; font-size: 1.2rem; }
 .today { display: grid; grid-template-columns: 1.1fr 1fr; gap: 20px; align-items: start; }
 .block { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; display: grid; gap: 14px; min-width: 0; }
@@ -146,6 +150,15 @@ select.plain { border: 1px solid var(--line); background: var(--surface); border
 .alerts li:first-child { border-top: 0; padding-top: 0; }
 .alerts .what { min-width: 0; display: grid; gap: 2px; }
 .alerts .what b { font-weight: 600; overflow-wrap: anywhere; }
+.bundles { border-top: 1px solid var(--line); padding-top: 10px; margin-top: 6px; }
+.bundles summary { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; cursor: pointer; list-style: none; }
+.bundles summary::-webkit-details-marker { display: none; }
+.bundles summary::after { content: '▾'; color: var(--muted); margin-left: auto; transition: transform .2s; }
+.bundles[open] summary::after { transform: rotate(180deg); }
+@media (max-width: 600px) {
+  .alerts li { grid-template-columns: 40px minmax(0, 1fr); }
+  .alerts li > .tools { grid-column: 2; justify-content: flex-start; flex-wrap: wrap; }
+}
 .alerts .thumb { width: 40px; height: 40px; font-size: 1rem; }
 .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
 .stat { background: var(--surface); padding: 14px 16px; display: grid; gap: 2px; }
@@ -1041,7 +1054,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     $('#refresh').innerHTML = `<div style="display:grid;gap:4px;min-width:0">
         <p class="eyebrow">Daily refresh · prices, stock, reviews & new finds</p>
         <p class="when">${r.lastRun ? `Last checked ${esc(ago(r.lastRun))}` : 'Hasn’t run yet'}${r.requestedAt && (!r.lastRun || r.requestedAt > r.lastRun) ? ' · a refresh is running' : ''}</p>
-        ${r.summary ? `<p class="meta">${esc(r.summary)}</p>` : `<p class="meta">Each morning Claude checks your wants across shops, reads Reddit and independent reviews, and adds new finds here.</p>`}
+        ${r.summary ? `<p class="meta clamp${S.refreshOpen ? ' open' : ''}">${esc(r.summary)}</p>${r.summary.length > 160 ? `<button class="link" data-act="refresh-more" style="justify-self:start;font-size:0.82rem">${S.refreshOpen ? 'Less' : 'More'}</button>` : ''}` : `<p class="meta">Each morning Claude checks your wants across shops, reads Reddit and independent reviews, and adds new finds here.</p>`}
       </div>
       ${canRefresh ? `<button class="btn" data-act="refresh-now">Refresh now</button>` : ''}`;
 
@@ -1066,7 +1079,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
         <span class="tools">${w.url && safeUrl(w.url) ? `<a class="btn small ghost" href="${esc(w.url)}" target="_blank" rel="noopener">Shop ↗</a>` : ''}${canWrite ? `<button class="btn small ghost" data-act="alert-dismiss" data-id="${esc(w.id)}" data-v="${esc(a.label)}">Dismiss</button>` : ''}</span></li>`).join('')
       : `<li style="display:block"><span class="meta">${wants.length ? 'Nothing new has dropped or is running low.' : 'Add things you want. Price drops and low stock show up here.'}</span></li>`;
 
-    const nf = newFinds().sort((a, b) => String(b.foundOn || '').localeCompare(String(a.foundOn || ''))).slice(0, 4);
+    const nf = newFinds().sort((a, b) => String(b.foundOn || '').localeCompare(String(a.foundOn || ''))).slice(0, 3);
     $('#today-finds').innerHTML = nf.length ? nf.map(f => {
       const v = VERDICT[(f.review || f).verdict];
       return `<li>${thumb(f)}<span class="what"><b>${esc(shortOf(f))}</b><span class="meta">${esc([f.brand, FIND_KINDS[f.kind], f.price != null ? fmt(f.price) : ''].filter(Boolean).join(' · '))}</span>${f.gap ? `<span class="meta" style="color:var(--ink)">For: ${esc(f.gap)}</span>` : ''}${v ? `<span class="pills"><span class="pill ${v[0]}">${esc(v[1])}</span></span>` : ''}</span><span class="tools"><button class="btn small ghost" data-tab="finds">View</button>${canWrite ? `<button class="btn small ghost" data-act="find-snooze" data-id="${esc(f.id)}" title="Hide for a month">Not now</button><button class="btn small ghost danger" data-act="find-nope" data-id="${esc(f.id)}" title="Never show me this, or things like it">Never</button>` : ''}</span></li>`;
@@ -1508,11 +1521,14 @@ details.dna[open] > summary { margin-bottom: 10px; }
       .sort((a, b) => (b.has.length - a.has.length) || ((a.total ?? 1e9) - (b.total ?? 1e9))).slice(0, 4);
     const nm = (c) => { const x = items.find(i => `${i._col}/${i.id}` === c); return x ? shortOf(x) : ''; };
     const full = bundles.some(b => b.has.length === ids.size);
-    $('#shop-bundles').innerHTML = items.length >= 2 && bundles.length ? `<p class="eyebrow" style="margin:6px 0 8px">One order${rs.checked ? ` · checked ${esc(ago(rs.checked))}` : ''}</p>${full ? '' : '<p class="meta" style="margin:0 0 6px">No single shop has everything yet. These are the best splits.</p>'}<ul class="alerts">${bundles.map(b => `<li style="grid-template-columns:1fr auto">
-        <span class="what"><span><b>${esc(b.shop)}</b>${payPills(b)}</span><span class="meta">${b.has.length === ids.size ? 'Has everything' : `Has ${b.has.length} of ${ids.size}`}: ${esc(b.has.map(nm).filter(Boolean).join(', '))}${(b.missing || []).filter(c => ids.has(c)).length ? ` · not ${esc(b.missing.filter(c => ids.has(c)).map(nm).filter(Boolean).join(', '))}` : ''}</span>
-        <span class="meta">${b.subtotal != null ? fmt(b.subtotal) : ''}${b.delivery != null ? ` + ${Number(b.delivery) ? fmt(b.delivery) + ' delivery' : 'free delivery'}` : ' + delivery'}${b.total != null ? ` = <b style="color:var(--ink)">${fmt(b.total)}</b>` : ''}${b.note ? ` · ${esc(b.note)}` : ''}</span></span>
-        ${safeUrl(b.url) ? `<a class="btn small ghost" href="${esc(b.url)}" target="_blank" rel="noopener">Shop ↗</a>` : '<span></span>'}</li>`).join('')}</ul>` : items.length >= 2 ? `<p class="meta" style="margin:6px 0 0">One-order options (a shop that has everything on this list) appear after the next price check.</p>` : '';
+    // Kept folded on the home screen: one line saying the best option, details on tap
+    const best = bundles[0];
+    $('#shop-bundles').innerHTML = items.length >= 2 && bundles.length ? `<details class="bundles"${S.bundlesOpen ? ' open' : ''}><summary><span class="eyebrow">One order</span><span class="meta">${best.has.length === ids.size ? 'Everything from' : 'Best split:'} <b style="color:var(--ink)">${esc(best.shop)}</b>${best.total != null ? ` ${fmt(best.total)} delivered` : ''}${best.has.length < ids.size ? ` (${best.has.length} of ${ids.size})` : ''}${bundles.length > 1 ? ` · ${bundles.length - 1} more option${bundles.length > 2 ? 's' : ''}` : ''}</span></summary>
+      <ul class="alerts" style="margin-top:8px">${bundles.map(b => `<li style="grid-template-columns:1fr auto">
+        <span class="what"><span><b>${esc(b.shop)}</b>${b.total != null ? ` · <b>${fmt(b.total)}</b>` : ''}</span><span class="meta">${b.has.length === ids.size ? 'Has everything' : `Has ${esc(b.has.map(nm).filter(Boolean).join(', '))}`}${b.delivery != null ? ` · ${Number(b.delivery) ? fmt(b.delivery) + ' delivery' : 'free delivery'}` : ''}${payOf(b).length ? ` · ${esc(payOf(b).join(', '))}` : ''}</span>${b.note ? `<span class="meta clamp1" title="${esc(b.note)}">${esc(b.note)}</span>` : ''}</span>
+        ${safeUrl(b.url) ? `<a class="btn small ghost" href="${esc(b.url)}" target="_blank" rel="noopener">Shop ↗</a>` : '<span></span>'}</li>`).join('')}</ul>${checkedLine(rs)}</details>` : items.length >= 2 ? `<p class="meta" style="margin:6px 0 0">One-order options (a shop that has everything on this list) appear after the next price check.</p>` : '';
   }
+  const checkedLine = (rs) => rs.checked ? `<p class="meta" style="margin:6px 0 0;font-size:0.78rem">Checked ${esc(ago(rs.checked))}</p>` : '';
   function renderAmazon() {
     const all = live('basket'), open = all.filter(b => !b.ordered).sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)));
     const done = all.filter(b => b.ordered).sort((a, b) => String(b.orderedAt || '').localeCompare(String(a.orderedAt || '')));
@@ -2305,6 +2321,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setMenu(false); });
   document.addEventListener('click', (e) => { if (!e.target.closest('#tabs-wrap')) setMenu(false); });
   function setTab(tab) { setMenu(false); S.tab = tab; store.set('edit.tab', tab); history.replaceState(null, '', '#' + tab); render(); window.scrollTo({ top: 0 }); }
+  document.addEventListener('toggle', (e) => { if (e.target.matches?.('details.bundles')) S.bundlesOpen = e.target.open; }, true);
   document.addEventListener('toggle', (e) => { const d = e.target; if (d.dataset?.var) { S.openVar = S.openVar || {}; S.openVar[d.dataset.var] = d.open; } }, true);
   document.addEventListener('toggle', (e) => { const d = e.target; if (d.dataset?.alts) { S.openAlts = S.openAlts || {}; S.openAlts[d.dataset.alts] = d.open; } }, true);
   document.addEventListener('toggle', (e) => { const d = e.target; if (d.matches?.('details.shelf')) store.set('edit.open.' + d.dataset.key.replace('-', ''), d.open ? '1' : ''); }, true);
@@ -2388,6 +2405,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
         })();
         break;
       }
+      case 'refresh-more': S.refreshOpen = !S.refreshOpen; renderToday(); break;
       case 'lock': { flipState(); const row = t.dataset.row; S.locked.has(row) ? S.locked.delete(row) : S.locked.add(row); renderStyle(); break; }
       case 'pick-group': S.pickGroup = t.dataset.v; S.pickAll = false; renderStyle(); break;
       case 'occ': {
