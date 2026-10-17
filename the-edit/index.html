@@ -286,6 +286,10 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
 .palette span { display: grid; justify-items: center; gap: 3px; font-size: 0.68rem; color: var(--muted); width: 56px; text-align: center; line-height: 1.15; }
 .palette i { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--line); display: block; }
 .picks { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); grid-auto-rows: max-content; align-items: start; gap: 8px; }
+.fb { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.fb-note { display: flex; gap: 6px; flex: 1 1 220px; min-width: 0; }
+.fb-note input { flex: 1; min-width: 0; border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 5px 12px; font: inherit; font-size: 0.85rem; }
+@media (max-width: 600px) { .gaps li { grid-template-columns: 1fr; gap: 8px; } .gaps li > .pill { justify-self: start; } .gaps li .tools { justify-content: flex-start; flex-wrap: wrap; } }
 details.dna > summary { list-style: none; cursor: pointer; }
 details.dna > summary::-webkit-details-marker { display: none; }
 details.dna > summary h2::after { content: ' +'; color: var(--tan); font-size: 1rem; }
@@ -559,6 +563,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
       </div>
       <div class="board" id="board"></div>
       <div class="ai-out" id="board-out" hidden></div>
+      <div id="board-fb"></div>
     </section>
     <section class="block needs-img">
       <div class="block-h"><h2>Fit check</h2></div>
@@ -1212,6 +1217,22 @@ details.dna[open] > summary { margin-bottom: 10px; }
     const src = photoSrc(p);
     return `<div class="mini"><div class="img">${src ? `<img src="${esc(src)}" alt="" loading="lazy">` : initial(shortOf(p))}</div><span>${esc(shortOf(p))}</span></div>`;
   }
+  // Outfit ratings (meta/feedback) teach every styling prompt what the user loves and what's not them
+  const fbItems = () => S.meta.feedback?.items || [];
+  const fbKey = (ids) => [...ids].sort().join('|');
+  function fbRow(ids) {
+    if (!canWrite || !ids.length) return '';
+    const key = fbKey(ids), cur = fbItems().find(x => x.key === key), idAttr = esc(ids.join(','));
+    return `<div class="fb"><span class="meta">How's this?</span><button class="chip" data-act="fb" data-ids="${idAttr}" data-v="love" aria-pressed="${cur?.verdict === 'love'}">Love it</button><button class="chip" data-act="fb" data-ids="${idAttr}" data-v="nope" aria-pressed="${cur?.verdict === 'nope'}">Not me</button>
+      ${cur ? `<div class="fb-note"><input type="text" placeholder="${cur.verdict === 'love' ? 'What works? (optional)' : 'What’s off? e.g. too busy, wrong shoes'}" value="${esc(cur.note || '')}" aria-label="Why"><button class="btn small ghost" data-act="fb-note" data-ids="${idAttr}">Save</button></div>` : ''}</div>`;
+  }
+  async function rateOutfit(ids, patch) {
+    const key = fbKey(ids), names = ids.map(id => { const x = [...live('wardrobe'), ...live('wishlist')].find(p => p.id === id); return x ? shortOf(x) : ''; }).filter(Boolean);
+    const prev = fbItems().find(x => x.key === key) || {};
+    const items = [...fbItems().filter(x => x.key !== key), { ...prev, key, ids, names, ...patch, at: now() }].slice(-80);
+    await db.doc('meta/feedback').set({ items, updatedAt: now() });
+  }
+
   function outfitCard(o, i, saved) {
     const items = (o.itemIds || []).map(id => [...live('wardrobe'), ...live('wishlist')].find(w => w.id === id)).filter(Boolean);
     return `<article class="outfit">
@@ -1219,6 +1240,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
       <div class="outfit-items">${items.map(pieceTile).join('') || '<span class="meta">These pieces have been removed.</span>'}</div>
       ${o.note ? `<p class="notes">${esc(o.note)}</p>` : ''}
       ${o.missing ? `<p class="notes"><b>Would finish it:</b> ${esc(o.missing)}</p>` : ''}
+      ${fbRow(o.itemIds || [])}
       <div class="actions">${saved ? delBtn('outfits', o.id, 'Remove')
         : `${canWrite ? `<button class="btn small" data-act="save-outfit" data-i="${i}">Save outfit</button>` : ''}${sample ? `<button class="btn small ghost" data-act="outfit-roll" data-i="${i}"${o.rolling ? ' disabled' : ''}>${o.rolling ? 'Rolling…' : 'Roll again'}</button>` : ''}`}</div>
     </article>`;
@@ -1276,7 +1298,8 @@ details.dna[open] > summary { margin-bottom: 10px; }
     $('#pick-count').textContent = chosen.length ? `${chosen.length} on the board` : '';
     $('#style-picks').innerHTML = all.length ? all.map(x => { const src = photoSrc(x); return `<button class="pick" data-act="pick" data-id="${esc(x.id)}" aria-pressed="${chosenIds.has(x.id)}" title="${esc((x._col === 'wishlist' ? 'Want: ' : '') + shortOf(x))}" aria-label="${esc((x._col === 'wishlist' ? 'Want: ' : '') + shortOf(x))}"><div class="img">${src ? `<img src="${esc(src)}" alt="" loading="lazy">` : initial(shortOf(x))}</div></button>`; }).join('') : '<span class="meta">Add clothes to your wardrobe or wants first.</span>';
     const dna = S.meta.style || {};
-    $('#dna-when').textContent = dna.status === 'queued' ? 'Studying your board…' : dna.updatedAt ? `Updated ${ago(dna.updatedAt)}` : '';
+    const nRated = fbItems().length;
+    $('#dna-when').textContent = (dna.status === 'queued' ? 'Studying your board…' : dna.updatedAt ? `Updated ${ago(dna.updatedAt)}` : '') + (nRated ? ` · learning from ${nRated} rated ${nRated === 1 ? 'outfit' : 'outfits'}` : '');
     if (dna.pinterest && document.activeElement !== $('#dna-pin')) $('#dna-pin').value = dna.pinterest;
     $('#dna-body').innerHTML = dna.summary ? `<p class="notes" style="margin:0">${esc(dna.summary)}</p>
       ${(dna.palette || []).length ? `<p class="meta" style="margin:0"><b>Palette:</b> ${esc(dna.palette.join(', '))}</p>` : ''}
@@ -1301,6 +1324,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     $('#board').innerHTML = `<div class="me${mp.length ? '' : ' empty'}">${mp.length ? `<img src="/_blob/${mp[0]}" alt="You">` : 'Add a full-length photo of you'}</div>
       <div class="flip">${rows || '<span class="meta">Add clothes to your wardrobe to start flipping.</span>'}</div>`;
     $('#board-save').hidden = !canWrite || !chosen.length;
+    $('#board-fb').innerHTML = fbRow(chosen.map(x => x.id));
     $('#board-ask').disabled = !chosen.length;
   }
   function renderWardrobe() {
@@ -1589,6 +1613,9 @@ details.dna[open] > summary { margin-bottom: 10px; }
     if (a) t += `${t ? '; ' : ''}colouring: ${a.summary || ''} Best colours: ${(a.colours || []).map(c => c.name).join(', ')}. Go easy on: ${(a.avoid || []).map(c => c.name).join(', ')}. Shapes: ${(a.silhouettes || []).join(' / ')}`;
     const d = S.meta.style;
     if (d && (d.summary || (d.rules || []).length)) t += `${t ? '; ' : ''}MY STYLE DNA (follow this closely, it is my actual taste): ${d.summary || ''} Rules: ${(d.rules || []).join(' / ')}. Signature pieces and pairings: ${(d.signatures || []).join(' / ')}. Palette: ${(d.palette || []).join(', ')}. Avoid: ${(d.avoid || []).join(' / ')}`;
+    const fb = fbItems().slice(-24), fmtFb = (x) => x.names.join(' + ') + (x.note ? ` (${x.note})` : '');
+    const loved = fb.filter(x => x.verdict === 'love').slice(-10).map(fmtFb), nope = fb.filter(x => x.verdict === 'nope').slice(-10).map(fmtFb);
+    if (loved.length || nope.length) t += `${t ? '; ' : ''}OUTFIT FEEDBACK (learn from it): outfits I loved: ${loved.join(' / ') || 'none yet'}. Outfits that were not me: ${nope.join(' / ') || 'none yet'}`;
     if (S.weather && S.weather !== 'any') t += `${t ? '; ' : ''}weather today: ${WEATHER_TEXT[S.weather]}`;
     return t ? `\n\nAbout me: ${t}` : '';
   };
@@ -2333,6 +2360,16 @@ details.dna[open] > summary { margin-bottom: 10px; }
         break;
       }
       case 'save-outfit': { const i = Number(t.dataset.i), o = S.suggestions[i]; if (!o) break; act(async () => { await db.collection('outfits').add({ ...o, createdAt: now() }); S.suggestions.splice(i, 1); toast('Outfit saved'); render(); }); break; }
+      case 'fb': {
+        const ids = t.dataset.ids.split(',').filter(Boolean), cur = fbItems().find(x => x.key === fbKey(ids));
+        act(() => cur?.verdict === t.dataset.v ? db.doc('meta/feedback').set({ items: fbItems().filter(x => x.key !== fbKey(ids)), updatedAt: now() }) : rateOutfit(ids, { verdict: t.dataset.v }));
+        break;
+      }
+      case 'fb-note': {
+        const ids = t.dataset.ids.split(',').filter(Boolean), note = t.parentElement.querySelector('input').value.trim().slice(0, 200);
+        act(async () => { await rateOutfit(ids, { note }); toast('Thanks. Claude will style with that in mind.'); });
+        break;
+      }
       case 'igap-brief': case 'igap-want': {
         const dna = S.meta.style || {}, i = Number(t.dataset.i), g = (dna.gaps || [])[i]; if (!g) break;
         const brief = t.dataset.act === 'igap-brief';
