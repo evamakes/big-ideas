@@ -2049,29 +2049,58 @@ details.dna[open] > summary { margin-bottom: 10px; }
 
   // ---------- bulk photo add ----------
   // Each photo becomes a draft item tagged by Claude straight away; one research run then finishes them all
+  // Photos waiting to upload live in this browser's IndexedDB, so a locked phone or closed tab
+  // only pauses the batch: it carries on next time the page opens
+  const upq = {
+    open() { return this.p ||= new Promise((res, rej) => { try { const r = indexedDB.open('edit-uploads', 1); r.onupgradeneeded = () => r.result.createObjectStore('q', { keyPath: 'key', autoIncrement: true }); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); } catch (e) { rej(e); } }); },
+    async run(mode, fn) { const d = await this.open(); return new Promise((res, rej) => { const t = d.transaction('q', mode), r = fn(t.objectStore('q')); t.oncomplete = () => res(r?.result); t.onerror = () => rej(t.error); }); },
+    add(item) { return this.run('readwrite', st => st.add(item)); },
+    all() { return this.run('readonly', st => st.getAll()); },
+    del(key) { return this.run('readwrite', st => st.delete(key)); },
+  };
+  let memQueue = [], memKey = 0, uploading = false;
+  const qAdd = async (item) => { try { await upq.add(item); } catch { memQueue.push({ ...item, key: 'm' + memKey++ }); } };
+  const qAll = async () => { let a = []; try { a = await upq.all(); } catch {} return [...a, ...memQueue]; };
+  const qDel = async (key) => { if (String(key).startsWith('m')) memQueue = memQueue.filter(x => x.key !== key); else try { await upq.del(key); } catch {} };
+  window.addEventListener('beforeunload', (e) => { if (uploading) { e.preventDefault(); e.returnValue = ''; } });
   async function bulkAdd(files, target) {
-    files = files.filter(f => /^image\//.test(f.type)).slice(0, 40);
+    files = files.filter(f => /^image\//.test(f.type)).slice(0, 60);
     if (!files.length || !assets) return;
-    // Pass 1 saves every photo straight away (small and quick), so nothing is lost if the phone locks part way
-    const added = [];
-    for (let i = 0; i < files.length; i++) {
-      quickStatus(`Saving photo ${i + 1} of ${files.length}. Keep this page open…`);
+    quickStatus(`Getting ${files.length} photos ready…`);
+    for (const f of files) await qAdd({ blob: f, name: f.name || 'photo', target, addedAt: now() });
+    processUploads();
+  }
+  async function processUploads(resumed = false) {
+    if (uploading || !assets || !db || !canWrite) return;
+    let queue = await qAll(); if (!queue.length) return;
+    uploading = true;
+    let lock = null; try { lock = await navigator.wakeLock?.request('screen'); } catch {}
+    if (resumed) toast(`Finishing ${queue.length} photo${queue.length === 1 ? '' : 's'} from last time…`);
+    const added = []; let failed = 0, done = 0;
+    const total = queue.length;
+    for (const item of queue) {
+      quickStatus(`Saving photo ${++done} of ${total}. Keep this page open…`);
       try {
-        const small = await shrink(files[i]);
+        const small = await shrink(item.blob);
         const photoId = (await assets.upload(small)).id;
+        const target = item.target;
         const base = { photoId, userPhotoId: photoId, ownPhoto: target !== 'wants', research: canResearch() ? 'queued' : 'draft', quickPhrase: '(from a photo)', createdAt: now() };
         const col = target === 'wants' ? 'wishlist' : 'wardrobe';
         const doc = col === 'wishlist' ? { ...base, name: 'New item', brand: '', category: 'Clothes', variant: '', rrp: null, price: null, priceHistory: [], stock: 'unknown', priority: 'want', status: 'want' }
           : { ...base, name: 'New piece', brand: '', category: target === 'active' ? 'Active' : 'Top', colour: '', vibes: [], season: 'all' };
         const ref = await db.collection(col).add(doc);
-        added.push({ col, id: ref.id, small });
-      } catch {}
+        await qDel(item.key);
+        added.push({ col, id: ref.id, small, target });
+      } catch { failed++; }
     }
-    const ids = added.map(a => `${a.col}/${a.id}`), failed = files.length - added.length; let queued = false, nameErr = null;
+    try { await lock?.release(); } catch {}
+    uploading = false;
+    const ids = added.map(a => `${a.col}/${a.id}`); let queued = false, nameErr = null;
     if (ids.length && canResearch()) {
-      try { await mcp.callTool('Claude Code Remote', 'fire_trigger', { trigger_id: S.meta.research.triggerId, text: `Research request (several items from photos): ${ids.join(', ')}. Name, label, category, colour and occasions first for any still called New piece or New item. Then follow the PHOTO MATCHING steps for each: look at the photo, read any visible label or logo, find the exact product (brand, style name, colour) online by comparing candidate product photos side by side with theirs, set photoId to the brand's best clean product shot (keeping the user's photo in userPhotoId), and set match to exact, likely or none with a photoNote when it is not exact.` }, { cache: false }); queued = true; } catch {}
+      try { await mcp.callTool('Claude Code Remote', 'fire_trigger', { trigger_id: S.meta.research.triggerId, text: `Research request (several items from photos): ${ids.join(', ')}. Name, label, category, colour and occasions first for any still called New piece or New item, and turn sideways photos upright. Then follow the PHOTO MATCHING steps for each: look at the photo, read any visible label or logo, find the exact product (brand, style name, colour) online by comparing candidate product photos side by side with theirs, set photoId to the brand's best clean product shot (keeping the user's photo in userPhotoId), and set match to exact, likely or none with a photoNote when it is not exact.` }, { cache: false }); queued = true; } catch {}
     }
-    toast(`Saved ${ids.length} ${ids.length === 1 ? 'photo' : 'photos'}${failed ? `. ${failed} didn’t upload, try those again` : ''}. Naming them now…`);
+    toast(`Saved ${ids.length} ${ids.length === 1 ? 'photo' : 'photos'}${failed ? `. ${failed} didn’t upload yet; they’ll retry next time you open the page` : ''}. Naming them now…`);
+    const target = added[0]?.target;
     // Pass 2 names them here if Claude can; anything left is named by the research run
     let named = 0;
     if (sample && S.canImages) {
@@ -2092,7 +2121,6 @@ details.dna[open] > summary { margin-bottom: 10px; }
     // Say plainly when Claude couldn't help, so photos never sit there unnamed without a reason
     if (named < added.length) toast(`${named ? `Named ${named}. ` : ''}${nameErr ? `Claude couldn’t name ${named ? 'the rest' : 'them'} right now: ${aiErr(nameErr)} ` : ''}${queued ? 'A research run is on its way to finish them.' : 'They’re saved; the next refresh will name them.'}`);
   }
-
   for (const [inp, target] of [['#bulk-wardrobe', 'wardrobe']]) {
     $(inp).addEventListener('change', (e) => { const fs = [...e.target.files]; e.target.value = ''; bulkAdd(fs, S.wardCat === 'Active' ? 'active' : target); });
   }
@@ -2666,6 +2694,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     db.collection('meta').onSnapshot(snap => {
       S.meta = Object.fromEntries(snap.docs.map(x => [x.id, x.data()]));
       render();
+      if (!S.resumeChecked) { S.resumeChecked = true; setTimeout(() => processUploads(true), 1500); }
     }, onErr);
   })();
 })();
