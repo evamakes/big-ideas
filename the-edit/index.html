@@ -747,6 +747,8 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     const id = v ? v.photoId : x.photoId;
     return (!v && safeUrl(x.photoUrl)) || (/^[0-9a-f]{32}$/.test(id || '') ? '/_blob/' + id : '');
   };
+  const MATCH = { likely: ['warn', 'Likely match · check'], none: ['', 'Brand photo not found'] };
+  const matchPill = (x) => MATCH[x.match] ? `<span class="pill ${MATCH[x.match][0]}" title="${esc(x.photoNote || '')}">${MATCH[x.match][1]}</span>` : '';
   const researchPill = (x) => RESEARCH[x.research] ? `<span class="pill ${RESEARCH[x.research][0]}" title="${esc(x.researchNote || '')}">${RESEARCH[x.research][1]}</span>` : '';
   const isHex = (h) => /^#[0-9a-f]{6}$/i.test(h || '');
   function variantsBlock(col, x) {
@@ -1178,7 +1180,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     return `<div class="piece"><button class="piece-open" data-act="${canWrite ? 'edit' : ''}" data-col="wardrobe" data-id="${esc(p.id)}">
         <div class="img">${src ? `<img src="${esc(src)}" alt="" loading="lazy">` : `<span>${esc(shortOf(p))}</span>`}</div>
         <div class="cap"><b>${esc(shortOf(p))}</b><span class="meta">${esc([p.brand, fullOf(p), p.colour].filter(Boolean).join(' · '))}</span>
-        ${(p.vibes || []).length || p.example || p.research ? `<div class="pills">${p.example ? '<span class="pill ex">Example</span>' : ''}${researchPill(p)}${(p.vibes || []).slice(0, 3).map(v => `<span class="pill">${esc(v)}</span>`).join('')}</div>` : ''}</div>
+        ${(p.vibes || []).length || p.example || p.research || MATCH[p.match] ? `<div class="pills">${p.example ? '<span class="pill ex">Example</span>' : ''}${researchPill(p)}${matchPill(p)}${(p.vibes || []).slice(0, 3).map(v => `<span class="pill">${esc(v)}</span>`).join('')}</div>` : ''}</div>
       </button>${p.category === 'Active' ? '' : `<div class="occ">${Object.entries(OCCASIONS).map(([k, l]) => `<button class="occ-t" data-act="${canWrite ? 'occ' : ''}" data-id="${esc(p.id)}" data-v="${k}" aria-pressed="${occ.includes(k)}">${l}</button>`).join('')}</div>`}</div>`;
   }
   function renderHair() {
@@ -1763,7 +1765,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     }
     quickStatus('');
     if (ids.length && canResearch() && S.meta.refresh?.triggerId) {
-      try { await mcp.callTool('Claude Code Remote', 'fire_trigger', { trigger_id: S.meta.refresh.triggerId, text: `Research queue only, skip everything else this run. Research these new items from their photos: ${ids.join(', ')}. Look at each photo, identify the exact product (brand, style name, colour), find it online and set photoId to its best clean product photo (plain background, front-on, selected colour), keeping the user's photo in userPhotoId. Only if the exact product can't be found, keep the user's photo as photoId.` }, { cache: false }); } catch {}
+      try { await mcp.callTool('Claude Code Remote', 'fire_trigger', { trigger_id: S.meta.refresh.triggerId, text: `Research queue only, skip everything else this run. Research these new items from their photos: ${ids.join(', ')}. Follow the PHOTO MATCHING steps in step 2 for each: look at the photo, read any visible label or logo, find the exact product (brand, style name, colour) online by comparing candidate product photos side by side with theirs, set photoId to the brand's best clean product shot (keeping the user's photo in userPhotoId), and set match to exact, likely or none with a photoNote when it is not exact.` }, { cache: false }); } catch {}
     }
     toast(`Added ${ids.length} ${ids.length === 1 ? 'item' : 'items'}. Claude is filling in the details.`);
   }
