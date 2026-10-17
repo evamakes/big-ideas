@@ -1381,22 +1381,22 @@ details.dna[open] > summary { margin-bottom: 10px; }
   function occCats(cats) {
     if (S.occasion !== 'gym' || !cats) return cats;
     if (cats.includes('Top') || cats.includes('Bottoms')) return ['Active'];
-    if (cats.includes('Jumper')) return ['Jumper', 'Cardigan', 'Jacket', 'Active'];
+    if (cats.includes('Jumper')) return ['Jumper', 'Cardigan', 'Jacket'];
     if (cats.includes('Shoes')) return ['Shoes'];
     return [];
   }
   const isActiveBottom = (p) => /legging|short|pant|tight|jogger|skort|bike|flare/i.test(`${p.label || ''} ${p.name || ''}`);
   // In Gym, the first top and first bottom from activewear
-  const gymStart = () => { const it = rowItems(['Top']), b = it.findIndex(isActiveBottom), t = it.findIndex(x => !isActiveBottom(x)); return { ...(t >= 0 ? { Top: t } : {}), ...(b >= 0 ? { Bottom: b } : {}), Shoes: 0 }; };
+  const gymStart = () => ({ Top: 0, Bottom: 0, Shoes: 0 });
   const occOk = (p) => S.occasion === 'any' || S.occasion === 'gym' || !(p.occasions || []).length || p.occasions.includes(S.occasion);
   const isTrainer = (p) => /sneaker|trainer|runner|spezial|samba|vans|converse|nike|adidas|asics|new balance|on cloud/i.test(`${p.label || ''} ${p.name || ''} ${p.brand || ''}`);
   const rowItems = (cats) => { const gymShoes = S.occasion === 'gym' && cats?.includes('Shoes'); const list = rowItemsRaw(cats); if (!gymShoes) return list; const t = list.filter(isTrainer); return t.length ? t : list; };
-  const rowItemsRaw = (cats) => { cats = occCats(cats); return cats ? wearable().filter(weatherOk).filter(occOk).filter(p => cats.includes(p.category) && (S.occasion !== 'any' && S.occasion !== 'gym' ? p.category !== 'Active' : true)).map(p => ({ ...p, _col: 'wardrobe' })) : live('wishlist').filter(w => (S.occasion === 'gym' ? ['Activewear'] : ['Clothes', 'Activewear']).includes(w.category) && w.status !== 'bought').map(w => ({ ...w, _col: 'wishlist' })); };
+  const rowItemsRaw = (orig) => { const cats = occCats(orig), gymPart = S.occasion === 'gym' && orig ? (orig.includes('Top') ? 'top' : orig.includes('Bottoms') ? 'bottom' : '') : ''; return cats ? wearable().filter(p => !gymPart || (gymPart === 'bottom') === isActiveBottom(p)).filter(weatherOk).filter(occOk).filter(p => cats.includes(p.category) && (S.occasion !== 'any' && S.occasion !== 'gym' ? p.category !== 'Active' : true)).map(p => ({ ...p, _col: 'wardrobe' })) : live('wishlist').filter(w => (S.occasion === 'gym' ? ['Activewear'] : ['Clothes', 'Activewear']).includes(w.category) && w.status !== 'bought').map(w => ({ ...w, _col: 'wishlist' })); };
   // Board state is kept as indexes per row; today's look is saved by piece id so it survives reloads and devices
   function flipFromIds(ids) {
     const f = {}, used = new Set(), want = new Set(ids);
     const place = (row, pick) => { const items = rowItems(FLIP_ROWS.find(r => r[0] === row)[1]); const cand = items.map((x, i) => [x, i]).filter(([x]) => want.has(x.id) && !used.has(x.id)); const hit = pick(cand); if (hit) { f[row] = hit[1]; used.add(hit[0].id); } };
-    for (const [row, cats] of FLIP_ROWS) if (cats && !['Top', 'Layer', 'Outer'].includes(row)) place(row, c => row === 'Bottom' && S.occasion === 'gym' ? (c.find(([x]) => isActiveBottom(x)) || null) : c[0]);
+    for (const [row, cats] of FLIP_ROWS) if (cats && !['Top', 'Layer', 'Outer'].includes(row)) place(row, c => c[0]);
     // A shirt is the top only when there's no other top; otherwise it's worn open as a layer
     place('Top', c => c.find(([x]) => x.category === 'Top') || c[0]);
     const byWeight = (c) => c.sort((a, b) => LAYER_WEIGHT[a[0].category] - LAYER_WEIGHT[b[0].category]);
@@ -2244,9 +2244,8 @@ details.dna[open] > summary { margin-bottom: 10px; }
     const n = (row) => rowItems(FLIP_ROWS.find(x => x[0] === row)[1]).length;
     const dress = n('Dress') && Math.random() < 0.3;
     if (S.occasion === 'gym') {
-      const it = rowItems(['Top']).map((x, i) => [x, i]), bots = it.filter(([x]) => isActiveBottom(x)), tops = it.filter(([x]) => !isActiveBottom(x));
-      if (free('Top') && tops.length) f.Top = tops[r(tops.length)][1];
-      if (free('Bottom') && bots.length) f.Bottom = bots[r(bots.length)][1];
+      if (free('Top') && n('Top')) f.Top = r(n('Top'));
+      if (free('Bottom') && n('Bottom')) f.Bottom = r(n('Bottom'));
     } else if (dress && free('Dress')) f.Dress = r(n('Dress')); else { if (n('Top') && free('Top')) f.Top = r(n('Top')); if (n('Bottom') && free('Bottom')) f.Bottom = r(n('Bottom')); }
     if (n('Shoes') && free('Shoes')) f.Shoes = r(n('Shoes'));
     const layerOdds = { cold: 1, cool: 0.75, warm: 0.35, hot: 0.15 }[S.weather] ?? 0.5, outerOdds = { cold: 0.6, cool: 0.25 }[S.weather] || 0;
