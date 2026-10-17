@@ -286,6 +286,13 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
 .palette span { display: grid; justify-items: center; gap: 3px; font-size: 0.68rem; color: var(--muted); width: 56px; text-align: center; line-height: 1.15; }
 .palette i { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--line); display: block; }
 .picks { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); grid-auto-rows: max-content; align-items: start; gap: 8px; }
+details.dna > summary { list-style: none; cursor: pointer; }
+details.dna > summary::-webkit-details-marker { display: none; }
+details.dna > summary h2::after { content: ' +'; color: var(--tan); font-size: 1rem; }
+details.dna[open] > summary h2::after { content: ' −'; }
+details.dna[open] > summary { margin-bottom: 10px; }
+#dna-body { display: grid; gap: 8px; margin-bottom: 12px; }
+#dna-details .dna-form { margin-bottom: 8px; }
 .dna-form { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
 .dna-form input { border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 7px 14px; font: inherit; min-width: 0; }
 .dna-list { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
@@ -525,13 +532,20 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       </section>
     </div>
     <section class="block" id="dna-block">
-      <div class="block-h"><h2>Your style DNA</h2><span class="meta" id="dna-when"></span></div>
-      <div id="dna-body"></div>
-      <div class="dna-form">
-        <input type="url" id="dna-pin" placeholder="Paste a public Pinterest board link" aria-label="Pinterest board link">
-        <button class="btn small primary" id="dna-go">Learn my style</button>
-      </div>
-      <p class="meta" style="margin:0">Claude studies your Pinterest board, your Inspo pictures and your profile, then every outfit follows it. Keep the board public.</p>
+      <details class="dna" id="dna-details">
+        <summary class="block-h"><h2>Your style DNA</h2><span class="meta" id="dna-when"></span></summary>
+        <div id="dna-body"></div>
+        <div class="dna-form">
+          <input type="url" id="dna-pin" placeholder="Paste a public Pinterest board link" aria-label="Pinterest board link">
+          <button class="btn small primary" id="dna-go">Learn my style</button>
+        </div>
+        <p class="meta" style="margin:0">Claude studies your Pinterest board, your Inspo pictures and your profile, then every outfit follows it. Keep the board public.</p>
+      </details>
+    </section>
+    <section class="block" id="igaps-block">
+      <div class="block-h"><h2>Inspo vs your wardrobe</h2><span class="tools"><span class="meta" id="igaps-when"></span><button class="btn small ghost needs-ai" id="igaps-go">Find my gaps</button></span></div>
+      <p class="meta" style="margin:0">What your Pinterest and Inspo looks keep coming back to that your wardrobe doesn't have yet.</p>
+      <ul class="gaps" id="igaps-list"></ul>
     </section>
     <section class="block">
       <div class="block-h"><h2>Style board</h2>
@@ -1268,6 +1282,10 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       ${(dna.palette || []).length ? `<p class="meta" style="margin:0"><b>Palette:</b> ${esc(dna.palette.join(', '))}</p>` : ''}
       ${(dna.rules || []).length ? `<ul class="dna-list">${dna.rules.map(r => `<li>${esc(r)}</li>`).join('')}</ul>` : ''}
       ${(dna.avoid || []).length ? `<p class="meta" style="margin:0"><b>Not you:</b> ${esc(dna.avoid.join(' · '))}</p>` : ''}` : '<p class="meta" style="margin:0">No style DNA yet. Add your Pinterest board below (and a few Inspo pictures) so outfits match your taste.</p>';
+    const ig = (S.meta.style || {}).gaps || [];
+    $('#igaps-when').textContent = S.igapsBusy ? 'Comparing…' : (S.meta.style || {}).gapsAt ? `Checked ${ago(S.meta.style.gapsAt)}` : '';
+    $('#igaps-list').innerHTML = ig.length ? ig.map((g, i) => `<li><span class="pill ${g.priority === 'high' ? 'accent' : ''}">${g.priority === 'high' ? 'Key gap' : 'Nice to have'}</span><span><b>${esc(g.item)}</b><br><span class="meta">${esc(g.why || '')}${g.pairsWith ? ` · Wear with: ${esc(g.pairsWith)}` : ''}</span></span>${canWrite ? `<span class="tools">${g.briefed ? '<span class="meta">Options coming</span>' : `<button class="btn small" data-act="igap-brief" data-i="${i}">Find options</button>`}${g.wanted ? '<span class="meta">In wants</span>' : `<button class="btn small ghost" data-act="igap-want" data-i="${i}">Add to wants</button>`}</span>` : ''}</li>`).join('')
+      : `<li style="display:block"><span class="meta">${(S.meta.style || {}).summary ? 'Tap Find my gaps to compare your wardrobe with your style DNA and inspo.' : 'Add your Pinterest board above first, then Claude can compare it with your wardrobe.'}</span></li>`;
     $('#board-weather').innerHTML = Object.entries(WEATHER).map(([k, l]) => `<button class="chip" aria-pressed="${k === S.weather}" data-act="weather" data-v="${k}">${l}</button>`).join('');
     const f = flipState();
     const rows = FLIP_ROWS.map(([row, cats]) => {
@@ -1674,6 +1692,21 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       else toast('Saved. The next refresh will build your style DNA.');
     } catch { toast('Couldn’t start that. Try again.'); }
     finally { btn.disabled = false; }
+  });
+  $('#dna-details').open = store.get('edit.dna.open') === '1';
+  $('#dna-details').addEventListener('toggle', (e) => store.set('edit.dna.open', e.target.open ? '1' : ''));
+  // Compare the style DNA (built from Pinterest + Inspo) with what's actually in the wardrobe
+  $('#igaps-go').addEventListener('click', async () => {
+    const dna = S.meta.style || {};
+    if (!sample) return;
+    S.igapsBusy = true; renderStyle();
+    try {
+      const inspo = live('inspo').map(x => x.note || x.title || x.analysis?.summary || '').filter(Boolean).slice(0, 20);
+      const res = await sample.json(`You are a sharp personal stylist. Australian English.${profileText()}\n\nMy inspo notes: ${JSON.stringify(inspo)}\n\nMy wardrobe (JSON):\n${JSON.stringify(wearable().map(slimPiece))}\n\nMy wants already: ${JSON.stringify(live('wishlist').filter(w => w.status !== 'bought').map(w => shortOf(w)))}\n\nCompare what my style DNA and inspo keep coming back to with what I actually own. List the 4–7 specific pieces that would most close the gap between the two (be specific: cut, colour, fabric, e.g. "Tan suede western belt with a silver buckle", not "a belt"). Skip anything I already own or already want. Reply with only JSON: [{"item":"specific piece","why":"one line: which looks it unlocks and why it's missing","pairsWith":"2-3 of my own pieces by name","priority":"high|medium"}]`, { cache: false });
+      const gaps = (Array.isArray(res) ? res : []).slice(0, 7).map(g => ({ item: String(g.item || ''), why: String(g.why || ''), pairsWith: String(g.pairsWith || ''), priority: g.priority === 'high' ? 'high' : 'medium' })).filter(g => g.item);
+      await db.doc('meta/style').set({ ...dna, gaps, gapsAt: now() });
+    } catch (err) { toast(aiErr(err)); }
+    S.igapsBusy = false; renderStyle();
   });
   $('#pick-q').addEventListener('input', (e) => { S.pickQ = e.target.value.trim(); renderStyle(); });
   $('#pick-more').addEventListener('click', () => { S.pickAll = !S.pickAll; renderStyle(); });
@@ -2300,6 +2333,17 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
         break;
       }
       case 'save-outfit': { const i = Number(t.dataset.i), o = S.suggestions[i]; if (!o) break; act(async () => { await db.collection('outfits').add({ ...o, createdAt: now() }); S.suggestions.splice(i, 1); toast('Outfit saved'); render(); }); break; }
+      case 'igap-brief': case 'igap-want': {
+        const dna = S.meta.style || {}, i = Number(t.dataset.i), g = (dna.gaps || [])[i]; if (!g) break;
+        const brief = t.dataset.act === 'igap-brief';
+        act(async () => {
+          if (brief) await addBrief(`${g.item}. ${g.why}${g.pairsWith ? ` To wear with my ${g.pairsWith}.` : ''}`, null);
+          else { const ref = await db.collection('wishlist').add({ name: g.item, label: g.item.split(' ').slice(0, 4).join(' '), category: 'Clothes', priority: g.priority === 'high' ? 'must' : 'want', notes: g.why, status: 'want', stock: 'unknown', priceHistory: [], createdAt: now() }); await fireResearch('wishlist', ref.id, g.item); toast('Added to your wants. Claude is finding the best one.'); }
+          const gaps = (dna.gaps || []).map((x, j) => j === i ? { ...x, [brief ? 'briefed' : 'wanted']: true } : x);
+          await db.doc('meta/style').set({ ...dna, gaps });
+        });
+        break;
+      }
       case 'gap-want': {
         const g = S.gaps[Number(t.dataset.i)]; if (!g) break;
         act(async () => { await db.collection('wishlist').add({ name: g.item, category: 'Clothes', priority: g.priority === 'high' ? 'must' : 'want', notes: g.why, status: 'want', stock: 'unknown', priceHistory: [], createdAt: now() }); g.added = true; renderWardrobe(); toast('Added to your wants. The refresh will price it.'); });
