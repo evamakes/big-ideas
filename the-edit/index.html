@@ -650,8 +650,8 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
   const SKIN_STEPS = ['Cleanser', 'Toner', 'Exfoliant', 'Serum', 'Treatment', 'Eye cream', 'Moisturiser', 'Oil', 'SPF', 'Mask', 'Other'];
   const WHEN = { am: 'AM', pm: 'PM', both: 'AM & PM' };
   const FREQ = { daily: 'Daily', alt: 'Every other day', few: '2–3× a week', weekly: 'Weekly' };
-  const OCCASIONS = { work: 'Work', casual: 'Casual', fun: 'Fun' };
-  const WARD_CATS = ['Top', 'Shirt', 'Knit', 'Jumper', 'Cardigan', 'Jacket', 'Bottoms', 'Jeans', 'Skirt', 'Dress', 'Outerwear', 'Shoes', 'Bag', 'Accessory', 'Active'];
+  const OCCASIONS = { work: 'Work', casual: 'Casual', fun: 'Fun', beach: 'Beach' };
+  const WARD_CATS = ['Top', 'Shirt', 'Knit', 'Jumper', 'Cardigan', 'Jacket', 'Bottoms', 'Jeans', 'Skirt', 'Dress', 'Outerwear', 'Shoes', 'Bag', 'Accessory', 'Swim', 'Active'];
   const FIND_KINDS = { skincare: 'Skincare', makeup: 'Makeup', clothes: 'Clothes', office: 'Office', other: 'Other' };
   const VERDICT = { loved: ['good', 'Reviewers love it'], mixed: ['warn', 'Mixed reviews'], skip: ['bad', 'Probably skip'] };
   const opts = (list) => Array.isArray(list) ? list.map(v => [v, v]) : Object.entries(list);
@@ -716,7 +716,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       { k: 'colour', label: 'Colour', type: 'text' },
       { k: 'size', label: 'Size', type: 'text', ph: 'e.g. S, 10, EU 39' },
       { k: 'fit', label: 'Fit', type: 'select', options: opts({ '': 'Fits', no: 'Doesn’t fit' }) },
-      { k: 'occasions', label: 'Occasions', type: 'tags', full: true, ph: 'work, casual, fun' },
+      { k: 'occasions', label: 'Occasions', type: 'tags', full: true, ph: 'work, casual, fun, beach' },
       { k: 'vibes', label: 'Vibes', type: 'tags', full: true, ph: 'comma separated, e.g. office, weekend, date night', hint: 'Used when mixing outfits.' },
       { k: 'season', label: 'Season', type: 'select', options: opts({ all: 'All year', warm: 'Warm weather', cool: 'Cool weather' }) },
       PHOTO,
@@ -1235,7 +1235,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     for (const [row, cats] of FLIP_ROWS) { const items = rowItems(cats); const i = f[row]; if (i != null && i >= 0 && items.length) out.push(items[((i % items.length) + items.length) % items.length]); }
     return out;
   }
-  const PICK_GROUPS = [['Tops', ['Top', 'Shirt']], ['Jumpers & jackets', LAYER_CATS], ['Bottoms', ['Bottoms', 'Jeans', 'Skirt']], ['Dresses', ['Dress']], ['Shoes', ['Shoes']], ['Bags & extras', ['Bag', 'Accessory']], ['Active', ['Active']]];
+  const PICK_GROUPS = [['Tops', ['Top', 'Shirt']], ['Jumpers & jackets', LAYER_CATS], ['Bottoms', ['Bottoms', 'Jeans', 'Skirt']], ['Dresses', ['Dress']], ['Shoes', ['Shoes']], ['Bags & extras', ['Bag', 'Accessory']], ['Swim', ['Swim']], ['Active', ['Active']]];
   const pickable = () => [...wearable().map(p => ({ ...p, _col: 'wardrobe' })), ...live('wishlist').filter(w => ['Clothes', 'Activewear'].includes(w.category) && w.status !== 'bought').map(w => ({ ...w, _col: 'wishlist' }))];
   function renderStyle() {
     const me = S.meta.me || {};
@@ -1637,7 +1637,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     if (!pieces.length || !sample) return;
     S.occBusy = true; renderWardrobe();
     try {
-      const res = await sample.json(`Tag each clothing piece with the occasions it suits. Australian English.${profileText()}\n\nPieces (JSON):\n${JSON.stringify(pieces.map(slimPiece))}\n\nOccasions: "work" (office-appropriate, smart casual), "casual" (everyday, weekend, errands), "fun" (going out, drinks, dates, events). A piece can have more than one. Reply with only JSON: {"<id>": ["work","casual"], ...}`, { cache: false });
+      const res = await sample.json(`Tag each clothing piece with the occasions it suits. Australian English.${profileText()}\n\nPieces (JSON):\n${JSON.stringify(pieces.map(slimPiece))}\n\nOccasions: "work" (office-appropriate, smart casual), "casual" (everyday, weekend, errands), "fun" (going out, drinks, dates, events), "beach" (swim, beach and pool days). A piece can have more than one. Reply with only JSON: {"<id>": ["work","casual"], ...}`, { cache: false });
       for (const p of pieces) {
         const tags = (Array.isArray(res?.[p.id]) ? res[p.id] : []).map(String).filter(t => OCCASIONS[t]);
         if (tags.length) await db.collection('wardrobe').doc(p.id).update({ occasions: tags });
