@@ -338,6 +338,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       <button class="tab" role="tab" data-tab="active">Active<span class="n" id="n-active"></span></button>
       <button class="tab" role="tab" data-tab="style">Style me</button>
       <button class="tab" role="tab" data-tab="inspo">Inspo<span class="n" id="n-inspo"></span></button>
+      <button class="tab" role="tab" data-tab="amazon">Amazon list<span class="n" id="n-amazon"></span></button>
     </nav>
   </div>
 </header>
@@ -357,6 +358,10 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
   <section class="panel" data-panel="today">
     <div class="refresh" id="refresh"></div>
     <div class="stats" id="stats"></div>
+    <section class="block" id="shop-block">
+      <div class="block-h"><h2>To restock</h2><span class="tools"><span class="meta" id="shop-total"></span><button class="btn small ghost" data-act="restock-prices" id="restock-btn">Check prices now</button></span></div>
+      <ul class="alerts" id="shop-list"></ul>
+    </section>
     <div class="today">
       <section class="block">
         <div class="block-h"><h2>Heads up</h2><button class="link" data-tab="wants">All wants →</button></div>
@@ -535,6 +540,25 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     <div class="inspo-list" id="inspo-list"></div>
   </section>
 
+  <!-- AMAZON LIST -->
+  <section class="panel" data-panel="amazon" hidden>
+    <form class="ask" id="amz-form" autocomplete="off">
+      <label for="amz-name">Add something for the next Amazon order</label>
+      <div class="ask-row" style="grid-template-columns:1fr 80px auto">
+        <input type="text" id="amz-name" placeholder="e.g. AA batteries, phone stand, coffee filters">
+        <input type="number" id="amz-qty" min="1" value="1" aria-label="Quantity">
+        <button class="btn primary" type="submit">Add</button>
+      </div>
+      <input type="url" id="amz-link" placeholder="Optional: paste the Amazon link">
+    </form>
+    <section class="block">
+      <div class="block-h"><h2>Next order</h2><span class="tools"><span class="meta" id="amz-total"></span><button class="btn small primary" data-act="amz-ordered" id="amz-ordered">Mark ticked as ordered</button></span></div>
+      <p class="meta" style="margin:0">Tick what you’re ordering, open each one on Amazon, add them to your cart there, then mark them ordered here.</p>
+      <ul class="bin" id="amz-list"></ul>
+    </section>
+    <details class="shelf" id="amz-history"><summary>Ordered before</summary><ul class="bin" id="amz-done" style="margin-top:12px"></ul></details>
+  </section>
+
   <!-- BIN -->
   <section class="panel" data-panel="bin" hidden>
     <div class="toolbar">
@@ -562,8 +586,9 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
 <script>
 (() => {
   // ---------- config ----------
-  const COLS = ['wishlist', 'finds', 'routine', 'beauty', 'hair', 'wardrobe', 'outfits', 'inspo'];
-  const COL_LABEL = { wishlist: 'Wants', finds: 'Finds', routine: 'Skin', beauty: 'Makeup', hair: 'Hair', wardrobe: 'Wardrobe', outfits: 'Outfits', inspo: 'Inspo' };
+  const COLS = ['wishlist', 'finds', 'routine', 'beauty', 'hair', 'wardrobe', 'outfits', 'inspo', 'basket'];
+  const COL_LABEL = { wishlist: 'Wants', finds: 'Finds', routine: 'Skin', beauty: 'Makeup', hair: 'Hair', wardrobe: 'Wardrobe', outfits: 'Outfits', inspo: 'Inspo', basket: 'Amazon list' };
+  const SUPPLY = { low: ['warn', 'Running low'], out: ['bad', 'Run out'] };
   const HAIR_STEPS = ['Shampoo', 'Conditioner', 'Mask', 'Leave-in', 'Oil / serum', 'Styling', 'Scalp', 'Tools', 'Other'];
   const RESEARCH = { queued: ['warn', 'Researching…'], draft: ['', 'Draft from Claude · not checked yet'], failed: ['bad', 'Couldn’t confirm this one'] };
   const WANT_CATS = ['Clothes', 'Activewear', 'Beauty', 'Skincare', 'Hair', 'Office', 'Home', 'Tech', 'Other'];
@@ -674,7 +699,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
 
   // ---------- state ----------
   const S = {
-    wishlist: [], finds: [], routine: [], beauty: [], hair: [], wardrobe: [], outfits: [], inspo: [], meta: {}, canImages: false, inspoBusy: {},
+    wishlist: [], finds: [], routine: [], beauty: [], hair: [], wardrobe: [], outfits: [], inspo: [], basket: [], meta: {}, canImages: false, inspoBusy: {},
     status: 'connecting',
     tab: 'today', wantCat: 'All', wantSort: 'alert', showBought: false, findKind: 'All', wardCat: 'All',
     cardAi: {}, suggestions: [], gaps: [],
@@ -719,7 +744,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       return `<button class="sw" data-act="want-shade" data-col="${col}" data-id="${esc(x.id)}" data-i="${i}" title="${esc(v.note || v.name)}"><i style="background:${isHex(v.hex) ? v.hex : 'var(--sunk)'}"></i><span>${esc(v.name)}</span></button>`;
     }).join('')}</div></details>`;
   }
-  const stackNoteBlock = (x) => x.stackNote ? `<div class="note-block"><b>Against what you own</b><span>${esc(x.stackNote)}</span></div>` : '';
+  const stackNoteBlock = (x) => x.stackNote ? `<details class="more"><summary>Against what you own</summary><div class="note-block" style="margin-top:8px"><span>${esc(x.stackNote)}</span></div></details>` : '';
   const deliverTo = () => (S.meta.profile?.location || 'you').trim();
   const canResearch = () => !!(mcp && S.meta.research?.triggerId && canWrite);
   const initial = (s) => esc((s || '?').trim().charAt(0).toUpperCase());
@@ -839,10 +864,11 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     $('#n-makeup').textContent = stackCount('beauty') || '';
     $('#n-wardrobe').textContent = live('wardrobe').filter(p => p.category !== 'Active').length || '';
     $('#n-inspo').textContent = live('inspo').length || '';
+    $('#n-amazon').textContent = live('basket').filter(b => !b.ordered).length || '';
     $('#n-hair').textContent = stackCount('hair') || '';
     $('#n-active').textContent = live('wardrobe').filter(p => p.category === 'Active').length || '';
     $$('.needs-img').forEach(el => el.hidden = !S.canImages);
-    $('#quick').hidden = !db || !canWrite || ['bin', 'inspo', 'style'].includes(S.tab);
+    $('#quick').hidden = !db || !canWrite || ['bin', 'inspo', 'style', 'amazon'].includes(S.tab);
     if (!S.quickTouched) $('#quick-own').value = ['skin', 'makeup', 'hair', 'wardrobe', 'active'].includes(S.tab) ? 'own' : 'want';
     const nb = binItems().length;
     $('#bin-btn').textContent = nb ? `Bin (${nb})` : 'Bin';
@@ -1001,7 +1027,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
         <span class="meta">${esc(sub.filter(Boolean).join(' · '))}</span>
         ${!isSkin && x.shade ? `<span>${swatch}${esc(x.shade)}</span>` : ''}
         ${isSkin && x.actives ? `<span class="meta">Actives: ${esc(x.actives)}</span>` : ''}
-        <div class="pills">${x.example ? '<span class="pill ex">Example</span>' : ''}<span class="pill ${STACK_TONE[st]}">${esc(STACK[st])}</span>${researchPill(x)}${stars(x.rating)}</div>
+        <div class="pills">${x.example ? '<span class="pill ex">Example</span>' : ''}<span class="pill ${STACK_TONE[st]}">${esc(STACK[st])}</span>${SUPPLY[x.supply] ? `<span class="pill ${SUPPLY[x.supply][0]}">${SUPPLY[x.supply][1]}</span>` : ''}${researchPill(x)}${stars(x.rating)}</div>
         ${st === 'out' && (x.swapReason || x.swappedFor) ? `<p class="notes">${x.swappedFor ? `Swapped for ${esc(x.swappedFor)}. ` : ''}${esc(x.swapReason || '')}</p>` : ''}
         ${x.feedback ? `<p class="notes">“${esc(x.feedback)}”</p>` : ''}
         ${otherShades(col, x)}
@@ -1011,6 +1037,9 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
         ${aiBox(x.id)}
       </div>
       <div class="actions">
+        ${canWrite && st !== 'out' && st !== 'shelf' ? (x.supply === 'out' ? `<button class="btn small" data-act="supply" data-v="ok" data-col="${col}" data-id="${esc(x.id)}">Restocked</button>`
+          : x.supply === 'low' ? `<button class="btn small" data-act="supply" data-v="out" data-col="${col}" data-id="${esc(x.id)}">Run out</button><button class="btn small ghost" data-act="supply" data-v="ok" data-col="${col}" data-id="${esc(x.id)}">Restocked</button>`
+          : `<button class="btn small ghost" data-act="supply" data-v="low" data-col="${col}" data-id="${esc(x.id)}">Running low</button><button class="btn small ghost" data-act="supply" data-v="out" data-col="${col}" data-id="${esc(x.id)}">Run out</button>`) : ''}
         ${canResearch() && st !== 'out' && x.altResearch !== 'queued' ? `<button class="btn small ghost" data-act="alts" data-col="${col}" data-id="${esc(x.id)}">Similar or cheaper</button>` : ''}
         ${canResearch() && x.research && x.research !== 'queued' && x.research !== 'done' ? `<button class="btn small ghost" data-act="research" data-col="${col}" data-id="${esc(x.id)}">Research it</button>` : ''}
         ${canWrite && st !== 'out' && st !== 'shelf' ? `<button class="btn small" data-act="swap" data-col="${col}" data-id="${esc(x.id)}">Swap out</button>` : ''}
@@ -1141,6 +1170,42 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     }
   }
 
+  const restockItems = () => ['routine', 'hair', 'beauty'].flatMap(c => live(c).filter(x => SUPPLY[x.supply] && !['out', 'shelf'].includes(statusOf(x))).map(x => ({ ...x, _col: c })));
+  function renderShopList() {
+    const items = restockItems().sort((a, b) => (a.supply === 'out' ? 0 : 1) - (b.supply === 'out' ? 0 : 1));
+    $('#shop-block').hidden = !items.length && !live('basket').some(b => !b.ordered);
+    let sum = 0, known = 0;
+    const rows = items.map(x => {
+      const p = priceInfo(x), best = p.best, total = best ? best._total : (Number(x.price) || null);
+      if (total) { sum += total; known++; }
+      const url = (best && safeUrl(best.url)) || safeUrl(x.url);
+      return `<li>${thumb(x)}
+        <span class="what"><b>${esc(nameOf(x))}</b><span class="pills"><span class="pill ${SUPPLY[x.supply][0]}">${SUPPLY[x.supply][1]}</span><span class="meta">${esc([x.brand, x.shade, COL_LABEL[x._col]].filter(Boolean).join(' · '))}</span></span>
+        ${total ? `<span class="meta">${fmt(total)}${best ? `${best.delivery == null ? '+' : ''} delivered from ${esc(best.shop)}` : ' (last known price)'}</span>` : '<span class="meta">Price not checked yet</span>'}</span>
+        <span class="tools" style="flex-direction:column;align-items:stretch">${url ? `<a class="btn small ghost" href="${esc(url)}" target="_blank" rel="noopener">Shop ↗</a>` : ''}${canWrite ? `<button class="btn small" data-act="supply" data-v="ok" data-col="${x._col}" data-id="${esc(x.id)}">Bought</button>` : ''}</span></li>`;
+    });
+    const amz = live('basket').filter(b => !b.ordered);
+    if (amz.length) rows.push(`<li><div class="thumb">a</div><span class="what"><b>Amazon list</b><span class="meta">${amz.length} ${amz.length === 1 ? 'thing' : 'things'} waiting for the next order</span></span><button class="btn small ghost" data-tab="amazon">Open</button></li>`);
+    $('#shop-list').innerHTML = rows.join('');
+    $('#shop-total').textContent = known ? `about ${fmt(sum)} delivered${known < items.length ? ' (some prices unknown)' : ''}` : '';
+    $('#restock-btn').hidden = !items.length || !(mcp && S.meta.refresh?.triggerId && canWrite);
+  }
+  function renderAmazon() {
+    const all = live('basket'), open = all.filter(b => !b.ordered).sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)));
+    const done = all.filter(b => b.ordered).sort((a, b) => String(b.orderedAt || '').localeCompare(String(a.orderedAt || '')));
+    const amzUrl = (b) => safeUrl(b.url) || 'https://www.amazon.com.au/s?k=' + encodeURIComponent(b.name);
+    let total = 0, priced = 0;
+    open.forEach(b => { if (b.ticked !== false && Number(b.price) > 0) { total += Number(b.price) * (Number(b.qty) || 1); priced++; } });
+    $('#amz-total').textContent = priced ? `about ${fmt(total)} for the ticked items` : '';
+    $('#amz-ordered').hidden = !open.length || !canWrite;
+    $('#amz-list').innerHTML = open.length ? open.map(b => `<li style="grid-template-columns:auto 1fr auto">
+        <input type="checkbox" data-act="amz-tick" data-id="${esc(b.id)}" ${b.ticked !== false ? 'checked' : ''} aria-label="Include ${esc(b.name)}" style="width:20px;height:20px;accent-color:var(--accent)">
+        <span class="what"><b>${esc(b.name)}</b><span class="meta">Qty ${esc(b.qty || 1)}${Number(b.price) > 0 ? ` · about ${fmt(b.price)} each` : ''}${b.note ? ` · ${esc(b.note)}` : ''}</span></span>
+        <span class="tools"><a class="btn small" href="${esc(amzUrl(b))}" target="_blank" rel="noopener">${safeUrl(b.url) ? 'Open on Amazon ↗' : 'Find on Amazon ↗'}</a>${canWrite ? `<button class="btn small ghost" data-act="amz-qty" data-d="-1" data-id="${esc(b.id)}" aria-label="One less">−</button><button class="btn small ghost" data-act="amz-qty" data-d="1" data-id="${esc(b.id)}" aria-label="One more">+</button>` : ''}${delBtn('basket', b.id, 'Remove')}</span></li>`).join('')
+      : `<li style="display:block" class="empty">Nothing on the list yet. Add little things as you think of them, then order them all in one go.</li>`;
+    $('#amz-history').hidden = !done.length;
+    $('#amz-done').innerHTML = done.slice(0, 40).map(b => `<li style="grid-template-columns:1fr auto"><span class="what"><b>${esc(b.name)}</b><span class="meta">Qty ${esc(b.qty || 1)} · ordered ${esc(ago(b.orderedAt) || '')}</span></span><span class="tools">${canWrite ? `<button class="btn small ghost" data-act="amz-again" data-id="${esc(b.id)}">Add again</button>` : ''}</span></li>`).join('');
+  }
   function renderBin() {
     const items = binItems();
     $('#empty-bin').hidden = !items.length || !canWrite;
@@ -1195,7 +1260,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
 
   function render() {
     renderChrome();
-    renderToday(); renderWants(); renderFinds(); renderSkin(); renderMakeup(); renderHair(); renderWardrobe(); renderActive(); renderStyle(); renderInspo(); renderBin();
+    renderToday(); renderWants(); renderFinds(); renderSkin(); renderMakeup(); renderHair(); renderWardrobe(); renderActive(); renderStyle(); renderInspo(); renderShopList(); renderAmazon(); renderBin();
   }
 
   // ---------- writes ----------
@@ -1503,6 +1568,17 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
   $('#quick').addEventListener('dragover', (e) => e.preventDefault());
   $('#quick').addEventListener('drop', (e) => { e.preventDefault(); setQuickFile(e.dataTransfer.files[0]); });
 
+  // ---------- amazon list ----------
+  $('#amz-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = $('#amz-name').value.trim(); if (!name) { $('#amz-name').focus(); return; }
+    const url = $('#amz-link').value.trim();
+    try {
+      await db.collection('basket').add({ name, qty: Math.max(1, Number($('#amz-qty').value) || 1), url: safeUrl(url) ? url : '', ticked: true, ordered: false, createdAt: now() });
+      $('#amz-name').value = ''; $('#amz-link').value = ''; $('#amz-qty').value = 1; $('#amz-name').focus();
+    } catch { toast('Couldn’t add that. Try again.'); }
+  });
+
   // ---------- bulk photo add ----------
   // Each photo becomes a draft item tagged by Claude straight away; one research run then finishes them all
   async function bulkAdd(files, target) {
@@ -1710,6 +1786,26 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     const find = (c) => S[c].find(x => x.id === id);
     switch (a) {
       case 'want-cat': S.wantCat = t.dataset.v; renderWants(); break;
+      case 'supply': {
+        const v = t.dataset.v;
+        act(async () => { await db.collection(col).doc(id).update(v === 'ok' ? { supply: null, restockedAt: now() } : { supply: v, supplyAt: now() }); toast(v === 'ok' ? 'Marked as stocked' : v === 'low' ? 'Added to your restock list' : 'Added to your restock list as run out'); });
+        break;
+      }
+      case 'restock-prices': {
+        t.disabled = true;
+        const ids = restockItems().map(x => `${x._col}/${x.id}`);
+        mcp.callTool('Claude Code Remote', 'fire_trigger', { trigger_id: S.meta.refresh.triggerId, text: `Restock only, skip everything else this run. Apply the PRICING RULES to these products the user is running low on or has run out of, and write \`offers\` (cheapest delivered total first) and \`price\` on each doc: ${ids.join(', ')}.` }, { cache: false })
+          .then(() => toast('Checking prices. They’ll appear here in a few minutes.')).catch(() => { t.disabled = false; toast('Couldn’t start that. Allow the Claude Code connection and try again.'); });
+        break;
+      }
+      case 'amz-qty': { const b = find('basket'); if (b) act(() => db.collection('basket').doc(id).update({ qty: Math.max(1, (Number(b.qty) || 1) + Number(t.dataset.d)) })); break; }
+      case 'amz-ordered': {
+        const ticked = live('basket').filter(b => !b.ordered && b.ticked !== false);
+        if (!ticked.length) { toast('Tick at least one thing first.'); break; }
+        act(async () => { const at = now(); for (const b of ticked) await db.collection('basket').doc(b.id).update({ ordered: true, orderedAt: at }); toast(`${ticked.length} marked as ordered`); });
+        break;
+      }
+      case 'amz-again': { const b = find('basket'); if (b) act(() => db.collection('basket').add({ name: b.name, qty: b.qty || 1, url: b.url || '', price: b.price ?? null, ticked: true, ordered: false, createdAt: now() })); break; }
       case 'pick': {
         const f = flipState();
         for (const [row, cats] of FLIP_ROWS) {
@@ -1884,13 +1980,14 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
   });
   document.addEventListener('change', (e) => {
     const t = e.target;
+    if (t.dataset.act === 'amz-tick') act(() => db.collection('basket').doc(t.dataset.id).update({ ticked: t.checked }));
     if (t.id === 'wants-sort') { S.wantSort = t.value; renderWants(); }
     if (t.id === 'wants-bought') { S.showBought = t.checked; renderWants(); }
   });
 
   // ---------- boot ----------
   const startTab = (location.hash || '').slice(1) || store.get('edit.tab');
-  if (['today', 'wants', 'finds', 'skin', 'makeup', 'hair', 'wardrobe', 'active', 'style', 'inspo', 'bin'].includes(startTab)) S.tab = startTab;
+  if (['today', 'wants', 'finds', 'skin', 'makeup', 'hair', 'wardrobe', 'active', 'style', 'inspo', 'amazon', 'bin'].includes(startTab)) S.tab = startTab;
   render();
 
   (async () => {
