@@ -2,7 +2,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;0,6..96,600;1,6..96,400;1,6..96,500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Rye&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;0,6..96,600;1,6..96,400;1,6..96,500&family=Schibsted+Grotesk:wght@400;500;600;700&family=Rye&display=swap">
 <style>
 /* Layout: a personal beauty-counter ledger. Masthead + tabs, then one working panel per area. Stacks are grouped by step/area like a shelf. */
 :root {
@@ -23,8 +23,8 @@
   --bad: #B02A1E;
   --bad-soft: #FBE4E1;
   --f-display: "Bodoni Moda", "Didot", "Bodoni 72", Georgia, serif;
-  --f-body: "DM Sans", "Helvetica Neue", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --f-mono: "DM Sans", "Helvetica Neue", system-ui, sans-serif;
+  --f-body: "Schibsted Grotesk", "Helvetica Neue", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "Schibsted Grotesk", "Helvetica Neue", system-ui, sans-serif;
   --f-name: "Rye", "Bodoni Moda", Georgia, serif;
   --r: 10px;
 }
@@ -60,7 +60,7 @@ a { color: var(--accent); }
 .brand-sub .star { font-size: 0.6rem; vertical-align: 1px; }
 .tab { text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.76rem; font-weight: 500; }
 .top-in { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; padding-block: 28px 12px; }
-.brand { font-family: var(--f-name); font-weight: 400; font-size: clamp(2.3rem, 6.4vw, 3.6rem); line-height: 1; letter-spacing: 0.01em; }
+.brand { font-family: var(--f-name); font-weight: 400; text-transform: uppercase; font-size: clamp(2.6rem, 7.4vw, 4.4rem); line-height: 0.9; letter-spacing: -0.02em; word-spacing: -0.05em; }
 .brand em { color: var(--accent); font-style: normal; font-weight: 400; }
 .top-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .sync { margin: 0; font-size: 0.82rem; color: var(--muted); display: flex; align-items: center; gap: 6px; }
@@ -191,7 +191,7 @@ select.plain { border: 1px solid var(--line); background: var(--surface); border
 .card-title h3, .card-title .meta { overflow-wrap: anywhere; }
 .pills { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 .price-row { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: end; }
-.price { font-family: var(--f-mono); font-size: 1.35rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+.price { font-family: var(--f-mono); font-size: 1.35rem; font-weight: 500; }
 .price small { font-size: 0.78rem; color: var(--muted); font-weight: 400; display: block; font-family: var(--f-body); }
 .spark { width: 120px; height: 38px; display: block; }
 .notes { font-size: 0.88rem; color: var(--muted); margin: 0; overflow-wrap: anywhere; }
@@ -203,7 +203,7 @@ details.more { font-size: 0.86rem; }
 details.more summary { cursor: pointer; color: var(--muted); font-weight: 600; }
 .offers { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; }
 .offers li { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: baseline; }
-.offers .mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.offers .mono { font-family: var(--f-mono); }
 .review { background: var(--sunk); border-radius: 8px; padding: 10px 12px; display: grid; gap: 6px; font-size: 0.87rem; }
 .review ul { margin: 0; padding-left: 18px; }
 .sources { display: flex; gap: 4px 10px; flex-wrap: wrap; font-size: 0.8rem; }
@@ -425,7 +425,6 @@ details.dna[open] > summary { margin-bottom: 10px; }
 <header class="top">
   <div class="wrap top-in">
     <div>
-      <p class="eyebrow" id="today-date">Today</p>
       <h1 class="brand">The <em>Edit</em></h1>
     </div>
     <div class="top-tools">
@@ -587,6 +586,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     <section class="block">
       <div class="block-h"><h2>Style board <span class="meta" id="board-title-meta" style="font-family:var(--f-body);font-size:0.8rem;letter-spacing:0"></span></h2>
         <div class="tools">
+          <div class="chips" id="board-occ" role="group" aria-label="Occasion"></div>
           <div class="chips" id="board-weather" role="group" aria-label="Weather"></div>
           <button class="btn small" id="board-shuffle">Style me</button>
           <button class="btn small primary needs-img" id="board-ask">Claude’s take</button>
@@ -863,7 +863,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
   const S = {
     wishlist: [], finds: [], briefs: [], routine: [], beauty: [], hair: [], wardrobe: [], outfits: [], inspo: [], basket: [], meta: {}, canImages: false, inspoBusy: {},
     status: 'connecting',
-    tab: 'today', weather: 'any', pickGroup: 'All', pickQ: '', pickAll: false, wardOcc: 'All', wantCat: 'All', wantSort: 'alert', showBought: false, findKind: 'All', wardCat: 'All',
+    tab: 'today', weather: 'any', occasion: 'any', pickGroup: 'All', pickQ: '', pickAll: false, wardOcc: 'All', wantCat: 'All', wantSort: 'alert', showBought: false, findKind: 'All', wardCat: 'All',
     cardAi: {}, suggestions: [], gaps: [],
   };
   let db = null, assets = null, sample = null, mcp = null, canWrite = true;
@@ -1039,7 +1039,6 @@ details.dna[open] > summary { margin-bottom: 10px; }
   const binItems = () => COLS.flatMap(c => S[c].filter(x => x.deleted).map(x => ({ col: c, x }))).sort((a, b) => String(b.x.deletedAt || '').localeCompare(String(a.x.deletedAt || '')));
 
   function renderChrome() {
-    $('#today-date').textContent = new Date().toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' });
     const sync = $('#sync');
     sync.className = 'sync' + (S.status === 'live' ? ' on' : '');
     sync.textContent = S.status === 'live' ? (canWrite ? 'Saved to your Edit' : 'View only') : S.status === 'off' ? 'Not connected' : 'Connecting…';
@@ -1364,8 +1363,8 @@ details.dna[open] > summary { margin-bottom: 10px; }
   // Layer rows: an open shirt or light knit, then optionally a heavier jacket over it; they appear only when used
   const LAYERS = ['Shirt', ...LAYER_CATS];
   const LAYER_WEIGHT = { Shirt: 0, Cardigan: 1, Knit: 2, Jumper: 3, Jacket: 4, Outerwear: 5 };
-  const ROW_LABEL = { Layer: 'Layer', Outer: 'Over that', Want: 'Want' };
-  const FLIP_ROWS = [['Top', ['Top', 'Shirt']], ['Layer', LAYERS], ['Outer', LAYERS], ['Bottom', ['Bottoms', 'Jeans', 'Skirt']], ['Dress', ['Dress']], ['Shoes', ['Shoes']], ['Bag', ['Bag', 'Accessory']], ['Active', ['Active']], ['Want', null]];
+  const ROW_LABEL = { Layer: 'Layer', Outer: 'Over that', Extras: 'Belts & extras', Want: 'Want' };
+  const FLIP_ROWS = [['Top', ['Top', 'Shirt']], ['Layer', LAYERS], ['Outer', LAYERS], ['Bottom', ['Bottoms', 'Jeans', 'Skirt']], ['Dress', ['Dress']], ['Shoes', ['Shoes']], ['Bag', ['Bag']], ['Extras', ['Accessory']], ['Active', ['Active']], ['Want', null]];
   // Weather: hot leaves out cool-season pieces and layers; cold leaves out warm-season pieces
   const WEATHER = { any: 'Any weather', cold: 'Cold', cool: 'Cool', warm: 'Warm', hot: 'Hot' };
   const WEATHER_TEXT = { cold: 'Cold day, under 14°C: layer up, a jacket or coat over a jumper or shirt', cool: 'Cool day, around 14–20°C: one or two layers', warm: 'Warm day, around 21–26°C: light layers only, like an open shirt or cardigan', hot: 'Hot day, 27°C or more: no layers beyond an open shirt' };
@@ -1376,12 +1375,28 @@ details.dna[open] > summary { margin-bottom: 10px; }
     cool: true,
     cold: p.season !== 'warm',
   })[S.weather] ?? true;
-  const rowItems = (cats) => cats ? wearable().filter(weatherOk).filter(p => cats.includes(p.category)).map(p => ({ ...p, _col: 'wardrobe' })) : live('wishlist').filter(w => ['Clothes', 'Activewear'].includes(w.category) && w.status !== 'bought').map(w => ({ ...w, _col: 'wishlist' }));
+  // Occasion: Gym builds from activewear; the others keep pieces tagged for it (untagged pieces always count)
+  const BOARD_OCC = { any: 'Any', work: 'Work', casual: 'Casual', fun: 'Fun', beach: 'Beach', gym: 'Gym' };
+  const OCC_TEXT = { work: 'Dressing for work: polished, safe, office-appropriate choices; nothing too short, sheer or loud', casual: 'Dressing for a casual day', fun: 'Dressing for going out: more fun and statement-y', beach: 'Dressing for the beach or a hot coastal day', gym: 'Dressing for the gym or a workout: activewear only, plus trainers and a light layer if cool' };
+  function occCats(cats) {
+    if (S.occasion !== 'gym' || !cats) return cats;
+    if (cats.includes('Top') || cats.includes('Bottoms')) return ['Active'];
+    if (cats.includes('Jumper')) return ['Jumper', 'Cardigan', 'Jacket', 'Active'];
+    if (cats.includes('Shoes')) return ['Shoes'];
+    return [];
+  }
+  const isActiveBottom = (p) => /legging|short|pant|tight|jogger|skort|bike|flare/i.test(`${p.label || ''} ${p.name || ''}`);
+  // In Gym, the first top and first bottom from activewear
+  const gymStart = () => { const it = rowItems(['Top']), b = it.findIndex(isActiveBottom), t = it.findIndex(x => !isActiveBottom(x)); return { ...(t >= 0 ? { Top: t } : {}), ...(b >= 0 ? { Bottom: b } : {}), Shoes: 0 }; };
+  const occOk = (p) => S.occasion === 'any' || S.occasion === 'gym' || !(p.occasions || []).length || p.occasions.includes(S.occasion);
+  const isTrainer = (p) => /sneaker|trainer|runner|spezial|samba|vans|converse|nike|adidas|asics|new balance|on cloud/i.test(`${p.label || ''} ${p.name || ''} ${p.brand || ''}`);
+  const rowItems = (cats) => { const gymShoes = S.occasion === 'gym' && cats?.includes('Shoes'); const list = rowItemsRaw(cats); if (!gymShoes) return list; const t = list.filter(isTrainer); return t.length ? t : list; };
+  const rowItemsRaw = (cats) => { cats = occCats(cats); return cats ? wearable().filter(weatherOk).filter(occOk).filter(p => cats.includes(p.category) && (S.occasion !== 'any' && S.occasion !== 'gym' ? p.category !== 'Active' : true)).map(p => ({ ...p, _col: 'wardrobe' })) : live('wishlist').filter(w => (S.occasion === 'gym' ? ['Activewear'] : ['Clothes', 'Activewear']).includes(w.category) && w.status !== 'bought').map(w => ({ ...w, _col: 'wishlist' })); };
   // Board state is kept as indexes per row; today's look is saved by piece id so it survives reloads and devices
   function flipFromIds(ids) {
     const f = {}, used = new Set(), want = new Set(ids);
     const place = (row, pick) => { const items = rowItems(FLIP_ROWS.find(r => r[0] === row)[1]); const cand = items.map((x, i) => [x, i]).filter(([x]) => want.has(x.id) && !used.has(x.id)); const hit = pick(cand); if (hit) { f[row] = hit[1]; used.add(hit[0].id); } };
-    for (const [row, cats] of FLIP_ROWS) if (cats && !['Top', 'Layer', 'Outer'].includes(row)) place(row, c => c[0]);
+    for (const [row, cats] of FLIP_ROWS) if (cats && !['Top', 'Layer', 'Outer'].includes(row)) place(row, c => row === 'Bottom' && S.occasion === 'gym' ? (c.find(([x]) => isActiveBottom(x)) || null) : c[0]);
     // A shirt is the top only when there's no other top; otherwise it's worn open as a layer
     place('Top', c => c.find(([x]) => x.category === 'Top') || c[0]);
     const byWeight = (c) => c.sort((a, b) => LAYER_WEIGHT[a[0].category] - LAYER_WEIGHT[b[0].category]);
@@ -1466,6 +1481,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     $('#igaps-when').textContent = S.igapsBusy ? 'Comparing…' : (S.meta.style || {}).gapsAt ? `Checked ${ago(S.meta.style.gapsAt)}` : '';
     $('#igaps-list').innerHTML = ig.length ? ig.map((g, i) => `<li><span class="pill ${g.priority === 'high' ? 'accent' : ''}">${g.priority === 'high' ? 'Key gap' : 'Nice to have'}</span><span><b>${esc(g.item)}</b><br><span class="meta">${esc(g.why || '')}${g.pairsWith ? ` · Wear with: ${esc(g.pairsWith)}` : ''}</span></span>${canWrite ? `<span class="tools">${g.briefed ? '<span class="meta">Options coming</span>' : `<button class="btn small" data-act="igap-brief" data-i="${i}">Find options</button>`}${g.wanted ? '<span class="meta">In wants</span>' : `<button class="btn small ghost" data-act="igap-want" data-i="${i}">Add to wants</button>`}</span>` : ''}</li>`).join('')
       : `<li style="display:block"><span class="meta">${(S.meta.style || {}).summary ? 'Tap Find my gaps to compare your wardrobe with your style DNA and Pinterest.' : 'Add your Pinterest board above first, then Claude can compare it with your wardrobe.'}</span></li>`;
+    $('#board-occ').innerHTML = Object.entries(BOARD_OCC).map(([k, l]) => `<button class="chip" aria-pressed="${k === S.occasion}" data-act="board-occ" data-v="${k}">${l}</button>`).join('');
     $('#board-weather').innerHTML = Object.entries(WEATHER).map(([k, l]) => `<button class="chip" aria-pressed="${k === S.weather}" data-act="weather" data-v="${k}">${l}</button>`).join('');
     const f = flipState();
     const isOn = (row) => f[row] != null && f[row] >= 0;
@@ -1481,7 +1497,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
         <button class="arrow" data-act="flip" data-row="${row}" data-d="-1" aria-label="Previous ${row.toLowerCase()}"${lk ? ' disabled' : ''}>‹</button>
         <div class="card-in"><div class="img">${on ? (src ? `<img src="${esc(src)}" alt="" key="${esc(x.id)}">` : initial(x.name)) : '—'}</div>
           <div class="nm">${on ? `<b>${x._col === 'wishlist' ? 'Want · ' : ''}${esc(shortOf(x))}</b><span class="meta">${i + 1} of ${items.length}</span>` : `<span class="meta">${items.length} to flip through</span>`}
-          <button class="link" data-act="flip-toggle" data-row="${row}" style="justify-self:start">${on ? 'Take off' : row === 'Active' ? 'Add activewear' : row === 'Layer' ? 'Add a jumper or jacket' : 'Add a ' + row.toLowerCase()}</button></div></div>
+          <button class="link" data-act="flip-toggle" data-row="${row}" style="justify-self:start">${on ? 'Take off' : row === 'Active' ? 'Add activewear' : row === 'Extras' ? 'Add a belt or extra' : 'Add a ' + row.toLowerCase()}</button></div></div>
         <button class="arrow" data-act="flip" data-row="${row}" data-d="1" aria-label="Next ${row.toLowerCase()}"${lk ? ' disabled' : ''}>›</button></div>`;
     }).join('');
     $('#board').innerHTML = `<div class="me${mp.length ? '' : ' empty'}">${mp.length ? `<img src="/_blob/${mp[0]}" alt="You">` : 'Add a full-length photo of you'}</div>
@@ -1802,6 +1818,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     const loved = fb.filter(x => x.verdict === 'love').slice(-10).map(fmtFb), nope = fb.filter(x => x.verdict === 'nope').slice(-10).map(fmtFb);
     if (loved.length || nope.length) t += `${t ? '; ' : ''}OUTFIT FEEDBACK (learn from it): outfits I loved: ${loved.join(' / ') || 'none yet'}. Outfits that were not me: ${nope.join(' / ') || 'none yet'}`;
     if (S.weather && S.weather !== 'any') t += `${t ? '; ' : ''}weather today: ${WEATHER_TEXT[S.weather]}`;
+    if (S.occasion && S.occasion !== 'any') t += `${t ? '; ' : ''}occasion: ${OCC_TEXT[S.occasion]}`;
     return t ? `\n\nAbout me: ${t}` : '';
   };
   const slimMakeup = (b) => ({ product: b.name, brand: b.brand, type: b.type, shade: b.shade, finish: b.finish, status: STACK[statusOf(b)], rating: b.rating, feedback: b.feedback, swapReason: b.swapReason });
@@ -2212,7 +2229,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
       try {
         const seen = new Set(), pool = FLIP_ROWS.filter(r => r[1] && r[0] !== 'Outer').flatMap(([row, cats]) => rowItems(cats).filter(p => !seen.has(p.id) && seen.add(p.id)).map(p => ({ id: p.id, row, name: shortOf(p), brand: p.brand, colour: p.colour, category: p.category, season: p.season, occasions: p.occasions })));
         const recent = (S.recentLooks || []).slice(-6), keep = lockedIds();
-        const res = await sample.json(`You are a sharp personal stylist with real taste: think editorial, considered and wearable, never random. Australian English.${profileText()}\n\nMy pieces (JSON, grouped by row):\n${JSON.stringify(pool)}\n\n${keep.length ? `These locked pieces MUST stay in the outfit, build around them: ${JSON.stringify(keep)}. ` : ''}Build ONE cohesive outfit from these ids: either a dress, or a top plus a bottom; always shoes; layers are flexible: a button-up shirt can be the top, or worn open as a light layer over a fitted plain top, and that light layer can go under a heavier jacket or coat when it's cold (up to two layers, lighter one first in the ids list); a bag or belt only if it genuinely adds something. Colours, proportions, textures and formality must work together, and it should look like my style DNA. Don't repeat these recent looks: ${JSON.stringify(recent)}. Reply with only JSON: {"ids":["id1","id2"],"why":"one sentence on why it works"}`, { cache: false });
+        const res = await sample.json(`You are a sharp personal stylist with real taste: think editorial, considered and wearable, never random. Australian English.${profileText()}\n\nMy pieces (JSON, grouped by row):\n${JSON.stringify(pool)}\n\n${keep.length ? `These locked pieces MUST stay in the outfit, build around them: ${JSON.stringify(keep)}. ` : ''}Build ONE cohesive outfit from these ids${S.occasion === 'gym' ? ' (a workout outfit: an activewear top and bottom, trainers, a layer only if cool)' : S.occasion === 'work' ? ' (for work: polished and safe)' : ''}: either a dress, or a top plus a bottom; always shoes; layers are flexible: a button-up shirt can be the top, or worn open as a light layer over a fitted plain top, and that light layer can go under a heavier jacket or coat when it's cold (up to two layers, lighter one first in the ids list); a bag or belt only if it genuinely adds something. Colours, proportions, textures and formality must work together, and it should look like my style DNA. Don't repeat these recent looks: ${JSON.stringify(recent)}. Reply with only JSON: {"ids":["id1","id2"],"why":"one sentence on why it works"}`, { cache: false });
         const ids = [...new Set([...(res?.ids || []).map(String), ...keep])], f = flipFromIds(ids);
         if (Object.keys(f).length >= 2) {
           S.flip = f; S.recentLooks = [...(S.recentLooks || []), ids].slice(-10);
@@ -2226,12 +2243,17 @@ details.dna[open] > summary { margin-bottom: 10px; }
     const free = (row) => !S.locked.has(row);
     const n = (row) => rowItems(FLIP_ROWS.find(x => x[0] === row)[1]).length;
     const dress = n('Dress') && Math.random() < 0.3;
-    if (dress && free('Dress')) f.Dress = r(n('Dress')); else { if (n('Top') && free('Top')) f.Top = r(n('Top')); if (n('Bottom') && free('Bottom')) f.Bottom = r(n('Bottom')); }
+    if (S.occasion === 'gym') {
+      const it = rowItems(['Top']).map((x, i) => [x, i]), bots = it.filter(([x]) => isActiveBottom(x)), tops = it.filter(([x]) => !isActiveBottom(x));
+      if (free('Top') && tops.length) f.Top = tops[r(tops.length)][1];
+      if (free('Bottom') && bots.length) f.Bottom = bots[r(bots.length)][1];
+    } else if (dress && free('Dress')) f.Dress = r(n('Dress')); else { if (n('Top') && free('Top')) f.Top = r(n('Top')); if (n('Bottom') && free('Bottom')) f.Bottom = r(n('Bottom')); }
     if (n('Shoes') && free('Shoes')) f.Shoes = r(n('Shoes'));
     const layerOdds = { cold: 1, cool: 0.75, warm: 0.35, hot: 0.15 }[S.weather] ?? 0.5, outerOdds = { cold: 0.6, cool: 0.25 }[S.weather] || 0;
     if (free('Layer') && n('Layer') && Math.random() < layerOdds) f.Layer = r(n('Layer'));
     if (free('Outer') && f.Layer != null && Math.random() < outerOdds) { const items = rowItems(LAYERS), heavy = items.map((x, i) => [x, i]).filter(([x]) => LAYER_WEIGHT[x.category] >= 3 && x.id !== items[f.Layer % items.length]?.id); if (heavy.length) f.Outer = heavy[r(heavy.length)][1]; }
     if (free('Bag') && n('Bag') && Math.random() < 0.5) f.Bag = r(n('Bag'));
+    if (free('Extras') && n('Extras') && Math.random() < 0.4) f.Extras = r(n('Extras'));
     S.flip = f; $('#board-out').hidden = true; renderStyle();
   });
   $('#board-save').addEventListener('click', async () => {
@@ -2415,6 +2437,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
       case 'find-kind': S.findKind = t.dataset.v; renderFinds(); break;
       case 'ward-cat': S.wardCat = t.dataset.v; renderWardrobe(); break;
       case 'ward-occ': S.wardOcc = t.dataset.v; renderWardrobe(); break;
+      case 'board-occ': { const keep = lockedIds(); S.occasion = t.dataset.v; S.flip = flipFromIds(keep); if (S.occasion === 'gym' && !keep.length) S.flip = gymStart(); $('#board-out').hidden = true; renderStyle(); break; }
       case 'weather': { const keep = lockedIds(); S.weather = t.dataset.v; S.flip = flipFromIds(keep); $('#board-out').hidden = true; renderStyle(); break; }
       case 'today-add': {
         const f = flipState(), already = flipChosen().some(x => x.id === id), r = rowForPiece(id, f);
