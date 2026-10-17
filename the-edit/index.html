@@ -255,6 +255,38 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
 .recreate .use .thumb { width: 32px; height: 32px; font-size: 0.85rem; }
 .inspo-up { display: grid; gap: 10px; }
 
+/* Style me */
+.style-grid { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 20px; align-items: start; }
+.me-photos { display: flex; gap: 8px; flex-wrap: wrap; }
+.me-photos img { width: 76px; height: 100px; object-fit: cover; border-radius: 8px; }
+.palette { display: flex; gap: 6px; flex-wrap: wrap; }
+.palette span { display: grid; justify-items: center; gap: 3px; font-size: 0.68rem; color: var(--muted); width: 56px; text-align: center; line-height: 1.15; }
+.palette i { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--line); display: block; }
+.picks { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; max-height: 420px; overflow-y: auto; }
+.pick { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 0; cursor: pointer; overflow: hidden; text-align: left; display: grid; }
+.pick .img { aspect-ratio: 4 / 5; max-width: 100%; background: var(--sunk); display: grid; place-items: center; overflow: hidden; font-family: var(--f-display); font-style: italic; color: var(--muted); }
+.pick .img img { width: 100%; height: 100%; object-fit: cover; }
+.pick span { font-size: 0.7rem; padding: 4px 6px; overflow-wrap: anywhere; line-height: 1.2; }
+.pick[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+.board { display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr); gap: 12px; align-items: start; }
+.board .me { aspect-ratio: 3 / 5; max-width: 100%; border-radius: 10px; overflow: hidden; background: var(--sunk); display: grid; place-items: center; text-align: center; color: var(--muted); font-size: 0.85rem; padding: 0; }
+.board .me img { width: 100%; height: 100%; object-fit: cover; }
+.board .items { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+.flip { display: grid; gap: 10px; }
+.frow { display: grid; grid-template-columns: 64px 34px minmax(0, 1fr) 34px; gap: 8px; align-items: center; }
+.frow .lab { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); font-weight: 600; }
+.frow .card-in { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 10px; align-items: center; background: var(--sunk); border-radius: 10px; padding: 6px; min-width: 0; }
+.frow .card-in .img { width: 96px; height: 110px; border-radius: 8px; overflow: hidden; background: var(--surface); display: grid; place-items: center; color: var(--muted); font-family: var(--f-display); font-style: italic; }
+.frow .card-in .img img { width: 100%; height: 100%; object-fit: contain; background: #fff; }
+.frow .card-in .nm { font-size: 0.82rem; overflow-wrap: anywhere; display: grid; gap: 4px; }
+.frow.off .card-in { opacity: 0.45; }
+.frow .arrow { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); cursor: pointer; font-size: 1.1rem; color: var(--ink); }
+.frow .arrow:hover { border-color: var(--accent); color: var(--accent); }
+@media (prefers-reduced-motion: no-preference) { .frow .card-in .img img { animation: flipIn .25s ease; } @keyframes flipIn { from { transform: translateX(14px); opacity: 0 } to { transform: none; opacity: 1 } } }
+.board .items figure { margin: 0; display: grid; gap: 4px; font-size: 0.78rem; }
+.board .items .img { aspect-ratio: 4 / 5; max-width: 100%; border-radius: 8px; overflow: hidden; background: var(--sunk); }
+.board .items img { width: 100%; height: 100%; object-fit: cover; }
+
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(20px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 8px 8px 8px 16px; border-radius: 999px; font-size: 0.88rem; z-index: 50; max-width: calc(100vw - 32px); display: flex; gap: 12px; align-items: center; }
 .toast button { border: 0; background: var(--bg); color: var(--ink); border-radius: 999px; padding: 4px 12px; font-weight: 600; cursor: pointer; }
 .toast:not(.has-undo) { padding-right: 16px; }
@@ -262,6 +294,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
 @media (max-width: 820px) {
   .today { grid-template-columns: 1fr; }
   .inspo-card { grid-template-columns: 1fr; }
+  .style-grid { grid-template-columns: 1fr; }
   .inspo-card > .pic img { max-height: 420px; }
   .stats { grid-template-columns: repeat(2, 1fr); }
 }
@@ -271,6 +304,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
   .dlg-b { grid-template-columns: 1fr; }
   .ask-row, .refresh { grid-template-columns: 1fr; }
   .cards, .stack-list { grid-template-columns: 1fr; }
+  .board { grid-template-columns: minmax(0, 130px) minmax(0, 1fr); }
   .bin li { grid-template-columns: 48px 1fr; }
   .bin .tools { grid-column: 1 / -1; justify-content: flex-start; }
 }
@@ -299,7 +333,10 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       <button class="tab" role="tab" data-tab="finds">Finds<span class="n" id="n-finds"></span></button>
       <button class="tab" role="tab" data-tab="skin">Skin<span class="n" id="n-skin"></span></button>
       <button class="tab" role="tab" data-tab="makeup">Makeup<span class="n" id="n-makeup"></span></button>
+      <button class="tab" role="tab" data-tab="hair">Hair<span class="n" id="n-hair"></span></button>
       <button class="tab" role="tab" data-tab="wardrobe">Wardrobe<span class="n" id="n-wardrobe"></span></button>
+      <button class="tab" role="tab" data-tab="active">Active<span class="n" id="n-active"></span></button>
+      <button class="tab" role="tab" data-tab="style">Style me</button>
       <button class="tab" role="tab" data-tab="inspo">Inspo<span class="n" id="n-inspo"></span></button>
     </nav>
   </div>
@@ -309,7 +346,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
   <form class="quick" id="quick" autocomplete="off" hidden>
     <input type="text" id="quick-in" placeholder="Add anything, e.g. Jooycee aura blush, or paste a screenshot" aria-label="Product to add">
     <label class="btn small ghost" id="quick-photo-label" for="quick-photo" title="Add a photo or screenshot">Photo</label>
-    <input type="file" id="quick-photo" accept="image/*" hidden>
+    <input type="file" id="quick-photo" accept="image/*" multiple hidden>
     <select id="quick-own" aria-label="Want it or own it"><option value="want">I want it</option><option value="own">I own it</option></select>
     <button class="btn primary" type="submit" id="quick-go">Add</button>
   </form>
@@ -409,9 +446,74 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     <div class="section-h"><h2>In my wardrobe</h2></div>
     <div class="toolbar">
       <div class="chips" id="wardrobe-chips"></div>
-      <div class="tools"><button class="btn primary" data-add="wardrobe">+ Add a piece</button></div>
+      <div class="tools"><label class="btn" for="bulk-wardrobe">Add photos</label><input type="file" id="bulk-wardrobe" accept="image/*" multiple hidden><button class="btn primary" data-add="wardrobe">+ Add a piece</button></div>
     </div>
     <div class="closet" id="wardrobe-list"></div>
+  </section>
+
+  <!-- HAIR -->
+  <section class="panel" data-panel="hair" hidden>
+    <div class="toolbar">
+      <p class="meta" style="margin:0;max-width:60ch">Your hair care by step. Swap things out the same way as skincare.</p>
+      <div class="tools"><button class="btn primary" data-add="hair">+ Add a product</button></div>
+    </div>
+    <div id="hair-stack" style="display:grid;gap:22px"></div>
+  </section>
+
+  <!-- ACTIVE -->
+  <section class="panel" data-panel="active" hidden>
+    <div class="toolbar">
+      <p class="meta" style="margin:0;max-width:60ch">Activewear you own and want.</p>
+      <div class="tools">
+        <label class="btn" for="bulk-active">Add photos</label><input type="file" id="bulk-active" accept="image/*" multiple hidden>
+        <button class="btn primary" data-add="wardrobe" data-preset="Active">+ Add a piece</button>
+      </div>
+    </div>
+    <div class="closet" id="active-list"></div>
+    <div class="section-h" id="active-wants-h"><h2>Activewear I want</h2></div>
+    <div class="cards" id="active-wants"></div>
+  </section>
+
+  <!-- STYLE ME -->
+  <section class="panel" data-panel="style" hidden>
+    <div class="style-grid">
+      <section class="block">
+        <div class="block-h"><h2>Me</h2></div>
+        <div class="me-photos" id="me-photos"></div>
+        <div class="tools">
+          <label class="btn small" for="me-file">Add photos of me</label><input type="file" id="me-file" accept="image/*" multiple hidden>
+          <button class="btn small primary needs-img" id="me-read">Read my colouring and shape</button>
+        </div>
+        <p class="meta" style="margin:0">A full-length photo in fitted clothes against a plain wall, plus a close-up in daylight with no makeup, gives the best read. Only you can see these.</p>
+        <div id="me-analysis"></div>
+      </section>
+      <section class="block">
+        <div class="block-h"><h2>Jump to a piece</h2><span class="meta" id="pick-count"></span></div>
+        <p class="meta" style="margin:0">Tap anything from your wardrobe or wants to put it on the board. Use the arrows on the board to flip through each row.</p>
+        <div class="picks" id="style-picks"></div>
+      </section>
+    </div>
+    <section class="block">
+      <div class="block-h"><h2>Style board</h2>
+        <div class="tools">
+          <button class="btn small" id="board-shuffle">Shuffle</button>
+          <button class="btn small primary needs-img" id="board-ask">Claude’s take</button>
+          <button class="btn small" id="board-save">Save outfit</button>
+          <button class="btn small ghost" id="board-clear">Clear</button>
+        </div>
+      </div>
+      <div class="board" id="board"></div>
+      <div class="ai-out" id="board-out" hidden></div>
+    </section>
+    <section class="block needs-img">
+      <div class="block-h"><h2>Fit check</h2></div>
+      <label class="drop" id="fit-drop" for="fit-file">
+        <span id="fit-prev"><div class="thumb">+</div></span>
+        <span><b>Add a photo of you in an outfit</b><br><span class="meta">Claude says what’s working, what to tweak with pieces you own, and what would finish it.</span></span>
+        <input type="file" id="fit-file" accept="image/*">
+      </label>
+      <div class="ask-row"><textarea id="fit-note" rows="2" placeholder="Optional: where you’re wearing it, or what feels off"></textarea><button class="btn primary" id="fit-go">Check it</button></div>
+    </section>
   </section>
 
   <!-- INSPO -->
@@ -460,10 +562,11 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
 <script>
 (() => {
   // ---------- config ----------
-  const COLS = ['wishlist', 'finds', 'routine', 'beauty', 'wardrobe', 'outfits', 'inspo'];
-  const COL_LABEL = { wishlist: 'Wants', finds: 'Finds', routine: 'Skin', beauty: 'Makeup', wardrobe: 'Wardrobe', outfits: 'Outfits', inspo: 'Inspo' };
+  const COLS = ['wishlist', 'finds', 'routine', 'beauty', 'hair', 'wardrobe', 'outfits', 'inspo'];
+  const COL_LABEL = { wishlist: 'Wants', finds: 'Finds', routine: 'Skin', beauty: 'Makeup', hair: 'Hair', wardrobe: 'Wardrobe', outfits: 'Outfits', inspo: 'Inspo' };
+  const HAIR_STEPS = ['Shampoo', 'Conditioner', 'Mask', 'Leave-in', 'Oil / serum', 'Styling', 'Scalp', 'Tools', 'Other'];
   const RESEARCH = { queued: ['warn', 'Researching…'], draft: ['', 'Draft from Claude · not checked yet'], failed: ['bad', 'Couldn’t confirm this one'] };
-  const WANT_CATS = ['Clothes', 'Beauty', 'Skincare', 'Office', 'Home', 'Tech', 'Other'];
+  const WANT_CATS = ['Clothes', 'Activewear', 'Beauty', 'Skincare', 'Hair', 'Office', 'Home', 'Tech', 'Other'];
   const STOCK = { in: 'In stock', low: 'Low stock', selling: 'Selling fast', out: 'Out of stock', unknown: 'Not sure' };
   const PRIORITY = { must: 'Must have', want: 'Want', maybe: 'Maybe' };
   const STACK = { grail: 'Holy grail', current: 'In my stack', testing: 'Testing', shelf: 'On the shelf', out: 'Swapped out' };
@@ -521,6 +624,16 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       { k: 'freq', label: 'How often', type: 'select', options: opts(FREQ) },
       { k: 'status', label: 'Status', type: 'select', options: opts(STACK) },
       { k: 'actives', label: 'Key actives', type: 'text', full: true, ph: 'e.g. niacinamide 10%, retinal 0.1%' },
+      { k: 'rating', label: 'Rating', type: 'rating' },
+      PHOTO,
+      { k: 'feedback', label: 'How it’s going', type: 'textarea', full: true },
+    ]},
+    hair: { title: 'hair product', fields: [
+      { k: 'product', label: 'Product', type: 'text', req: true, full: true, ph: 'e.g. Miracle Hair Elixir' },
+      { k: 'brand', label: 'Brand', type: 'text' },
+      { k: 'step', label: 'Step', type: 'select', options: opts(HAIR_STEPS) },
+      { k: 'freq', label: 'How often', type: 'select', options: opts({ daily: 'Every wash', alt: 'Every other wash', few: '2–3× a week', weekly: 'Weekly' }) },
+      { k: 'status', label: 'Status', type: 'select', options: opts(STACK) },
       { k: 'rating', label: 'Rating', type: 'rating' },
       PHOTO,
       { k: 'feedback', label: 'How it’s going', type: 'textarea', full: true },
@@ -657,8 +770,14 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     const lastChecked = it.lastChecked || (h.length ? h[h.length - 1].d : null);
     // Rank shops by what it costs to land at the door: item + delivery + any membership needed
     const totalOf = (o) => o.total != null ? Number(o.total) : Number(o.price) + Number(o.delivery || 0) + Number(o.membership || 0);
-    const offers = (it.offers || []).filter(o => o && o.price != null).map(o => ({ ...o, _total: totalOf(o) })).sort((a, b) => a._total - b._total);
-    return { h, last, prev, peak, drop, rise, offPeak, atTarget, lastChecked, stale: daysSince(lastChecked), offers, best: offers[0] };
+    // Offers tagged with a colour only count for that colour; cheaper offers in other colours are kept aside as a tip
+    const sel = String(it.variant || '').toLowerCase();
+    const all = (it.offers || []).filter(o => o && o.price != null).map(o => ({ ...o, _total: totalOf(o) })).sort((a, b) => a._total - b._total);
+    const fits = (o) => !o.colour || !sel || String(o.colour).toLowerCase() === sel;
+    const offers = all.filter(fits), others = all.filter(o => !fits(o));
+    const best = offers[0];
+    const otherDeal = others.find(o => !best || o._total < best._total) || null;
+    return { h, last, prev, peak, drop, rise, offPeak, atTarget, lastChecked, stale: daysSince(lastChecked), offers, others, best, otherDeal };
   }
   function wantAlerts(it) {
     const p = priceInfo(it), out = [];
@@ -718,10 +837,13 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     $('#n-finds').textContent = newFinds().length || '';
     $('#n-skin').textContent = stackCount('routine') || '';
     $('#n-makeup').textContent = stackCount('beauty') || '';
-    $('#n-wardrobe').textContent = live('wardrobe').length || '';
+    $('#n-wardrobe').textContent = live('wardrobe').filter(p => p.category !== 'Active').length || '';
     $('#n-inspo').textContent = live('inspo').length || '';
-    $('#quick').hidden = !db || !canWrite || ['bin', 'inspo'].includes(S.tab);
-    if (!S.quickTouched) $('#quick-own').value = ['skin', 'makeup', 'wardrobe'].includes(S.tab) ? 'own' : 'want';
+    $('#n-hair').textContent = stackCount('hair') || '';
+    $('#n-active').textContent = live('wardrobe').filter(p => p.category === 'Active').length || '';
+    $$('.needs-img').forEach(el => el.hidden = !S.canImages);
+    $('#quick').hidden = !db || !canWrite || ['bin', 'inspo', 'style'].includes(S.tab);
+    if (!S.quickTouched) $('#quick-own').value = ['skin', 'makeup', 'hair', 'wardrobe', 'active'].includes(S.tab) ? 'own' : 'want';
     const nb = binItems().length;
     $('#bin-btn').textContent = nb ? `Bin (${nb})` : 'Bin';
     $('#profile-btn').hidden = !db || !canWrite;
@@ -795,7 +917,9 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     list.sort(sorters[S.wantSort] || sorters.alert);
     const el = $('#wants-list');
     if (!list.length) { el.innerHTML = emptyState('wishlist', all.length ? 'Nothing in this category.' : 'Add things you’re eyeing: clothes, beauty, office bits. The daily refresh checks prices and stock across shops.'); return; }
-    el.innerHTML = list.map(w => {
+    el.innerHTML = list.map(wantCard).join('');
+  }
+  function wantCard(w) {
       const p = priceInfo(w), al = wantAlerts(w);
       return `<article class="card ${w.status === 'bought' ? 'faded' : ''}">
         <div class="card-top">${thumb(w)}
@@ -809,12 +933,13 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
           <div class="price">${p.last == null && w.rrp ? `<span class="meta">about</span> ${fmt(w.rrp)}` : fmt(p.last)}<small>${[p.best ? `<b style="color:var(--ink)">${fmt(p.best._total)}${p.best.delivery == null ? '+' : ''}</b> delivered from ${esc(p.best.shop)}` : '', w.size ? esc(w.size) : '', p.offPeak ? `${fmt(p.offPeak)} off peak` : ''].filter(Boolean).join(' · ') || '&nbsp;'}</small></div>
           ${spark(p.h)}
         </div>
+        ${p.otherDeal ? `<p class="notes" style="margin:0"><span class="pill good">Cheaper in ${esc(p.otherDeal.colour)}</span> ${fmt(p.otherDeal._total)}${p.otherDeal.delivery == null ? '+' : ''} delivered from ${esc(p.otherDeal.shop)}${p.otherDeal.note ? ` · ${esc(p.otherDeal.note)}` : ''}</p>` : ''}
         ${al.length || w.research ? `<div class="pills">${researchPill(w)}${al.map(a => `<span class="pill ${a.tone}">${esc(a.label)}</span>`).join('')}</div>` : ''}
         ${variantsBlock('wishlist', w)}
         ${stackNoteBlock(w)}
         ${p.offers.length ? `<details class="more"><summary>${p.offers.length} ${p.offers.length === 1 ? 'shop' : 'shops'} compared, delivered to ${esc(deliverTo())}${p.lastChecked ? ` · ${esc(ago(p.lastChecked))}` : ''}</summary><ul class="offers" style="gap:8px">${p.offers.map(o => `<li style="grid-template-columns:1fr auto">
             <span style="min-width:0">${safeUrl(o.url) ? `<a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(o.shop)}</a>` : esc(o.shop)}<br><span class="meta">${fmt(o.price)} + ${o.delivery == null ? 'delivery not known' : Number(o.delivery) ? fmt(o.delivery) + ' delivery' : 'free delivery'}${Number(o.membership) ? ` + ${fmt(o.membership)} membership` : ''}${o.stock && o.stock !== 'unknown' ? ` · ${esc(STOCK[o.stock] || '')}` : ''}${o.note ? ` · ${esc(o.note)}` : ''}</span></span>
-            <span class="mono" style="text-align:right">${fmt(o._total)}${o.delivery == null ? '+' : ''}</span></li>`).join('')}</ul></details>` : ''}
+            <span class="mono" style="text-align:right">${fmt(o._total)}${o.delivery == null ? '+' : ''}</span></li>`).join('')}</ul>${p.others.length ? `<p class="eyebrow" style="margin:10px 0 4px">Other colours</p><ul class="offers">${p.others.map(o => `<li style="grid-template-columns:1fr auto"><span style="min-width:0">${safeUrl(o.url) ? `<a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(o.shop)}</a>` : esc(o.shop)} · ${esc(o.colour)}<br><span class="meta">${fmt(o.price)} + ${o.delivery == null ? 'delivery not known' : Number(o.delivery) ? fmt(o.delivery) + ' delivery' : 'free delivery'}${o.note ? ` · ${esc(o.note)}` : ''}</span></span><span class="mono" style="text-align:right">${fmt(o._total)}${o.delivery == null ? '+' : ''}</span></li>`).join('')}</ul>` : ''}</details>` : ''}
         ${w.notes ? `<p class="notes">${esc(w.notes)}</p>` : ''}
         ${reviewBlock(w.reviews)}
         ${altsBlock('wishlist', w)}
@@ -831,7 +956,6 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
           ${delBtn('wishlist', w.id)}
         </div>
       </article>`;
-    }).join('');
   }
 
   function renderFinds() {
@@ -867,8 +991,8 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
   }
 
   function stackItem(col, x) {
-    const st = statusOf(x), isSkin = col === 'routine';
-    const sub = isSkin ? [x.brand, WHEN[x.when], x.freq && x.freq !== 'daily' ? FREQ[x.freq] : ''] : [x.brand, x.finish];
+    const st = statusOf(x), isSkin = col !== 'beauty';
+    const sub = col === 'hair' ? [x.brand, x.freq && x.freq !== 'daily' ? ({ alt: 'Every other wash', few: '2–3× a week', weekly: 'Weekly' })[x.freq] : ''] : isSkin ? [x.brand, WHEN[x.when], x.freq && x.freq !== 'daily' ? FREQ[x.freq] : ''] : [x.brand, x.finish];
     const swatch = !isSkin && /^#[0-9a-f]{6}$/i.test(x.shadeHex || '') ? `<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${x.shadeHex};border:1px solid var(--line);vertical-align:-1px;margin-right:5px"></span>` : '';
     return `<div class="sitem ${st === 'out' ? 'out' : ''}">
       ${thumb(x, isSkin ? '' : 'round')}
@@ -899,7 +1023,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
   }
   function renderStack(col, el, groups, groupOf) {
     const items = live(col);
-    if (!items.length) { el.innerHTML = emptyState(col, col === 'routine' ? 'Add the skincare you use. You’ll see it by step and can swap things out as you go.' : 'Add your makeup with shades and how it went. Claude uses your notes to suggest swaps.'); return; }
+    if (!items.length) { el.innerHTML = emptyState(col, col === 'hair' ? 'Add your shampoo, conditioner, masks and oils.' : col === 'routine' ? 'Add the skincare you use. You’ll see it by step and can swap things out as you go.' : 'Add your makeup with shades and how it went. Claude uses your notes to suggest swaps.'); return; }
     const active = items.filter(x => !['out', 'shelf'].includes(statusOf(x)));
     const rank = { grail: 0, current: 1, testing: 2 };
     let html = '';
@@ -929,7 +1053,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     return `<div class="mini"><div class="img">${src ? `<img src="${esc(src)}" alt="" loading="lazy">` : initial(p.name)}</div><span>${esc(p.name)}</span></div>`;
   }
   function outfitCard(o, i, saved) {
-    const items = (o.itemIds || []).map(id => live('wardrobe').find(w => w.id === id)).filter(Boolean);
+    const items = (o.itemIds || []).map(id => [...live('wardrobe'), ...live('wishlist')].find(w => w.id === id)).filter(Boolean);
     return `<article class="outfit">
       <div class="section-h"><h3>${esc(o.title || 'Outfit')}</h3>${o.vibe ? `<span class="meta">${esc(o.vibe)}</span>` : ''}</div>
       <div class="outfit-items">${items.map(pieceTile).join('') || '<span class="meta">These pieces have been removed.</span>'}</div>
@@ -939,19 +1063,71 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
         : (canWrite ? `<button class="btn small" data-act="save-outfit" data-i="${i}">Save outfit</button>` : '')}</div>
     </article>`;
   }
+  function pieceBtn(p) {
+    const src = photoSrc(p);
+    return `<button class="piece" data-act="${canWrite ? 'edit' : ''}" data-col="wardrobe" data-id="${esc(p.id)}">
+        <div class="img">${src ? `<img src="${esc(src)}" alt="" loading="lazy">` : `<span>${esc(p.name)}</span>`}</div>
+        <div class="cap"><b>${esc(p.name)}</b><span class="meta">${esc([p.brand, p.colour, p.category].filter(Boolean).join(' · '))}</span>
+        ${(p.vibes || []).length || p.example || p.research ? `<div class="pills">${p.example ? '<span class="pill ex">Example</span>' : ''}${researchPill(p)}${(p.vibes || []).slice(0, 3).map(v => `<span class="pill">${esc(v)}</span>`).join('')}</div>` : ''}</div>
+      </button>`;
+  }
+  function renderHair() {
+    const known = new Set(HAIR_STEPS);
+    renderStack('hair', $('#hair-stack'), HAIR_STEPS.map(s => [s, [s]]), x => known.has(x.step) ? x.step : 'Other');
+  }
+  function renderActive() {
+    const mine = live('wardrobe').filter(p => p.category === 'Active');
+    $('#active-list').innerHTML = mine.length ? mine.map(pieceBtn).join('') : emptyState('wardrobe', 'Add your activewear, or tap Add photos to snap a few pieces at once.');
+    const wants = live('wishlist').filter(w => w.category === 'Activewear' && w.status !== 'bought');
+    $('#active-wants-h').hidden = !wants.length;
+    $('#active-wants').innerHTML = wants.map(wantCard).join('');
+  }
+  const FLIP_ROWS = [['Top', ['Top', 'Knit', 'Shirt']], ['Layer', ['Outerwear']], ['Bottom', ['Bottoms', 'Jeans', 'Skirt']], ['Dress', ['Dress']], ['Shoes', ['Shoes']], ['Bag', ['Bag', 'Accessory']], ['Active', ['Active']], ['Want', null]];
+  const rowItems = (cats) => cats ? live('wardrobe').filter(p => cats.includes(p.category)).map(p => ({ ...p, _col: 'wardrobe' })) : live('wishlist').filter(w => ['Clothes', 'Activewear'].includes(w.category) && w.status !== 'bought').map(w => ({ ...w, _col: 'wishlist' }));
+  function flipState() { if (!S.flip) { S.flip = { Top: 0, Bottom: 0, Shoes: 0 }; } return S.flip; }
+  function flipChosen() {
+    const f = flipState(), out = [];
+    for (const [row, cats] of FLIP_ROWS) { const items = rowItems(cats); const i = f[row]; if (i != null && i >= 0 && items.length) out.push(items[((i % items.length) + items.length) % items.length]); }
+    return out;
+  }
+  const pickable = () => [...live('wardrobe').map(p => ({ ...p, _col: 'wardrobe' })), ...live('wishlist').filter(w => ['Clothes', 'Activewear'].includes(w.category) && w.status !== 'bought').map(w => ({ ...w, _col: 'wishlist' }))];
+  function renderStyle() {
+    const me = S.meta.me || {};
+    const mp = (me.photoIds || []).filter(id => /^[0-9a-f]{32}$/.test(id));
+    $('#me-photos').innerHTML = mp.length ? mp.map(id => `<img src="/_blob/${id}" alt="Photo of you">`).join('') : '<span class="meta">No photos yet.</span>';
+    const a = me.analysis;
+    $('#me-analysis').innerHTML = S.meBusy ? `<div class="ai-out"><span class="by">Claude</span>${esc(S.meBusy)}</div>` : a ? `<div style="display:grid;gap:10px">
+        <p style="margin:0">${esc(a.summary || '')}</p>
+        ${(a.colours || []).length ? `<div><p class="eyebrow" style="margin-bottom:6px">Your best colours</p><div class="palette">${a.colours.map(c => `<span><i style="background:${isHex(c.hex) ? c.hex : 'var(--sunk)'}"></i>${esc(c.name)}</span>`).join('')}</div></div>` : ''}
+        ${(a.avoid || []).length ? `<div><p class="eyebrow" style="margin-bottom:6px">Go easy on</p><div class="palette">${a.avoid.map(c => `<span><i style="background:${isHex(c.hex) ? c.hex : 'var(--sunk)'}"></i>${esc(c.name)}</span>`).join('')}</div></div>` : ''}
+        ${(a.silhouettes || []).length ? `<div><p class="eyebrow" style="margin-bottom:6px">Shapes that suit you</p><ul class="recreate">${a.silhouettes.map(t => `<li style="grid-template-columns:1fr"><span>${esc(t)}</span></li>`).join('')}</ul></div>` : ''}
+      </div>` : '';
+    const all = pickable();
+    const chosen = flipChosen(), chosenIds = new Set(chosen.map(x => x.id));
+    $('#pick-count').textContent = chosen.length ? `${chosen.length} on the board` : '';
+    $('#style-picks').innerHTML = all.length ? all.map(x => { const src = photoSrc(x); return `<button class="pick" data-act="pick" data-id="${esc(x.id)}" aria-pressed="${chosenIds.has(x.id)}"><div class="img">${src ? `<img src="${esc(src)}" alt="" loading="lazy">` : initial(x.name)}</div><span>${x._col === 'wishlist' ? '<b>Want</b> · ' : ''}${esc(x.name)}</span></button>`; }).join('') : '<span class="meta">Add clothes to your wardrobe or wants first.</span>';
+    const f = flipState();
+    const rows = FLIP_ROWS.map(([row, cats]) => {
+      const items = rowItems(cats); if (!items.length) return '';
+      const on = f[row] != null && f[row] >= 0, i = on ? ((f[row] % items.length) + items.length) % items.length : 0, x = items[i], src = photoSrc(x);
+      return `<div class="frow ${on ? '' : 'off'}"><span class="lab">${esc(row)}</span>
+        <button class="arrow" data-act="flip" data-row="${row}" data-d="-1" aria-label="Previous ${row.toLowerCase()}">‹</button>
+        <div class="card-in"><div class="img">${on ? (src ? `<img src="${esc(src)}" alt="" key="${esc(x.id)}">` : initial(x.name)) : '—'}</div>
+          <div class="nm">${on ? `<b>${x._col === 'wishlist' ? 'Want · ' : ''}${esc(x.name)}</b><span class="meta">${i + 1} of ${items.length}</span>` : `<span class="meta">${items.length} to flip through</span>`}
+          <button class="link" data-act="flip-toggle" data-row="${row}" style="justify-self:start">${on ? 'Take off' : 'Add a ' + row.toLowerCase()}</button></div></div>
+        <button class="arrow" data-act="flip" data-row="${row}" data-d="1" aria-label="Next ${row.toLowerCase()}">›</button></div>`;
+    }).join('');
+    $('#board').innerHTML = `<div class="me">${mp.length ? `<img src="/_blob/${mp[0]}" alt="You">` : 'Add a full-length photo of you'}</div>
+      <div class="flip">${rows || '<span class="meta">Add clothes to your wardrobe to start flipping.</span>'}</div>`;
+    $('#board-save').hidden = !canWrite || !chosen.length;
+    $('#board-ask').disabled = !chosen.length;
+  }
   function renderWardrobe() {
-    const all = live('wardrobe');
+    const all = live('wardrobe').filter(p => p.category !== 'Active');
     chipRow($('#wardrobe-chips'), WARD_CATS.filter(c => all.some(w => w.category === c)).map(c => [c, c]), S.wardCat, 'ward-cat');
     const list = all.filter(w => S.wardCat === 'All' || w.category === S.wardCat)
       .sort((a, b) => WARD_CATS.indexOf(a.category) - WARD_CATS.indexOf(b.category) || String(a.name).localeCompare(String(b.name)));
-    $('#wardrobe-list').innerHTML = list.length ? list.map(p => {
-      const src = photoSrc(p);
-      return `<button class="piece" data-act="${canWrite ? 'edit' : ''}" data-col="wardrobe" data-id="${esc(p.id)}">
-        <div class="img">${src ? `<img src="${esc(src)}" alt="" loading="lazy">` : `<span>${esc(p.name)}</span>`}</div>
-        <div class="cap"><b>${esc(p.name)}</b><span class="meta">${esc([p.colour, p.category].filter(Boolean).join(' · '))}</span>
-        ${(p.vibes || []).length || p.example || p.research ? `<div class="pills">${p.example ? '<span class="pill ex">Example</span>' : ''}${researchPill(p)}${(p.vibes || []).slice(0, 3).map(v => `<span class="pill">${esc(v)}</span>`).join('')}</div>` : ''}</div>
-      </button>`;
-    }).join('') : emptyState('wardrobe', 'Add what’s in your wardrobe (a photo helps). Then Claude can mix outfits from your own pieces and spot missing basics.');
+    $('#wardrobe-list').innerHTML = list.length ? list.map(pieceBtn).join('') : emptyState('wardrobe', 'Add what’s in your wardrobe (a photo helps). Then Claude can mix outfits from your own pieces and spot missing basics.');
     const saved = live('outfits').sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
     $('#saved-h').hidden = !saved.length;
     $('#outfits').innerHTML = saved.map((o, i) => outfitCard(o, i, true)).join('');
@@ -990,14 +1166,14 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       else if (a.summary) {
         body = `<p style="margin:0">${esc(a.summary)}</p>
           ${(a.features || []).length ? `<div class="pills">${a.features.slice(0, 6).map(f => `<span class="pill">${esc(f)}</span>`).join('')}</div>` : ''}
-          ${(a.recreate || []).length ? `<div><p class="eyebrow" style="margin-bottom:8px">Recreate it</p><ul class="recreate">${a.recreate.map(r => `<li><span class="pill accent" style="justify-self:start">${esc(r.area || 'Step')}</span><span>${esc(r.step || '')}${r.shade ? ` <span class="meta">(${esc(r.shade)})</span>` : ''}${use(r.useId)}${r.tip ? `<br><span class="meta">${esc(r.tip)}</span>` : ''}</span></li>`).join('')}</ul></div>` : ''}
+          ${(a.recreate || []).length ? `<div><p class="eyebrow" style="margin-bottom:8px">${x.kind === 'fit' ? 'Tweaks' : 'Recreate it'}</p><ul class="recreate">${a.recreate.map(r => `<li><span class="pill accent" style="justify-self:start">${esc(r.area || 'Step')}</span><span>${esc(r.step || '')}${r.shade ? ` <span class="meta">(${esc(r.shade)})</span>` : ''}${use(r.useId)}${r.tip ? `<br><span class="meta">${esc(r.tip)}</span>` : ''}</span></li>`).join('')}</ul></div>` : ''}
           ${(a.outfits || []).length ? `<div class="outfits">${a.outfits.map((o, i) => outfitCard({ ...o, vibe: '' }, i, true).replace(/<div class="actions">[\s\S]*?<\/div>\s*<\/article>/, '</article>')).join('')}</div>` : ''}
           ${(a.missing || []).length ? `<div><p class="eyebrow" style="margin-bottom:8px">You don’t have</p><ul class="gaps">${a.missing.map((m, i) => `<li><span class="pill warn">Missing</span><span><b>${esc(m.item)}</b><br><span class="meta">${esc(m.why || '')}</span></span>${canWrite ? (m.added ? '<span class="meta">Added</span>' : `<button class="btn small" data-act="inspo-want" data-id="${esc(x.id)}" data-i="${i}">Add to wants</button>`) : '<span></span>'}</li>`).join('')}</ul></div>` : ''}`;
       } else body = `<p class="meta" style="margin:0">Not analysed yet.</p>`;
       return `<article class="inspo-card">
         <div class="pic">${src ? `<img src="${esc(src)}" alt="Inspiration: ${esc(a.title || '')}" loading="lazy">` : ''}</div>
         <div class="body">
-          <div class="section-h"><h2>${esc(a.title || (x.kind === 'style' ? 'Outfit inspo' : 'Makeup inspo'))}</h2><span class="pill">${x.kind === 'style' ? 'Outfit' : 'Makeup'}</span></div>
+          <div class="section-h"><h2>${esc(a.title || ({ style: 'Outfit inspo', fit: 'Fit check' }[x.kind] || 'Makeup inspo'))}</h2><span class="pill">${({ style: 'Outfit', fit: 'Fit check' }[x.kind] || 'Makeup')}</span></div>
           ${x.note ? `<p class="notes">You said: “${esc(x.note)}”</p>` : ''}
           ${body}
           <div class="actions">
@@ -1019,7 +1195,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
 
   function render() {
     renderChrome();
-    renderToday(); renderWants(); renderFinds(); renderSkin(); renderMakeup(); renderWardrobe(); renderInspo(); renderBin();
+    renderToday(); renderWants(); renderFinds(); renderSkin(); renderMakeup(); renderHair(); renderWardrobe(); renderActive(); renderStyle(); renderInspo(); renderBin();
   }
 
   // ---------- writes ----------
@@ -1141,7 +1317,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
         }
         // A changed name, brand, colour or shade means a different product: clear what was found and research it again
         const ID_KEYS = ['name', 'product', 'brand', 'variant', 'shade'];
-        const changed = ['wishlist', 'beauty', 'routine', 'wardrobe'].includes(col) && ID_KEYS.some(k => k in data && String(data[k] || '').trim().toLowerCase() !== String(item[k] || '').trim().toLowerCase());
+        const changed = ['wishlist', 'beauty', 'routine', 'hair', 'wardrobe'].includes(col) && ID_KEYS.some(k => k in data && String(data[k] || '').trim().toLowerCase() !== String(item[k] || '').trim().toLowerCase());
         const identityChanged = ID_KEYS.filter(k => k !== 'variant' && k !== 'shade').some(k => k in data && String(data[k] || '').trim().toLowerCase() !== String(item[k] || '').trim().toLowerCase());
         if (identityChanged && canResearch()) {
           Object.assign(data, { stackNote: null, alternatives: null, reviews: null, research: 'queued' });
@@ -1155,7 +1331,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
         if (col === 'wishlist') { data.status = 'want'; data.priceHistory = data.price != null ? [{ d: today, p: data.price }] : []; data.lastChecked = data.price != null ? today : null; }
         if (canResearch() && col !== 'logprice') data.research = 'queued';
         const ref = await db.collection(col).add(data);
-        if (canResearch() && ['wishlist', 'beauty', 'routine', 'wardrobe'].includes(col)) { await fireResearch(col, ref.id, [data.brand, data.name || data.product, data.variant || data.shade || data.colour].filter(Boolean).join(' ') + (data.photoId ? ' (identify from the attached photo)' : '')); toast('Added. Claude is filling in the details, photo and prices.'); }
+        if (canResearch() && ['wishlist', 'beauty', 'routine', 'hair', 'wardrobe'].includes(col)) { await fireResearch(col, ref.id, [data.brand, data.name || data.product, data.variant || data.shade || data.colour].filter(Boolean).join(' ') + (data.photoId ? ' (identify from the attached photo)' : '')); toast('Added. Claude is filling in the details, photo and prices.'); }
         else toast('Added');
       }
       dlg.close();
@@ -1170,7 +1346,12 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
 
   // ---------- Claude ----------
   const STYLE = 'Write in Australian English. Plain text only: no markdown, no asterisks, no headings. Use "–" for list items. Be specific and candid, like a knowledgeable friend. Prefer products sold in Australia (Mecca, Sephora AU, Adore Beauty, Priceline, Chemist Warehouse, Myer, David Jones). If you are guessing a shade match, say so.';
-  const profileText = () => { const p = S.meta.profile; if (!p) return ''; const t = Object.entries(p).filter(([k, v]) => v && k !== 'updatedAt').map(([k, v]) => `${k}: ${v}`).join('; '); return t ? `\n\nAbout me: ${t}` : ''; };
+  const profileText = () => {
+    const p = S.meta.profile || {}, a = S.meta.me?.analysis;
+    let t = Object.entries(p).filter(([k, v]) => v && k !== 'updatedAt').map(([k, v]) => `${k}: ${v}`).join('; ');
+    if (a) t += `${t ? '; ' : ''}colouring: ${a.summary || ''} Best colours: ${(a.colours || []).map(c => c.name).join(', ')}. Go easy on: ${(a.avoid || []).map(c => c.name).join(', ')}. Shapes: ${(a.silhouettes || []).join(' / ')}`;
+    return t ? `\n\nAbout me: ${t}` : '';
+  };
   const slimMakeup = (b) => ({ product: b.name, brand: b.brand, type: b.type, shade: b.shade, finish: b.finish, status: STACK[statusOf(b)], rating: b.rating, feedback: b.feedback, swapReason: b.swapReason });
   const slimSkin = (r) => ({ product: r.product, brand: r.brand, step: r.step, when: WHEN[r.when], freq: FREQ[r.freq], actives: r.actives, status: STACK[statusOf(r)], rating: r.rating, feedback: r.feedback, swapReason: r.swapReason });
   const slimPiece = (p) => ({ id: p.id, name: p.name, category: p.category, colour: p.colour, vibes: p.vibes, season: p.season, notes: p.notes });
@@ -1264,7 +1445,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       return true;
     } catch { return false; }
   }
-  const WANT_CAT_OF = { makeup: 'Beauty', skincare: 'Skincare', clothes: 'Clothes', home: 'Home', office: 'Office', tech: 'Tech' };
+  const WANT_CAT_OF = { makeup: 'Beauty', skincare: 'Skincare', hair: 'Hair', clothes: 'Clothes', activewear: 'Activewear', home: 'Home', office: 'Office', tech: 'Tech' };
   function quickStatus(msg) { const el = $('#quick-status'); el.textContent = msg || ''; el.hidden = !msg; }
   async function quickAdd(phrase, own, file) {
     let info = {}, photoId = null;
@@ -1273,7 +1454,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       quickStatus(phrase ? `Looking up “${phrase}”…` : 'Working out what’s in the picture…');
       try {
         const withImg = file && S.canImages;
-        info = await sample.json(`Identify this product from a shopper's ${withImg ? 'photo or screenshot' : 'short description'} and fill in its details from what you know. Australian English, prices in AUD.\n\n${phrase ? `Description: "${phrase}"` : 'Description: (none, use the picture)'}\n\nReply with only JSON:\n{"kind":"makeup|skincare|clothes|home|office|tech|other","name":"official product name","brand":"brand","type":"makeup only, one of: ${MAKEUP_TYPES.join(', ')}","step":"skincare only, one of: ${SKIN_STEPS.join(', ')}","category":"clothes only, one of: ${WARD_CATS.join(', ')}","rrp":typical Australian price as a number or null,"finish":"makeup finish or empty","actives":"skincare key actives or empty","colour":"clothes colour if named","variants":[{"name":"shade or colour name","hex":"#rrggbb approximate","note":"short descriptor e.g. warm peach, satin"}],"selected":"the shade or colour the shopper named, matching a variant name, or empty","summary":"one sentence on what it is","confidence":"high|medium|low"}\n\nList every shade or colourway you know (up to 24). If unsure, give your best guess and set confidence to low.`, file && S.canImages ? { images: [file] } : undefined);
+        info = await sample.json(`Identify this product from a shopper's ${withImg ? 'photo or screenshot' : 'short description'} and fill in its details from what you know. Australian English, prices in AUD.\n\n${phrase ? `Description: "${phrase}"` : 'Description: (none, use the picture)'}\n\nReply with only JSON:\n{"kind":"makeup|skincare|hair|clothes|activewear|home|office|tech|other","name":"official product name","brand":"brand","type":"makeup only, one of: ${MAKEUP_TYPES.join(', ')}","step":"skincare: one of ${SKIN_STEPS.join(', ')}; hair: one of ${HAIR_STEPS.join(', ')}","category":"clothes only, one of: ${WARD_CATS.join(', ')}","rrp":typical Australian price as a number or null,"finish":"makeup finish or empty","actives":"skincare key actives or empty","colour":"clothes colour if named","variants":[{"name":"shade or colour name","hex":"#rrggbb approximate","note":"short descriptor e.g. warm peach, satin"}],"selected":"the shade or colour the shopper named, matching a variant name, or empty","summary":"one sentence on what it is","confidence":"high|medium|low"}\n\nList every shade or colourway you know (up to 24). If unsure, give your best guess and set confidence to low.`, file && S.canImages ? { images: [file] } : undefined);
       } catch (e) { if (e?.code === 'not_granted' || e?.code === 'sampling_disabled') info = {}; else info = {}; }
     }
     const kind = String(info.kind || 'other');
@@ -1284,12 +1465,14 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     let col, doc;
     if (own && kind === 'makeup') { col = 'beauty'; doc = { name, brand, type: MAKEUP_TYPES.includes(info.type) ? info.type : 'Other', finish: info.finish || '', shade: sel?.name || '', shadeHex: sel?.hex || '', status: 'current', ...common }; }
     else if (own && kind === 'skincare') { col = 'routine'; doc = { product: name, brand, step: SKIN_STEPS.includes(info.step) ? info.step : 'Other', when: 'both', freq: 'daily', actives: info.actives || '', status: 'current', ...common, variants: [] }; }
+    else if (own && kind === 'hair') { col = 'hair'; doc = { product: name, brand, step: HAIR_STEPS.includes(info.step) ? info.step : 'Other', freq: 'daily', status: 'current', ...common, variants: [] }; }
+    else if (own && kind === 'activewear') { col = 'wardrobe'; doc = { name, brand, category: 'Active', colour: sel?.name || info.colour || '', vibes: ['active'], season: 'all', ...common, variants: [] }; }
     else if (own && kind === 'clothes') { col = 'wardrobe'; doc = { name, brand, category: WARD_CATS.includes(info.category) ? info.category : 'Top', colour: sel?.name || info.colour || '', vibes: [], season: 'all', ...common, variants: [] }; }
     else { col = 'wishlist'; doc = { name, brand, category: WANT_CAT_OF[kind] || 'Other', variant: sel?.name || info.colour || '', shadeHex: sel?.hex || '', rrp: Number(info.rrp) > 0 ? Number(info.rrp) : null, price: null, priceHistory: [], stock: 'unknown', priority: 'want', status: 'want', ...common }; }
     const ref = await db.collection(col).add(doc);
     const queued = await fireResearch(col, ref.id, (phrase || name) + (photoId ? ' (identify from the attached photo: the userPhotoId asset)' : ''));
     quickStatus('');
-    const where = { beauty: 'makeup', routine: 'skin', wardrobe: 'wardrobe', wishlist: 'wants' }[col];
+    const where = { beauty: 'makeup', routine: 'skin', hair: 'hair', wardrobe: doc.category === 'Active' ? 'active' : 'wardrobe', wishlist: 'wants' }[col];
     toast(queued ? `Added to ${COL_LABEL[col]}. Claude is checking shops, shades and reviews.` : `Added to ${COL_LABEL[col]}${variants.length ? ` with ${variants.length} ${col === 'beauty' || kind === 'makeup' ? 'shades' : 'colours'}` : ''}.`);
     if (S.tab !== where) setTab(where);
     return ref.id;
@@ -1311,10 +1494,121 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     b.innerHTML = quickFile ? `<img src="${URL.createObjectURL(quickFile)}" alt="" style="width:26px;height:26px;border-radius:6px;object-fit:cover">` : 'Photo';
     $('#quick-in').placeholder = quickFile ? 'Optional: add a note, e.g. the brand' : 'Add anything, e.g. Jooycee aura blush, or paste a screenshot';
   }
-  $('#quick-photo').addEventListener('change', (e) => setQuickFile(e.target.files[0]));
+  $('#quick-photo').addEventListener('change', (e) => {
+    const fs = [...e.target.files];
+    if (fs.length > 1) { bulkAdd(fs, $('#quick-own').value === 'own' ? (S.tab === 'active' ? 'active' : 'wardrobe') : 'wants'); e.target.value = ''; return; }
+    setQuickFile(fs[0]);
+  });
   $('#quick-in').addEventListener('paste', (e) => { const f = [...(e.clipboardData?.files || [])].find(f => /^image\//.test(f.type)); if (f) { e.preventDefault(); setQuickFile(f); } });
   $('#quick').addEventListener('dragover', (e) => e.preventDefault());
   $('#quick').addEventListener('drop', (e) => { e.preventDefault(); setQuickFile(e.dataTransfer.files[0]); });
+
+  // ---------- bulk photo add ----------
+  // Each photo becomes a draft item tagged by Claude straight away; one research run then finishes them all
+  async function bulkAdd(files, target) {
+    files = files.filter(f => /^image\//.test(f.type)).slice(0, 40);
+    if (!files.length || !assets) return;
+    const ids = [];
+    for (let i = 0; i < files.length; i++) {
+      const f = files[i];
+      quickStatus(`Adding ${i + 1} of ${files.length}…`);
+      try {
+        const photoId = (await assets.upload(f)).id;
+        let info = {};
+        if (sample && S.canImages) {
+          try {
+            info = await sample.json(`Identify the ${target === 'wants' ? 'product' : 'clothing item'} in this photo. If it is a screenshot of a shop listing, read the product name, brand and price from it. Australian English.\nReply with only JSON: {"name":"short descriptive name, e.g. Cream cable knit jumper","brand":"brand if visible or known, else empty","category":"one of ${WARD_CATS.join(', ')}","colour":"main colour","vibes":["2-3 style tags"],"kind":"clothes|activewear|makeup|skincare|hair|home|office|tech|other","price":number or null}`, { images: [f], modelTier: 'quick', cache: false });
+          } catch {}
+        }
+        let col, doc;
+        const base = { photoId, userPhotoId: photoId, ownPhoto: target !== 'wants', research: canResearch() ? 'queued' : 'draft', quickPhrase: '(from a photo)', createdAt: now() };
+        if (target === 'wants') { col = 'wishlist'; doc = { ...base, name: String(info.name || 'New item'), brand: String(info.brand || ''), category: WANT_CAT_OF[info.kind] || 'Clothes', variant: String(info.colour || ''), rrp: Number(info.price) > 0 ? Number(info.price) : null, price: null, priceHistory: [], stock: 'unknown', priority: 'want', status: 'want' }; }
+        else { col = 'wardrobe'; doc = { ...base, name: String(info.name || 'New piece'), brand: String(info.brand || ''), category: target === 'active' || info.kind === 'activewear' ? 'Active' : (WARD_CATS.includes(info.category) ? info.category : 'Top'), colour: String(info.colour || ''), vibes: Array.isArray(info.vibes) ? info.vibes.map(String).slice(0, 3) : [], season: 'all' }; }
+        const ref = await db.collection(col).add(doc);
+        ids.push(`${col}/${ref.id}`);
+      } catch { toast(`Couldn’t add photo ${i + 1}. Carrying on.`); }
+    }
+    quickStatus('');
+    if (ids.length && canResearch() && S.meta.refresh?.triggerId) {
+      try { await mcp.callTool('Claude Code Remote', 'fire_trigger', { trigger_id: S.meta.refresh.triggerId, text: `Research queue only, skip everything else this run. Research these new items from their photos: ${ids.join(', ')}. Look at each photo, identify the exact product (brand, style name, colour), find it online and set photoId to its best clean product photo (plain background, front-on, selected colour), keeping the user's photo in userPhotoId. Only if the exact product can't be found, keep the user's photo as photoId.` }, { cache: false }); } catch {}
+    }
+    toast(`Added ${ids.length} ${ids.length === 1 ? 'item' : 'items'}. Claude is filling in the details.`);
+  }
+  for (const [inp, target] of [['#bulk-wardrobe', 'wardrobe'], ['#bulk-active', 'active']]) {
+    $(inp).addEventListener('change', (e) => { const fs = [...e.target.files]; e.target.value = ''; bulkAdd(fs, target); });
+  }
+
+  // ---------- style me ----------
+  async function blobOf(id) { const r = await fetch('/_blob/' + id); if (!r.ok) throw new Error('blob'); return r.blob(); }
+  async function maxImages() { try { return (await sample.limits())?.images?.maxCount || 4; } catch { return 4; } }
+  $('#me-file').addEventListener('change', async (e) => {
+    const fs = [...e.target.files].filter(f => /^image\//.test(f.type)); e.target.value = '';
+    if (!fs.length || !assets) return;
+    toast('Uploading…');
+    try {
+      const ids = [];
+      for (const f of fs) ids.push((await assets.upload(f)).id);
+      const cur = S.meta.me || {};
+      await db.doc('meta/me').set({ ...cur, photoIds: [...(cur.photoIds || []), ...ids].slice(-8), updatedAt: now() });
+      toast(fs.length === 1 ? 'Photo added' : `${fs.length} photos added`);
+    } catch { toast('Couldn’t upload that. Try again.'); }
+  });
+  $('#me-read').addEventListener('click', async (e) => {
+    const ids = (S.meta.me?.photoIds || []).slice(-(await maxImages()));
+    if (!ids.length) { toast('Add a photo of you first.'); return; }
+    const btn = e.currentTarget; btn.disabled = true; S.meBusy = 'Looking at your colouring and shape…'; renderStyle();
+    try {
+      const imgs = await Promise.all(ids.map(blobOf));
+      const a = await sample.json(`You are a personal stylist and colour analyst. These are photos of me. Australian English. Be warm, specific and practical, never critical of my body.${profileText()}\n\nReply with only JSON:\n{"summary":"2 sentences on my colouring (undertone, contrast, seasonal palette) and body proportions in neutral, kind terms","colours":[{"name":"colour name","hex":"#rrggbb"}],"avoid":[{"name":"colour name","hex":"#rrggbb"}],"silhouettes":["one short tip on shapes, rises, lengths or necklines that flatter me", "... up to 5"]}\nGive 10 best colours and 4 to go easy on.`, { images: imgs, cache: false });
+      const clean = { summary: String(a.summary || ''), colours: (a.colours || []).slice(0, 12).map(c => ({ name: String(c.name || ''), hex: isHex(c.hex) ? c.hex : '' })), avoid: (a.avoid || []).slice(0, 6).map(c => ({ name: String(c.name || ''), hex: isHex(c.hex) ? c.hex : '' })), silhouettes: (a.silhouettes || []).slice(0, 5).map(String), at: now() };
+      await db.doc('meta/me').set({ ...(S.meta.me || {}), analysis: clean, updatedAt: now() });
+    } catch (err) { toast(aiErr(err)); }
+    finally { S.meBusy = null; btn.disabled = false; renderStyle(); }
+  });
+  $('#board-clear').addEventListener('click', () => { S.flip = {}; $('#board-out').hidden = true; renderStyle(); });
+  $('#board-shuffle').addEventListener('click', () => {
+    const r = (n) => Math.floor(Math.random() * n), f = {};
+    const n = (row) => rowItems(FLIP_ROWS.find(x => x[0] === row)[1]).length;
+    const dress = n('Dress') && Math.random() < 0.3;
+    if (dress) f.Dress = r(n('Dress')); else { if (n('Top')) f.Top = r(n('Top')); if (n('Bottom')) f.Bottom = r(n('Bottom')); }
+    if (n('Shoes')) f.Shoes = r(n('Shoes'));
+    if (n('Layer') && Math.random() < 0.5) f.Layer = r(n('Layer'));
+    if (n('Bag') && Math.random() < 0.5) f.Bag = r(n('Bag'));
+    S.flip = f; $('#board-out').hidden = true; renderStyle();
+  });
+  $('#board-save').addEventListener('click', async () => {
+    const ids = flipChosen().map(x => x.id); if (!ids.length) return;
+    const note = $('#board-out').hidden ? '' : $('#board-out').textContent.replace(/^Claude/, '').trim().slice(0, 600);
+    try { await db.collection('outfits').add({ title: 'Styled by me', itemIds: ids, note, vibe: '', createdAt: now() }); toast('Outfit saved to your wardrobe'); }
+    catch { toast('Couldn’t save that outfit.'); }
+  });
+  $('#board-ask').addEventListener('click', async (e) => {
+    const chosen = flipChosen(); if (!chosen.length) return;
+    const btn = e.currentTarget, out = $('#board-out'); btn.disabled = true; out.hidden = false; out.className = 'ai-out'; out.innerHTML = '<span class="by">Claude</span>Looking at the outfit…';
+    try {
+      const max = await maxImages(), meId = (S.meta.me?.photoIds || [])[0];
+      const imgIds = [...(meId ? [meId] : []), ...chosen.map(x => x.photoId).filter(Boolean)].slice(0, max);
+      const imgs = (await Promise.all(imgIds.map(id => blobOf(id).catch(() => null)))).filter(Boolean);
+      await sample(`You are my personal stylist. ${STYLE}${profileText()}\n\n${meId ? 'The first picture is me; the others are the pieces. ' : 'The pictures are the pieces. '}Outfit: ${JSON.stringify(chosen.map(x => ({ name: x.name, brand: x.brand, colour: x.colour || x.variant, category: x.category, own: x._col === 'wardrobe' })))}\n\nIn under 140 words: does this work on me (colours against my colouring, proportions), how to wear it (tuck, roll, layer, shoes, accessories), one swap from my own wardrobe that would lift it, and whether any "want" piece earns its place.`, { images: imgs, cache: false, onText: ({ text }) => { out.innerHTML = `<span class="by">Claude</span>${esc(text)}`; } });
+    } catch (err) { out.className = 'ai-out err'; out.textContent = err?.text || aiErr(err); }
+    finally { btn.disabled = false; }
+  });
+  let fitFile = null;
+  $('#fit-file').addEventListener('change', (e) => { const f = e.target.files[0]; if (f && /^image\//.test(f.type)) { fitFile = f; $('#fit-prev').innerHTML = `<img class="thumb" src="${URL.createObjectURL(f)}" alt="">`; } });
+  $('#fit-go').addEventListener('click', async (e) => {
+    if (!fitFile) { toast('Choose a photo first.'); return; }
+    const btn = e.currentTarget; btn.disabled = true;
+    try {
+      const up = await assets.upload(fitFile);
+      const fresh = { kind: 'fit', note: $('#fit-note').value.trim(), photoId: up.id, createdAt: now() };
+      const ref = await db.collection('inspo').add(fresh);
+      const f = fitFile; fitFile = null; $('#fit-note').value = ''; $('#fit-prev').innerHTML = '<div class="thumb">+</div>';
+      toast('Saved to Inspo. Claude is looking now.');
+      setTab('inspo');
+      analyseInspo({ id: ref.id, ...fresh }, f);
+    } catch { toast('Couldn’t save that photo.'); }
+    finally { btn.disabled = false; }
+  });
 
   // ---------- inspo ----------
   let inspoFile = null;
@@ -1337,8 +1631,10 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
   async function analyseInspo(x, blob) {
     if (!sample || !S.canImages) return;
     S.inspoBusy[x.id] = 'Looking at the picture and your stack…'; renderInspo();
-    const isStyle = x.kind === 'style';
-    const prompt = isStyle
+    const isStyle = x.kind === 'style' || x.kind === 'fit';
+    const prompt = x.kind === 'fit'
+      ? `You are a kind but honest personal stylist doing a fit check. This is a photo of me wearing an outfit. Australian English.${profileText()}\n\nMy wardrobe (JSON with ids):\n${JSON.stringify(live('wardrobe').map(slimPiece))}\n\n${x.note ? `Context: ${x.note}\n\n` : ''}Reply with only JSON:\n{"title":"short name for the outfit","summary":"2 sentences: overall verdict and the main thing to change, if anything","features":["what is working", "... up to 4"],"recreate":[{"area":"Fit|Colour|Proportion|Shoes|Accessories|Layering","step":"specific tweak","useId":"id of one of MY pieces to swap in, or null","shade":"","tip":"why it helps"}],"missing":[{"item":"specific piece that would finish it","why":"what it adds"}]}\nUp to 4 tweaks, prefer my own pieces. At most 3 missing pieces.`
+      : isStyle
       ? `You are a personal stylist. Look at this outfit inspiration picture. Australian English.${profileText()}\n\nMy wardrobe (JSON with ids):\n${JSON.stringify(live('wardrobe').map(slimPiece))}\n\n${x.note ? `What I love about it: ${x.note}\n\n` : ''}Reply with only JSON:\n{"title":"short name for the look","summary":"2 sentences on the look and what makes it work","features":["key element", "... up to 5"],"outfits":[{"title":"name","itemIds":["ids of MY pieces only"],"note":"how to style it like the picture"}],"missing":[{"item":"specific piece, e.g. Black square-toe ankle boots","why":"what it adds to recreate the look"}]}\nGive up to 2 outfits from my wardrobe (ids only from my list) and at most 4 missing pieces that really matter.`
       : `You are a makeup artist. Look at this makeup inspiration picture. Australian English.${profileText()}\n\nMy makeup (JSON with ids):\n${JSON.stringify(live('beauty').filter(b => statusOf(b) !== 'out').map(b => ({ id: b.id, ...slimMakeup(b) })))}\n\n${x.note ? `What I love about it: ${x.note}\n\n` : ''}Reply with only JSON:\n{"title":"short name for the look","summary":"2 sentences on the look and what makes it work","features":["key element", "... up to 5"],"recreate":[{"area":"Skin|Cheeks|Eyes|Brows|Lips","step":"what to do","useId":"id of my product to use, or null","shade":"which shade or how to apply","tip":"short tip"}],"missing":[{"item":"specific product type and shade direction, e.g. cool mauve lip liner","why":"what it adds"}]}\nUse my own products wherever they can work, in application order. List at most 4 missing items that really matter.`;
     try {
@@ -1371,7 +1667,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
 
   // "I have it": copy a want or find into the matching stack (or wardrobe)
   async function ownIt(src, srcCol) {
-    const kind = srcCol === 'finds' ? src.kind : ({ Beauty: 'makeup', Skincare: 'skincare', Clothes: 'clothes' }[src.category] || 'other');
+    const kind = srcCol === 'finds' ? src.kind : ({ Beauty: 'makeup', Skincare: 'skincare', Hair: 'hair', Clothes: 'clothes', Activewear: 'activewear' }[src.category] || 'other');
     const photo = { photoId: src.photoId || null, photoShared: true };
     const base = { brand: src.brand || '', ...photo, reviews: src.reviews || src.review || null, variants: src.variants || [], createdAt: now(), [srcCol === 'finds' ? 'fromFind' : 'fromWant']: src.id };
     let col = null, doc = null;
@@ -1384,14 +1680,17 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     } else if (kind === 'makeup') {
       col = 'beauty';
       doc = { ...base, name: src.name, type: MAKEUP_TYPES.includes(src.category) ? src.category : (src.type || 'Other'), shade: src.shade || src.variant || '', shadeHex: src.shadeHex || '', status: 'current' };
-    } else if (kind === 'clothes') {
+    } else if (kind === 'hair') {
+      col = 'hair';
+      doc = { ...base, product: src.name, step: HAIR_STEPS.includes(src.category) ? src.category : 'Other', freq: 'daily', status: 'current' };
+    } else if (kind === 'clothes' || kind === 'activewear') {
       col = 'wardrobe';
-      doc = { name: src.name, brand: src.brand || '', ...photo, category: 'Top', colour: src.variant || '', vibes: [], season: 'all', createdAt: now(), fromWant: src.id };
+      doc = { name: src.name, brand: src.brand || '', ...photo, category: kind === 'activewear' ? 'Active' : 'Top', colour: src.variant || '', vibes: [], season: 'all', createdAt: now(), fromWant: src.id };
     }
     if (doc && col && col !== 'routine-placeholder') await db.collection(col).add(doc);
     if (srcCol === 'finds') await db.collection('finds').doc(src.id).update({ status: 'added' });
     else await db.collection('wishlist').doc(src.id).update({ status: 'bought', boughtOn: dayKey() });
-    const where = { routine: 'skin stack', 'routine-placeholder': 'skin stack', beauty: 'makeup bag', wardrobe: 'wardrobe' }[col];
+    const where = { routine: 'skin stack', 'routine-placeholder': 'skin stack', beauty: 'makeup bag', hair: 'hair care', wardrobe: 'wardrobe' }[col];
     toast(where ? `Added to your ${where}${col === 'wardrobe' ? '. Edit it to set the category.' : ''}` : 'Marked as yours');
   }
 
@@ -1405,12 +1704,27 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     const t = e.target.closest('[data-tab],[data-add],[data-act]');
     if (!t || t.tagName === 'INPUT') return;
     if (t.dataset.tab) { setTab(t.dataset.tab); return; }
-    if (t.dataset.add) { openForm(t.dataset.add, null, {}); return; }
+    if (t.dataset.add) { openForm(t.dataset.add, null, t.dataset.preset ? { category: t.dataset.preset } : {}); return; }
     const a = t.dataset.act, id = t.dataset.id, col = t.dataset.col;
     if (!a) return;
     const find = (c) => S[c].find(x => x.id === id);
     switch (a) {
       case 'want-cat': S.wantCat = t.dataset.v; renderWants(); break;
+      case 'pick': {
+        const f = flipState();
+        for (const [row, cats] of FLIP_ROWS) {
+          const items = rowItems(cats), i = items.findIndex(x => x.id === id);
+          if (i < 0) continue;
+          const cur = f[row] != null && f[row] >= 0 && items[((f[row] % items.length) + items.length) % items.length]?.id === id;
+          f[row] = cur ? -1 : i;
+          if (!cur && row === 'Dress') { f.Top = -1; f.Bottom = -1; }
+          if (!cur && (row === 'Top' || row === 'Bottom')) f.Dress = -1;
+          break;
+        }
+        $('#board-out').hidden = true; renderStyle(); break;
+      }
+      case 'flip': { const f = flipState(), row = t.dataset.row; f[row] = (f[row] != null && f[row] >= 0 ? f[row] : 0) + Number(t.dataset.d); if (row === 'Dress') { f.Top = -1; f.Bottom = -1; } $('#board-out').hidden = true; renderStyle(); break; }
+      case 'flip-toggle': { const f = flipState(), row = t.dataset.row; f[row] = f[row] != null && f[row] >= 0 ? -1 : 0; if (row === 'Dress' && f.Dress === 0) { f.Top = -1; f.Bottom = -1; } $('#board-out').hidden = true; renderStyle(); break; }
       case 'find-kind': S.findKind = t.dataset.v; renderFinds(); break;
       case 'ward-cat': S.wardCat = t.dataset.v; renderWardrobe(); break;
       case 'profile': openForm('profile', null); break;
@@ -1576,7 +1890,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
 
   // ---------- boot ----------
   const startTab = (location.hash || '').slice(1) || store.get('edit.tab');
-  if (['today', 'wants', 'finds', 'skin', 'makeup', 'wardrobe', 'inspo', 'bin'].includes(startTab)) S.tab = startTab;
+  if (['today', 'wants', 'finds', 'skin', 'makeup', 'hair', 'wardrobe', 'active', 'style', 'inspo', 'bin'].includes(startTab)) S.tab = startTab;
   render();
 
   (async () => {
