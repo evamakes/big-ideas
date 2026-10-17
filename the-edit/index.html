@@ -103,6 +103,8 @@ select.plain { border: 1px solid var(--line); background: var(--surface); border
 .pill.accent { background: var(--accent-soft); color: var(--accent); }
 .pill.ex { background: transparent; border: 1px dashed var(--line); }
 .pill.pay { background: transparent; border: 1px solid var(--tan); color: var(--tan); font-weight: 500; padding: 0 7px; margin-left: 4px; }
+.restock-tools { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; max-width: 330px; }
+@media (max-width: 520px) { .restock-tools { grid-column: 1 / -1; justify-content: flex-start; max-width: none; } }
 .gap { margin: 0; border-left: 2px solid var(--accent); padding-left: 10px; display: grid; gap: 2px; font-size: 0.92rem; }
 .ongoing { border-left: 2px solid var(--tan); padding-left: 10px; display: grid; gap: 3px; }
 .coll-h { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--tan); padding-bottom: 6px; margin-top: 8px; }
@@ -648,8 +650,8 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
   const SKIN_STEPS = ['Cleanser', 'Toner', 'Exfoliant', 'Serum', 'Treatment', 'Eye cream', 'Moisturiser', 'Oil', 'SPF', 'Mask', 'Other'];
   const WHEN = { am: 'AM', pm: 'PM', both: 'AM & PM' };
   const FREQ = { daily: 'Daily', alt: 'Every other day', few: '2–3× a week', weekly: 'Weekly' };
-  const OCCASIONS = { work: 'Work', casual: 'Casual', fun: 'Fun' };
-  const WARD_CATS = ['Top', 'Shirt', 'Knit', 'Jumper', 'Cardigan', 'Jacket', 'Bottoms', 'Jeans', 'Skirt', 'Dress', 'Outerwear', 'Shoes', 'Bag', 'Accessory', 'Active'];
+  const OCCASIONS = { work: 'Work', casual: 'Casual', fun: 'Fun', beach: 'Beach' };
+  const WARD_CATS = ['Top', 'Shirt', 'Knit', 'Jumper', 'Cardigan', 'Jacket', 'Bottoms', 'Jeans', 'Skirt', 'Dress', 'Outerwear', 'Shoes', 'Bag', 'Accessory', 'Swim', 'Active'];
   const FIND_KINDS = { skincare: 'Skincare', makeup: 'Makeup', clothes: 'Clothes', office: 'Office', other: 'Other' };
   const VERDICT = { loved: ['good', 'Reviewers love it'], mixed: ['warn', 'Mixed reviews'], skip: ['bad', 'Probably skip'] };
   const opts = (list) => Array.isArray(list) ? list.map(v => [v, v]) : Object.entries(list);
@@ -714,7 +716,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       { k: 'colour', label: 'Colour', type: 'text' },
       { k: 'size', label: 'Size', type: 'text', ph: 'e.g. S, 10, EU 39' },
       { k: 'fit', label: 'Fit', type: 'select', options: opts({ '': 'Fits', no: 'Doesn’t fit' }) },
-      { k: 'occasions', label: 'Occasions', type: 'tags', full: true, ph: 'work, casual, fun' },
+      { k: 'occasions', label: 'Occasions', type: 'tags', full: true, ph: 'work, casual, fun, beach' },
       { k: 'vibes', label: 'Vibes', type: 'tags', full: true, ph: 'comma separated, e.g. office, weekend, date night', hint: 'Used when mixing outfits.' },
       { k: 'season', label: 'Season', type: 'select', options: opts({ all: 'All year', warm: 'Warm weather', cool: 'Cool weather' }) },
       PHOTO,
@@ -854,7 +856,9 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     const sel = String(it.variant || '').toLowerCase();
     const every = (it.offers || []).filter(o => o && o.price != null).map(o => ({ ...o, _total: totalOf(o) })).sort((a, b) => a._total - b._total);
     const isUsed = (o) => o.condition && o.condition !== 'new';
-    const all = every.filter(o => !isUsed(o)), preloved = every.filter(isUsed);
+    const all = every.filter(o => !isUsed(o)), usedAll = every.filter(isUsed);
+    const newBest = all.find(o => !o.colour || !String(it.variant || '') || String(o.colour).toLowerCase() === String(it.variant).toLowerCase());
+    const preloved = usedAll.filter(o => !newBest || o._total < newBest._total);
     const fits = (o) => !o.colour || !sel || String(o.colour).toLowerCase() === sel;
     const offers = all.filter(fits), others = all.filter(o => !fits(o));
     const best = offers[0];
@@ -1210,8 +1214,8 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     const occ = Array.isArray(p.occasions) ? p.occasions : [];
     return `<div class="piece${p.fit === 'no' ? ' nofit' : ''}"><button class="piece-open" data-act="${canWrite ? 'edit' : ''}" data-col="wardrobe" data-id="${esc(p.id)}">
         <div class="img">${src ? `<img src="${esc(src)}" alt="" loading="lazy">` : `<span>${esc(shortOf(p))}</span>`}</div>
-        <div class="cap"><b>${esc(shortOf(p))}</b><span class="meta">${esc([p.brand, fullOf(p), p.colour, p.size ? `Size ${p.size}` : ''].filter(Boolean).join(' · '))}</span>
-        ${(p.vibes || []).length || p.example || p.research || MATCH[p.match] ? `<div class="pills">${p.example ? '<span class="pill ex">Example</span>' : ''}${researchPill(p)}${matchPill(p)}${(p.vibes || []).slice(0, 3).map(v => `<span class="pill">${esc(v)}</span>`).join('')}</div>` : ''}</div>
+        <div class="cap" title="${esc(fullOf(p) || nameOf(p))}"><b>${esc(shortOf(p))}</b><span class="meta">${esc([p.brand, p.colour, p.size ? `Size ${p.size}` : ''].filter(Boolean).join(' · '))}</span>
+        ${p.example || RESEARCH[p.research] || MATCH[p.match] ? `<div class="pills">${p.example ? '<span class="pill ex">Example</span>' : ''}${researchPill(p)}${matchPill(p)}</div>` : ''}</div>
       </button><div class="occ">${p.category === 'Active' ? '' : Object.entries(OCCASIONS).map(([k, l]) => `<button class="occ-t" data-act="${canWrite ? 'occ' : ''}" data-id="${esc(p.id)}" data-v="${k}" aria-pressed="${occ.includes(k)}">${l}</button>`).join('')}<button class="occ-t fit" data-act="${canWrite ? 'fit' : ''}" data-id="${esc(p.id)}" aria-pressed="${p.fit === 'no'}" title="Left out of outfits while it doesn't fit">Doesn't fit</button></div></div>`;
   }
   function renderHair() {
@@ -1231,7 +1235,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     for (const [row, cats] of FLIP_ROWS) { const items = rowItems(cats); const i = f[row]; if (i != null && i >= 0 && items.length) out.push(items[((i % items.length) + items.length) % items.length]); }
     return out;
   }
-  const PICK_GROUPS = [['Tops', ['Top', 'Shirt']], ['Jumpers & jackets', LAYER_CATS], ['Bottoms', ['Bottoms', 'Jeans', 'Skirt']], ['Dresses', ['Dress']], ['Shoes', ['Shoes']], ['Bags & extras', ['Bag', 'Accessory']], ['Active', ['Active']]];
+  const PICK_GROUPS = [['Tops', ['Top', 'Shirt']], ['Jumpers & jackets', LAYER_CATS], ['Bottoms', ['Bottoms', 'Jeans', 'Skirt']], ['Dresses', ['Dress']], ['Shoes', ['Shoes']], ['Bags & extras', ['Bag', 'Accessory']], ['Swim', ['Swim']], ['Active', ['Active']]];
   const pickable = () => [...wearable().map(p => ({ ...p, _col: 'wardrobe' })), ...live('wishlist').filter(w => ['Clothes', 'Activewear'].includes(w.category) && w.status !== 'bought').map(w => ({ ...w, _col: 'wishlist' }))];
   function renderStyle() {
     const me = S.meta.me || {};
@@ -1322,7 +1326,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       return `<li>${thumb(x)}
         <span class="what"><b>${esc(shortOf(x))}</b><span class="pills"><span class="pill ${SUPPLY[x.supply][0]}">${SUPPLY[x.supply][1]}</span><span class="meta">${esc([x.brand, x.shade, COL_LABEL[x._col]].filter(Boolean).join(' · '))}</span></span>
         ${total ? `<span class="meta">${fmt(total)}${best ? `${best.delivery == null ? '+' : ''} delivered from ${esc(best.shop)}` : ' (last known price)'}</span>` : '<span class="meta">Price not checked yet</span>'}</span>
-        <span class="tools" style="flex-direction:column;align-items:stretch">${url ? `<a class="btn small ghost" href="${esc(url)}" target="_blank" rel="noopener">Shop ↗</a>` : ''}${canWrite ? `<button class="btn small" data-act="supply" data-v="ok" data-col="${x._col}" data-id="${esc(x.id)}">Bought</button><button class="btn small ghost" data-act="supply" data-v="dismiss" data-col="${x._col}" data-id="${esc(x.id)}" title="Take it off the list">Dismiss</button><button class="btn small ghost danger" data-act="no-rebuy" data-col="${x._col}" data-id="${esc(x.id)}" title="Moves it to Swapped out">Won't buy again</button>` : ''}</span></li>`;
+        <span class="tools restock-tools">${url ? `<a class="btn small ghost" href="${esc(url)}" target="_blank" rel="noopener">Shop ↗</a>` : ''}${canWrite ? `<button class="btn small" data-act="supply" data-v="ok" data-col="${x._col}" data-id="${esc(x.id)}">Bought</button><button class="btn small ghost" data-act="supply" data-v="dismiss" data-col="${x._col}" data-id="${esc(x.id)}" title="Take it off the list">Dismiss</button><button class="btn small ghost danger" data-act="no-rebuy" data-col="${x._col}" data-id="${esc(x.id)}" title="Moves it to Swapped out">Won't buy again</button>` : ''}</span></li>`;
     });
     const amz = live('basket').filter(b => !b.ordered);
     if (amz.length) rows.push(`<li><div class="thumb">a</div><span class="what"><b>Amazon list</b><span class="meta">${amz.length} ${amz.length === 1 ? 'thing' : 'things'} waiting for the next order</span></span><button class="btn small ghost" data-tab="amazon">Open</button></li>`);
@@ -1633,7 +1637,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     if (!pieces.length || !sample) return;
     S.occBusy = true; renderWardrobe();
     try {
-      const res = await sample.json(`Tag each clothing piece with the occasions it suits. Australian English.${profileText()}\n\nPieces (JSON):\n${JSON.stringify(pieces.map(slimPiece))}\n\nOccasions: "work" (office-appropriate, smart casual), "casual" (everyday, weekend, errands), "fun" (going out, drinks, dates, events). A piece can have more than one. Reply with only JSON: {"<id>": ["work","casual"], ...}`, { cache: false });
+      const res = await sample.json(`Tag each clothing piece with the occasions it suits. Australian English.${profileText()}\n\nPieces (JSON):\n${JSON.stringify(pieces.map(slimPiece))}\n\nOccasions: "work" (office-appropriate, smart casual), "casual" (everyday, weekend, errands), "fun" (going out, drinks, dates, events), "beach" (swim, beach and pool days). A piece can have more than one. Reply with only JSON: {"<id>": ["work","casual"], ...}`, { cache: false });
       for (const p of pieces) {
         const tags = (Array.isArray(res?.[p.id]) ? res[p.id] : []).map(String).filter(t => OCCASIONS[t]);
         if (tags.length) await db.collection('wardrobe').doc(p.id).update({ occasions: tags });
