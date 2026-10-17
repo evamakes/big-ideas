@@ -1493,7 +1493,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
       }
       const on = isOn(row), i = on ? ((f[row] % items.length) + items.length) % items.length : 0, x = items[i], src = photoSrc(x);
       const lk = on && S.locked.has(row);
-      return `<div class="frow ${on ? '' : 'off'} ${lk ? 'locked' : ''}"><span class="lab">${esc(ROW_LABEL[row] || row)}${on ? `<button class="lock" data-act="lock" data-row="${row}" aria-pressed="${lk}" title="${lk ? 'Unlock' : 'Keep this piece when shuffling'}">${lk ? '🔒 Locked' : 'Lock'}</button>` : ''}</span>
+      return `<div class="frow ${on ? '' : 'off'} ${lk ? 'locked' : ''}"><span class="lab">${esc(ROW_LABEL[row] || row)}${on ? `<button class="lock" data-act="lock" data-row="${row}" aria-pressed="${lk}" title="${lk ? 'Unlock' : 'Keep this piece when shuffling'}">${lk ? '🔒 Locked' : '🔓 Lock'}</button>` : ''}</span>
         <button class="arrow" data-act="flip" data-row="${row}" data-d="-1" aria-label="Previous ${row.toLowerCase()}"${lk ? ' disabled' : ''}>‹</button>
         <div class="card-in"><div class="img">${on ? (src ? `<img src="${esc(src)}" alt="" key="${esc(x.id)}">` : initial(x.name)) : '—'}</div>
           <div class="nm">${on ? `<b>${x._col === 'wishlist' ? 'Want · ' : ''}${esc(shortOf(x))}</b><span class="meta">${i + 1} of ${items.length}</span>` : `<span class="meta">${items.length} to flip through</span>`}
@@ -2234,7 +2234,13 @@ details.dna[open] > summary { margin-bottom: 10px; }
         for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
         const fresh = pool.filter(p => !recentIds.has(p.id) && ['Top', 'Bottom', 'Dress', 'Layer'].includes(p.row)), anchor = !keep.length && fresh.length ? fresh[Math.floor(Math.random() * fresh.length)] : null;
         const res = await sample.json(`You are a sharp personal stylist with real taste: think editorial, considered and wearable, never random. Australian English.${profileText()}\n\nMy pieces (JSON, grouped by row):\n${JSON.stringify(pool)}\n\n${keep.length ? `These locked pieces MUST stay in the outfit, build around them: ${JSON.stringify(keep)}. ` : ''}Build ONE cohesive outfit from these ids${S.occasion === 'gym' ? ' (a workout outfit: an activewear top and bottom, trainers, a layer only if cool)' : S.occasion === 'work' ? ' (for work: polished and safe)' : ''}: either a dress, or a top plus a bottom; always shoes; layers are flexible: a button-up shirt can be the top, or worn open as a light layer over a fitted plain top, and that light layer can go under a heavier jacket or coat when it's cold (up to two layers, lighter one first in the ids list); a bag or belt only if it genuinely adds something. Colours, proportions, textures and formality must work together, and it should look like my style DNA. ${anchor ? `Start from this piece and build the look around it: ${JSON.stringify(anchor.id)} (${anchor.name}). ` : ''}Don't repeat these recent looks, and use mostly different pieces from them: ${JSON.stringify(recent)}. Reply with only JSON: {"ids":["id1","id2"],"why":"one sentence on why it works"}`, { cache: false });
-        const ids = [...new Set([...(res?.ids || []).map(String), ...keep])], f = flipFromIds(ids);
+        // Locked rows never change: whatever Claude suggests for that row is dropped
+        const cur = flipState(), lockedRows = [...S.locked].filter(r => cur[r] != null && cur[r] >= 0);
+        const lockedCats = new Set(lockedRows.flatMap(r => FLIP_ROWS.find(x => x[0] === r)?.[1] || []));
+        const ids = [...new Set([...keep, ...(res?.ids || []).map(String).filter(id => { const pc = wearable().find(p => p.id === id)?.category; return !pc || !lockedCats.has(pc) || keep.includes(id); })])], f = flipFromIds(ids);
+        for (const r of lockedRows) f[r] = cur[r];
+        if (lockedRows.some(r => r === 'Dress')) { if (!S.locked.has('Top')) delete f.Top; if (!S.locked.has('Bottom')) delete f.Bottom; }
+        if (lockedRows.some(r => r === 'Top' || r === 'Bottom')) { if (!S.locked.has('Dress')) delete f.Dress; }
         if (Object.keys(f).length >= 2) {
           S.flip = f; S.recentLooks = [...(S.recentLooks || []), ids].slice(-10); store.set('edit.recentLooks', JSON.stringify(S.recentLooks));
           const out = $('#board-out'); out.hidden = false; out.className = 'ai-out'; out.innerHTML = `<span class="by">Claude</span>${esc(res.why || '')}`;
@@ -2246,7 +2252,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     for (const row of S.locked) if (cur[row] != null && cur[row] >= 0) f[row] = cur[row];
     const free = (row) => !S.locked.has(row);
     const n = (row) => rowItems(FLIP_ROWS.find(x => x[0] === row)[1]).length;
-    const dress = n('Dress') && Math.random() < 0.3;
+    const dress = !S.locked.has('Top') && !S.locked.has('Bottom') && (S.locked.has('Dress') || (n('Dress') && Math.random() < 0.3));
     if (S.occasion === 'gym') {
       if (free('Top') && n('Top')) f.Top = r(n('Top'));
       if (free('Bottom') && n('Bottom')) f.Bottom = r(n('Bottom'));
