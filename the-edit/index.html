@@ -194,6 +194,8 @@ textarea { resize: vertical; min-height: 44px; }
 .closet { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
 .piece { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; display: grid; grid-template-rows: 1fr auto; min-width: 0; }
 .piece-open { border: 0; background: none; padding: 0; display: grid; align-content: start; cursor: pointer; text-align: left; color: inherit; font: inherit; min-width: 0; }
+.today-add { margin: 0 12px 12px; border: 1px solid var(--accent); background: transparent; color: var(--accent); border-radius: 999px; padding: 5px 10px; font: inherit; font-size: 0.78rem; font-weight: 600; cursor: pointer; }
+.today-add[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
 .occ { display: flex; gap: 4px; padding: 0 12px 12px; flex-wrap: wrap; }
 .occ-t { border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: 999px; padding: 1px 8px; font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; }
 .occ-t[aria-pressed="true"] { background: var(--tan); border-color: var(--tan); color: #fff; }
@@ -302,6 +304,8 @@ details.dna[open] > summary { margin-bottom: 10px; }
 .dna-list { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
 .pick-tools { display: grid; gap: 8px; }
 .btn[data-act="look-fav"][aria-pressed="true"] { background: var(--tan); border-color: var(--tan); color: #fff; }
+.check-row { display: flex !important; flex-direction: row; gap: 8px; align-items: flex-start; font-size: 0.86rem; }
+.check-row input { margin-top: 3px; }
 .search-in { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 8px 16px; font: inherit; width: min(100%, 420px); }
 .pick-tools input { border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 7px 14px; font: inherit; width: 100%; }
 .pick { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 0; cursor: pointer; overflow: hidden; text-align: left; display: grid; }
@@ -322,6 +326,12 @@ details.dna[open] > summary { margin-bottom: 10px; }
 .frow .card-in .nm { font-size: 0.82rem; overflow-wrap: anywhere; display: grid; gap: 4px; }
 .frow.off .card-in { opacity: 0.45; }
 .frow .arrow { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); cursor: pointer; font-size: 1.1rem; color: var(--ink); }
+.frow .lab { display: grid; gap: 4px; align-content: center; }
+.frow .lock { border: 1px solid var(--line); background: transparent; border-radius: 999px; font: inherit; font-size: 0.68rem; letter-spacing: 0.04em; text-transform: none; padding: 1px 8px; cursor: pointer; color: var(--muted); justify-self: start; }
+.frow .lock[aria-pressed="true"] { background: var(--tan); border-color: var(--tan); color: #fff; }
+.frow.locked .card-in { outline: 2px solid var(--tan); outline-offset: -2px; }
+.frow .arrow:disabled { opacity: 0.35; cursor: default; }
+@media (max-width: 520px) { .frow .lab { grid-auto-flow: column; justify-content: start; align-items: center; gap: 8px; } }
 .frow .arrow:hover { border-color: var(--accent); color: var(--accent); }
 @media (prefers-reduced-motion: no-preference) { .frow .card-in .img img { animation: flipIn .25s ease; } @keyframes flipIn { from { transform: translateX(14px); opacity: 0 } to { transform: none; opacity: 1 } } }
 .board .items figure { margin: 0; display: grid; gap: 4px; font-size: 0.78rem; }
@@ -383,6 +393,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
       <button class="tab" role="tab" data-tab="hair">Hair<span class="n" id="n-hair"></span></button>
       <button class="tab" role="tab" data-tab="wardrobe">Wardrobe<span class="n" id="n-wardrobe"></span></button>
       <button class="tab" role="tab" data-tab="style">Style me</button>
+      <button class="tab" role="tab" data-tab="mystyle">My style</button>
       <button class="tab" role="tab" data-tab="inspo">Inspo<span class="n" id="n-inspo"></span></button>
       <button class="tab" role="tab" data-tab="amazon">Amazon list<span class="n" id="n-amazon"></span></button>
     </nav>
@@ -518,25 +529,44 @@ details.dna[open] > summary { margin-bottom: 10px; }
 
   <!-- STYLE ME -->
   <section class="panel" data-panel="style" hidden>
-    <div class="style-grid">
-      <section class="block">
-        <div class="block-h"><h2>Me</h2></div>
-        <div class="me-photos" id="me-photos"></div>
+    <section class="block" id="looks-block">
+      <div class="block-h"><h2>My looks</h2><div class="chips" id="looks-chips"></div></div>
+      <div class="outfits" id="looks"></div>
+    </section>
+    <section class="block">
+      <div class="block-h"><h2>Style board <span class="meta" id="board-title-meta" style="font-family:var(--f-body);font-size:0.8rem;letter-spacing:0"></span></h2>
         <div class="tools">
-          <label class="btn small" for="me-file">Add photos of me</label><input type="file" id="me-file" accept="image/*" multiple hidden>
-          <button class="btn small primary needs-img" id="me-read">Read my colouring and shape</button>
+          <div class="chips" id="board-weather" role="group" aria-label="Weather"></div>
+          <button class="btn small" id="board-shuffle">Style me</button>
+          <button class="btn small primary needs-img" id="board-ask">Claude’s take</button>
+          <button class="btn small" id="board-save">Save outfit</button>
+          <button class="btn small ghost" id="board-clear">Clear</button>
         </div>
-        <p class="meta" style="margin:0">A full-length photo in fitted clothes against a plain wall, plus a close-up in daylight with no makeup, gives the best read. Only you can see these.</p>
-        <div id="me-analysis"></div>
-      </section>
-      <section class="block">
-        <div class="block-h"><h2>Jump to a piece</h2><span class="meta" id="pick-count"></span></div>
-        <p class="meta" style="margin:0">Tap anything from your wardrobe or wants to put it on the board. Use the arrows on the board to flip through each row.</p>
-        <div class="pick-tools"><div class="chips" id="pick-chips"></div><input type="search" id="pick-q" placeholder="Search your pieces" aria-label="Search your pieces"></div>
-        <div class="picks" id="style-picks"></div>
-        <button class="link" id="pick-more" hidden></button>
-      </section>
-    </div>
+      </div>
+      <div class="board" id="board"></div>
+      <div class="ai-out" id="board-out" hidden></div>
+      <div id="board-fb"></div>
+    </section>
+    <section class="block">
+      <div class="block-h"><h2>Jump to a piece</h2><span class="meta" id="pick-count"></span></div>
+      <p class="meta" style="margin:0">Tap anything from your wardrobe or wants to put it on the board. Use the arrows on the board to flip through each row.</p>
+      <div class="pick-tools"><div class="chips" id="pick-chips"></div><input type="search" id="pick-q" placeholder="Search your pieces" aria-label="Search your pieces"></div>
+      <div class="picks" id="style-picks"></div>
+      <button class="link" id="pick-more" hidden></button>
+    </section>
+    <section class="block needs-img">
+      <div class="block-h"><h2>Fit check</h2></div>
+      <label class="drop" id="fit-drop" for="fit-file">
+        <span id="fit-prev"><div class="thumb">+</div></span>
+        <span><b>Add a photo of you in an outfit</b><br><span class="meta">Claude says what’s working, what to tweak with pieces you own, and what would finish it.</span></span>
+        <input type="file" id="fit-file" accept="image/*">
+      </label>
+      <div class="ask-row"><textarea id="fit-note" rows="2" placeholder="Optional: where you’re wearing it, or what feels off"></textarea><button class="btn primary" id="fit-go">Check it</button></div>
+    </section>
+  </section>
+
+  <!-- MY STYLE -->
+  <section class="panel" data-panel="mystyle" hidden>
     <section class="block" id="dna-block">
       <details class="dna" id="dna-details">
         <summary class="block-h"><h2>Your style DNA</h2><span class="meta" id="dna-when"></span></summary>
@@ -554,31 +584,14 @@ details.dna[open] > summary { margin-bottom: 10px; }
       <ul class="gaps" id="igaps-list"></ul>
     </section>
     <section class="block">
-      <div class="block-h"><h2>Style board</h2>
-        <div class="tools">
-          <div class="chips" id="board-weather" role="group" aria-label="Weather"></div>
-          <button class="btn small" id="board-shuffle">Style me</button>
-          <button class="btn small primary needs-img" id="board-ask">Claude’s take</button>
-          <button class="btn small" id="board-save">Save outfit</button>
-          <button class="btn small ghost" id="board-clear">Clear</button>
-        </div>
+      <div class="block-h"><h2>Me</h2></div>
+      <div class="me-photos" id="me-photos"></div>
+      <div class="tools">
+        <label class="btn small" for="me-file">Add photos of me</label><input type="file" id="me-file" accept="image/*" multiple hidden>
+        <button class="btn small primary needs-img" id="me-read">Read my colouring and shape</button>
       </div>
-      <div class="board" id="board"></div>
-      <div class="ai-out" id="board-out" hidden></div>
-      <div id="board-fb"></div>
-    </section>
-    <section class="block" id="looks-block">
-      <div class="block-h"><h2>My looks</h2><div class="chips" id="looks-chips"></div></div>
-      <div class="outfits" id="looks"></div>
-    </section>
-    <section class="block needs-img">
-      <div class="block-h"><h2>Fit check</h2></div>
-      <label class="drop" id="fit-drop" for="fit-file">
-        <span id="fit-prev"><div class="thumb">+</div></span>
-        <span><b>Add a photo of you in an outfit</b><br><span class="meta">Claude says what’s working, what to tweak with pieces you own, and what would finish it.</span></span>
-        <input type="file" id="fit-file" accept="image/*">
-      </label>
-      <div class="ask-row"><textarea id="fit-note" rows="2" placeholder="Optional: where you’re wearing it, or what feels off"></textarea><button class="btn primary" id="fit-go">Check it</button></div>
+      <p class="meta" style="margin:0">A full-length photo in fitted clothes against a plain wall, plus a close-up in daylight with no makeup, gives the best read. Only you can see these.</p>
+      <div id="me-analysis"></div>
     </section>
   </section>
 
@@ -967,7 +980,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     $('#n-amazon').textContent = live('basket').filter(b => !b.ordered).length || '';
     $('#n-hair').textContent = stackCount('hair') || '';
     $$('.needs-img').forEach(el => el.hidden = !S.canImages);
-    $('#quick').hidden = !db || !canWrite || ['bin', 'inspo', 'style', 'amazon'].includes(S.tab);
+    $('#quick').hidden = !db || !canWrite || ['bin', 'inspo', 'style', 'mystyle', 'amazon'].includes(S.tab);
     if (!S.quickTouched) { $('#quick-own').value = ['skin', 'makeup', 'hair', 'wardrobe'].includes(S.tab) ? 'own' : 'want'; setQuickFile(quickFile); }
     $('#quick-own option[value="try"]').hidden = !['skin', 'makeup', 'hair', 'wants', 'today', 'finds'].includes(S.tab);
     const nb = binItems().length;
@@ -1259,7 +1272,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
         <div class="img">${src ? `<img src="${esc(src)}" alt="" loading="lazy">` : `<span>${esc(shortOf(p))}</span>`}</div>
         <div class="cap" title="${esc(fullOf(p) || nameOf(p))}"><b>${esc(shortOf(p))}</b><span class="meta">${esc([p.brand, p.colour, p.size ? `Size ${p.size}` : ''].filter(Boolean).join(' · '))}</span>
         ${p.example || RESEARCH[p.research] || MATCH[p.match] ? `<div class="pills">${p.example ? '<span class="pill ex">Example</span>' : ''}${researchPill(p)}${matchPill(p)}</div>` : ''}</div>
-      </button><div class="occ">${p.category === 'Active' ? '' : Object.entries(OCCASIONS).map(([k, l]) => `<button class="occ-t" data-act="${canWrite ? 'occ' : ''}" data-id="${esc(p.id)}" data-v="${k}" aria-pressed="${occ.includes(k)}">${l}</button>`).join('')}<button class="occ-t fit" data-act="${canWrite ? 'fit' : ''}" data-id="${esc(p.id)}" aria-pressed="${p.fit === 'no'}" title="Left out of outfits while it doesn't fit">Doesn't fit</button></div></div>`;
+      </button><div class="occ">${p.category === 'Active' ? '' : Object.entries(OCCASIONS).map(([k, l]) => `<button class="occ-t" data-act="${canWrite ? 'occ' : ''}" data-id="${esc(p.id)}" data-v="${k}" aria-pressed="${occ.includes(k)}">${l}</button>`).join('')}<button class="occ-t fit" data-act="${canWrite ? 'fit' : ''}" data-id="${esc(p.id)}" aria-pressed="${p.fit === 'no'}" title="Left out of outfits while it doesn't fit">Doesn't fit</button></div>${p.fit === 'no' || p.category === 'Swim' ? '' : `<button class="today-add" data-act="today-add" data-id="${esc(p.id)}" aria-pressed="${flipChosen().some(x => x.id === p.id)}">${flipChosen().some(x => x.id === p.id) ? '✓ In today’s look' : '+ Add to today’s look'}</button>`}</div>`;
   }
   function renderHair() {
     const known = new Set(HAIR_STEPS);
@@ -1272,7 +1285,31 @@ details.dna[open] > summary { margin-bottom: 10px; }
   const WEATHER_TEXT = { hot: 'Hot day, 27°C or more', mild: 'Mild day, around 18–24°C', cold: 'Cold day, under 15°C' };
   const weatherOk = (p) => S.weather === 'hot' ? p.season !== 'cool' && !LAYER_CATS.includes(p.category) : S.weather === 'cold' ? p.season !== 'warm' : true;
   const rowItems = (cats) => cats ? wearable().filter(weatherOk).filter(p => cats.includes(p.category)).map(p => ({ ...p, _col: 'wardrobe' })) : live('wishlist').filter(w => ['Clothes', 'Activewear'].includes(w.category) && w.status !== 'bought').map(w => ({ ...w, _col: 'wishlist' }));
-  function flipState() { if (!S.flip) { S.flip = { Top: 0, Bottom: 0, Shoes: 0 }; } return S.flip; }
+  // Board state is kept as indexes per row; today's look is saved by piece id so it survives reloads and devices
+  function flipFromIds(ids) {
+    const f = {};
+    for (const [row, cats] of FLIP_ROWS) { if (!cats) continue; const i = rowItems(cats).findIndex(x => ids.includes(x.id)); if (i >= 0) f[row] = i; }
+    return f;
+  }
+  function flipState() {
+    if (!S.flip) {
+      const t = S.meta.today;
+      if (t && t.date === dayKey() && (t.ids || []).length) { S.flip = flipFromIds(t.ids); S.locked = new Set((t.locked || []).filter(r => S.flip[r] != null)); }
+      else S.flip = { Top: 0, Bottom: 0, Shoes: 0 };
+    }
+    if (!S.locked) S.locked = new Set();
+    return S.flip;
+  }
+  const lockedIds = () => { const f = flipState(); return FLIP_ROWS.filter(([row, cats]) => cats && S.locked.has(row) && f[row] != null && f[row] >= 0).map(([row, cats]) => { const items = rowItems(cats); return items[((f[row] % items.length) + items.length) % items.length]?.id; }).filter(Boolean); };
+  let todayTimer = null, todaySaved = '';
+  function saveToday() {
+    if (!db || !canWrite) return;
+    const ids = flipChosen().map(x => x.id), locked = [...(S.locked || [])];
+    const sig = JSON.stringify([dayKey(), ids, locked]);
+    if (sig === todaySaved) return;
+    todaySaved = sig; clearTimeout(todayTimer);
+    todayTimer = setTimeout(() => db.doc('meta/today').set({ date: dayKey(), ids, locked, updatedAt: now() }).catch(() => {}), 800);
+  }
   function flipChosen() {
     const f = flipState(), out = [];
     for (const [row, cats] of FLIP_ROWS) { const items = rowItems(cats); const i = f[row]; if (i != null && i >= 0 && items.length) out.push(items[((i % items.length) + items.length) % items.length]); }
@@ -1321,23 +1358,26 @@ details.dna[open] > summary { margin-bottom: 10px; }
     const rows = FLIP_ROWS.map(([row, cats]) => {
       const items = rowItems(cats); if (!items.length) return '';
       const on = f[row] != null && f[row] >= 0, i = on ? ((f[row] % items.length) + items.length) % items.length : 0, x = items[i], src = photoSrc(x);
-      return `<div class="frow ${on ? '' : 'off'}"><span class="lab">${esc(row === 'Layer' ? 'Jumper / jacket' : row)}</span>
-        <button class="arrow" data-act="flip" data-row="${row}" data-d="-1" aria-label="Previous ${row.toLowerCase()}">‹</button>
+      const lk = on && S.locked.has(row);
+      return `<div class="frow ${on ? '' : 'off'} ${lk ? 'locked' : ''}"><span class="lab">${esc(row === 'Layer' ? 'Jumper / jacket' : row)}${on ? `<button class="lock" data-act="lock" data-row="${row}" aria-pressed="${lk}" title="${lk ? 'Unlock' : 'Keep this piece when shuffling'}">${lk ? '🔒 Locked' : 'Lock'}</button>` : ''}</span>
+        <button class="arrow" data-act="flip" data-row="${row}" data-d="-1" aria-label="Previous ${row.toLowerCase()}"${lk ? ' disabled' : ''}>‹</button>
         <div class="card-in"><div class="img">${on ? (src ? `<img src="${esc(src)}" alt="" key="${esc(x.id)}">` : initial(x.name)) : '—'}</div>
           <div class="nm">${on ? `<b>${x._col === 'wishlist' ? 'Want · ' : ''}${esc(shortOf(x))}</b><span class="meta">${i + 1} of ${items.length}</span>` : `<span class="meta">${items.length} to flip through</span>`}
           <button class="link" data-act="flip-toggle" data-row="${row}" style="justify-self:start">${on ? 'Take off' : row === 'Active' ? 'Add activewear' : row === 'Layer' ? 'Add a jumper or jacket' : 'Add a ' + row.toLowerCase()}</button></div></div>
-        <button class="arrow" data-act="flip" data-row="${row}" data-d="1" aria-label="Next ${row.toLowerCase()}">›</button></div>`;
+        <button class="arrow" data-act="flip" data-row="${row}" data-d="1" aria-label="Next ${row.toLowerCase()}"${lk ? ' disabled' : ''}>›</button></div>`;
     }).join('');
     $('#board').innerHTML = `<div class="me${mp.length ? '' : ' empty'}">${mp.length ? `<img src="/_blob/${mp[0]}" alt="You">` : 'Add a full-length photo of you'}</div>
       <div class="flip">${rows || '<span class="meta">Add clothes to your wardrobe to start flipping.</span>'}</div>`;
     $('#board-save').hidden = !canWrite || !chosen.length;
     $('#board-fb').innerHTML = fbRow(chosen.map(x => x.id));
+    $('#board-title-meta').textContent = chosen.length ? `Today's look${S.locked.size ? ` · ${S.locked.size} locked` : ''} · saved` : '';
+    saveToday();
     const looks = live('outfits').sort((a, b) => (!!b.fav - !!a.fav) || String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
     const favN = looks.filter(o => o.fav).length;
     if (S.looksFav && !favN) S.looksFav = false;
     $('#looks-chips').innerHTML = looks.length ? `<button class="chip" aria-pressed="${!S.looksFav}" data-act="looks-filter" data-v="">All ${looks.length}</button>${favN ? `<button class="chip" aria-pressed="${!!S.looksFav}" data-act="looks-filter" data-v="1">★ Favourites ${favN}</button>` : ''}` : '';
     const shown = S.looksFav ? looks.filter(o => o.fav) : looks;
-    $('#looks').innerHTML = shown.length ? shown.map((o, i) => outfitCard(o, i, true)).join('') : '<p class="meta" style="margin:0">Looks you save from the style board or Mix up land here. Star your favourites.</p>';
+    $('#looks').innerHTML = shown.length ? shown.map((o, i) => outfitCard(o, i, true)).join('') : '<p class="meta" style="margin:0">Save looks from the style board below or from Mix up in Wardrobe, then star your favourites.</p>';
     $('#board-ask').disabled = !chosen.length;
   }
   function renderWardrobe() {
@@ -1506,7 +1546,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
         <span id="drop-prev">${cur ? `<img class="thumb" src="${esc(cur)}" alt="">` : '<div class="thumb">+</div>'}</span>
         <span><b>${cur ? 'Change photo' : 'Add a photo'}</b><br><span class="meta">Choose a file, drag one in, or paste a screenshot.</span></span>
         <input type="file" id="${id}" accept="image/*">
-      </label>`;
+      </label>${src && ['wardrobe', 'wishlist', 'beauty', 'routine', 'hair'].includes(editing?.col) ? `<label class="field full check-row"><input type="checkbox" name="isLabel"> <span>This is a photo of the <b>label or tag</b>: use it to identify the piece and keep the current picture</span></label>` : ''}`;
     }
     else ctl = `<input type="${f.type === 'number' ? 'number' : f.type === 'url' ? 'url' : 'text'}" ${base} ${f.type === 'number' ? 'step="0.01" min="0" inputmode="decimal"' : ''} value="${esc(v ?? '')}" placeholder="${esc(f.ph || '')}" ${f.req ? 'required' : ''}>`;
     return `<label class="field ${f.full ? 'full' : ''}" for="${id}"><span>${esc(f.label)}</span>${ctl}${f.hint ? `<span class="hint">${esc(f.hint)}</span>` : ''}</label>`;
@@ -1560,7 +1600,8 @@ details.dna[open] > summary { margin-bottom: 10px; }
       if (pendingPhoto && assets) {
         save.textContent = 'Uploading photo…';
         const up = await assets.upload(pendingPhoto);
-        data.photoId = up.id; data.photoUrl = up.url;
+        if (item && form.elements.isLabel?.checked) data.labelPhotoId = up.id;
+        else { data.photoId = up.id; data.photoUrl = up.url; }
       }
       save.textContent = 'Saving…';
       const today = dayKey();
@@ -1599,7 +1640,8 @@ details.dna[open] > summary { margin-bottom: 10px; }
           if (col === 'wishlist') Object.assign(data, { offers: [], variants: [] });
         }
         await db.collection(col).doc(item.id).update(data);
-        if (changed && canResearch()) { await fireResearch(col, item.id, [data.brand ?? item.brand, data.name || data.product || nameOf(item), data.variant || data.shade || ''].filter(Boolean).join(' ')); toast('Saved. Claude is updating the details, photo and prices.'); }
+        if (data.labelPhotoId && canResearch()) { await fireResearch(col, item.id, `${[item.brand, nameOf(item)].filter(Boolean).join(' ')} (the user added a photo of its LABEL or TAG: asset ${data.labelPhotoId}; download and read it for brand, style name, size and wash or colour, update the details and find the matching studio photo; keep the current photoId unless you find the exact product)`); toast('Label added. Claude is reading it to pin down the exact piece.'); }
+        else if (changed && canResearch()) { await fireResearch(col, item.id, [data.brand ?? item.brand, data.name || data.product || nameOf(item), data.variant || data.shade || ''].filter(Boolean).join(' ')); toast('Saved. Claude is updating the details, photo and prices.'); }
         else toast('Saved');
       } else {
         data.createdAt = now();
@@ -1778,6 +1820,24 @@ details.dna[open] > summary { margin-bottom: 10px; }
   }
 
   // ---------- quick add + research ----------
+  // Phone photos are 3-6MB; shrink them so uploads are quick and Claude can read them
+  async function shrink(file, max = 1800) {
+    if (!file || !/^image\/(jpeg|png|webp|heic|heif)/.test(file.type) || file.size < 900000) return file;
+    try {
+      const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
+      const k = Math.min(1, max / Math.max(bmp.width, bmp.height));
+      const c = document.createElement('canvas'); c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+      c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height); bmp.close?.();
+      const b = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.86));
+      return b ? new File([b], (file.name || 'photo').replace(/\.\w+$/, '') + '.jpg', { type: 'image/jpeg' }) : file;
+    } catch { return file; }
+  }
+  // Best-guess category from a typed name, for when Claude couldn't read it
+  function guessCat(t) {
+    t = String(t || '').toLowerCase();
+    const map = [[/swim|bikini|one.?piece/, 'Swim'], [/legging|sports bra|gym|yoga|run/, 'Active'], [/jean|denim pant/, 'Jeans'], [/skirt/, 'Skirt'], [/dress/, 'Dress'], [/pant|trouser|short|chino/, 'Bottoms'], [/shoe|boot|sneaker|converse|vans|birken|doc|sandal|heel|loafer|flat|slide|mule/, 'Shoes'], [/bag|tote|clutch|purse/, 'Bag'], [/cardi/, 'Cardigan'], [/jumper|sweater|hoodie|crew/, 'Jumper'], [/knit/, 'Knit'], [/blazer|jacket/, 'Jacket'], [/coat|trench|puffer/, 'Outerwear'], [/shirt|blouse/, 'Shirt'], [/belt|hat|scarf|chain|necklace|earring|ring|sunglass/, 'Accessory']];
+    return (map.find(([r]) => r.test(t)) || [0, 'Top'])[1];
+  }
   async function fireResearch(col, id, phrase) {
     if (!canResearch()) return false;
     try {
@@ -1820,13 +1880,14 @@ details.dna[open] > summary { margin-bottom: 10px; }
       return ref.id;
     }
     let info = {}, photoId = null;
+    file = await shrink(file);
     if (file && assets) { quickStatus('Uploading the picture…'); try { photoId = (await assets.upload(file)).id; } catch {} }
     if (sample) {
       quickStatus(phrase ? `Looking up “${phrase}”…` : 'Working out what’s in the picture…');
       try {
         const withImg = file && S.canImages;
         info = await sample.json(`Identify this product from a shopper's ${withImg ? 'photo or screenshot' : 'short description'} and fill in its details from what you know. Australian English, prices in AUD.\n\n${phrase ? `Description: "${phrase}"` : 'Description: (none, use the picture)'}\n\nReply with only JSON:\n{"kind":"makeup|skincare|hair|health|clothes|activewear|home|office|tech|other","name":"official product name","label":"2-4 word plain description, colour + what it is, e.g. Blue gym leggings, Burgundy Mary Janes, Rice toner","brand":"brand","type":"makeup only, one of: ${MAKEUP_TYPES.join(', ')}","step":"skincare: one of ${SKIN_STEPS.join(', ')}; hair: one of ${HAIR_STEPS.join(', ')}","category":"clothes only, one of: ${WARD_CATS.join(', ')}","rrp":typical Australian price as a number or null,"finish":"makeup finish or empty","actives":"skincare key actives or empty","colour":"clothes colour if named","variants":[{"name":"shade or colour name","hex":"#rrggbb approximate","note":"short descriptor e.g. warm peach, satin"}],"selected":"the shade or colour the shopper named, matching a variant name, or empty","summary":"one sentence on what it is","confidence":"high|medium|low"}\n\nList every shade or colourway you know (up to 24). If unsure, give your best guess and set confidence to low.`, file && S.canImages ? { images: [file] } : undefined);
-      } catch (e) { if (e?.code === 'not_granted' || e?.code === 'sampling_disabled') info = {}; else info = {}; }
+      } catch { info = {}; }
     }
     const kind = String(info.kind || 'other');
     own = mode === 'own' || (mode === 'try' && ['makeup', 'skincare', 'hair'].includes(kind));
@@ -1840,7 +1901,12 @@ details.dna[open] > summary { margin-bottom: 10px; }
     else if (own && kind === 'skincare') { col = 'routine'; doc = { product: name, brand, step: SKIN_STEPS.includes(info.step) ? info.step : 'Other', when: 'both', freq: 'daily', actives: info.actives || '', status: stackStatus, ...common, variants: [] }; }
     else if (own && kind === 'hair') { col = 'hair'; doc = { product: name, brand, step: HAIR_STEPS.includes(info.step) ? info.step : 'Other', freq: 'daily', status: stackStatus, ...common, variants: [] }; }
     else if (own && kind === 'activewear') { col = 'wardrobe'; doc = { name, brand, category: 'Active', colour: sel?.name || info.colour || '', vibes: ['active'], season: 'all', ...common, variants: [] }; }
-    else if (own && kind === 'clothes') { col = 'wardrobe'; doc = { name, brand, category: WARD_CATS.includes(info.category) ? info.category : 'Top', colour: sel?.name || info.colour || '', vibes: [], season: 'all', ...common, variants: [] }; }
+    else if (own && (kind === 'clothes' || !['home', 'office', 'tech', 'health'].includes(kind))) {
+      // I own it always lands in the wardrobe (or the stack tab you're on) even when Claude couldn't read it
+      const stackCol = ({ skin: 'routine', makeup: 'beauty', hair: 'hair' })[S.tab];
+      if (stackCol && kind !== 'clothes') { col = stackCol; doc = stackCol === 'beauty' ? { name, brand, type: 'Other', finish: '', shade: '', shadeHex: '', status: stackStatus, ...common } : { product: name, brand, step: 'Other', freq: 'daily', status: stackStatus, ...(stackCol === 'routine' ? { when: 'both', actives: '' } : {}), ...common, variants: [] }; }
+      else { col = 'wardrobe'; doc = { name, brand, category: WARD_CATS.includes(info.category) ? info.category : guessCat(phrase), colour: sel?.name || info.colour || '', vibes: [], season: 'all', ...common, variants: [] }; }
+    }
     else { col = 'wishlist'; doc = { name, brand, category: WANT_CAT_OF[kind] || 'Other', variant: sel?.name || info.colour || '', shadeHex: sel?.hex || '', rrp: Number(info.rrp) > 0 ? Number(info.rrp) : null, price: null, priceHistory: [], stock: 'unknown', priority: mode === 'try' ? 'maybe' : 'want', status: 'want', ...common }; }
     const ref = await db.collection(col).add(doc);
     const queued = await fireResearch(col, ref.id, (phrase || name) + (photoId ? ' (identify from the attached photo: the userPhotoId asset)' : ''));
@@ -1893,32 +1959,45 @@ details.dna[open] > summary { margin-bottom: 10px; }
   async function bulkAdd(files, target) {
     files = files.filter(f => /^image\//.test(f.type)).slice(0, 40);
     if (!files.length || !assets) return;
-    const ids = [];
+    // Pass 1 saves every photo straight away (small and quick), so nothing is lost if the phone locks part way
+    const added = [];
     for (let i = 0; i < files.length; i++) {
-      const f = files[i];
-      quickStatus(`Adding ${i + 1} of ${files.length}…`);
+      quickStatus(`Saving photo ${i + 1} of ${files.length}. Keep this page open…`);
       try {
-        const photoId = (await assets.upload(f)).id;
-        let info = {};
-        if (sample && S.canImages) {
-          try {
-            info = await sample.json(`Identify the ${target === 'wants' ? 'product' : 'clothing item'} in this photo. If it is a screenshot of a shop listing, read the product name, brand and price from it. Australian English.\nReply with only JSON: {"name":"short descriptive name, e.g. Cream cable knit jumper","label":"2-4 word plain description, e.g. Blue gym leggings","brand":"brand if visible or known, else empty","category":"one of ${WARD_CATS.join(', ')}","colour":"main colour","vibes":["2-3 style tags"],"kind":"clothes|activewear|makeup|skincare|hair|home|office|tech|other","price":number or null}`, { images: [f], modelTier: 'quick', cache: false });
-          } catch {}
-        }
-        let col, doc;
-        const base = { ...(info.label ? { label: String(info.label).slice(0, 40) } : {}), photoId, userPhotoId: photoId, ownPhoto: target !== 'wants', research: canResearch() ? 'queued' : 'draft', quickPhrase: '(from a photo)', createdAt: now() };
-        if (target === 'wants') { col = 'wishlist'; doc = { ...base, name: String(info.name || 'New item'), brand: String(info.brand || ''), category: WANT_CAT_OF[info.kind] || 'Clothes', variant: String(info.colour || ''), rrp: Number(info.price) > 0 ? Number(info.price) : null, price: null, priceHistory: [], stock: 'unknown', priority: 'want', status: 'want' }; }
-        else { col = 'wardrobe'; doc = { ...base, name: String(info.name || 'New piece'), brand: String(info.brand || ''), category: target === 'active' || info.kind === 'activewear' ? 'Active' : (WARD_CATS.includes(info.category) ? info.category : 'Top'), colour: String(info.colour || ''), vibes: Array.isArray(info.vibes) ? info.vibes.map(String).slice(0, 3) : [], season: 'all' }; }
+        const small = await shrink(files[i]);
+        const photoId = (await assets.upload(small)).id;
+        const base = { photoId, userPhotoId: photoId, ownPhoto: target !== 'wants', research: canResearch() ? 'queued' : 'draft', quickPhrase: '(from a photo)', createdAt: now() };
+        const col = target === 'wants' ? 'wishlist' : 'wardrobe';
+        const doc = col === 'wishlist' ? { ...base, name: 'New item', brand: '', category: 'Clothes', variant: '', rrp: null, price: null, priceHistory: [], stock: 'unknown', priority: 'want', status: 'want' }
+          : { ...base, name: 'New piece', brand: '', category: target === 'active' ? 'Active' : 'Top', colour: '', vibes: [], season: 'all' };
         const ref = await db.collection(col).add(doc);
-        ids.push(`${col}/${ref.id}`);
-      } catch { toast(`Couldn’t add photo ${i + 1}. Carrying on.`); }
+        added.push({ col, id: ref.id, small });
+      } catch {}
+    }
+    const ids = added.map(a => `${a.col}/${a.id}`), failed = files.length - added.length;
+    if (ids.length && canResearch()) {
+      try { await mcp.callTool('Claude Code Remote', 'fire_trigger', { trigger_id: S.meta.research.triggerId, text: `Research request (several items from photos): ${ids.join(', ')}. Name, label, category, colour and occasions first for any still called New piece or New item. Then follow the PHOTO MATCHING steps for each: look at the photo, read any visible label or logo, find the exact product (brand, style name, colour) online by comparing candidate product photos side by side with theirs, set photoId to the brand's best clean product shot (keeping the user's photo in userPhotoId), and set match to exact, likely or none with a photoNote when it is not exact.` }, { cache: false }); } catch {}
+    }
+    toast(`Saved ${ids.length} ${ids.length === 1 ? 'photo' : 'photos'}${failed ? `. ${failed} didn’t upload, try those again` : ''}. Naming them now…`);
+    // Pass 2 names them here if Claude can; anything left is named by the research run
+    let named = 0;
+    if (sample && S.canImages) {
+      for (let i = 0; i < added.length; i++) {
+        const { col, id, small } = added[i];
+        quickStatus(`Naming ${i + 1} of ${added.length}…`);
+        let info = {};
+        try { info = await sample.json(`Identify the ${col === 'wishlist' ? 'product' : 'clothing item'} in this photo. If it is a screenshot of a shop listing, read the product name, brand and price from it. Australian English.\nReply with only JSON: {"name":"short descriptive name, e.g. Cream cable knit jumper","label":"2-4 word plain description, e.g. Blue gym leggings","brand":"brand if visible or known, else empty","category":"one of ${WARD_CATS.join(', ')}","colour":"main colour","vibes":["2-3 style tags"],"kind":"clothes|activewear|makeup|skincare|hair|home|office|tech|other","price":number or null}`, { images: [small], modelTier: 'quick', cache: false }); } catch { break; }
+        if (!info?.name) continue;
+        const up = { name: String(info.name).slice(0, 140), brand: String(info.brand || ''), ...(info.label ? { label: String(info.label).slice(0, 40) } : {}) };
+        if (col === 'wishlist') Object.assign(up, { category: WANT_CAT_OF[info.kind] || 'Clothes', variant: String(info.colour || ''), rrp: Number(info.price) > 0 ? Number(info.price) : null });
+        else Object.assign(up, { category: target === 'active' || info.kind === 'activewear' ? 'Active' : (WARD_CATS.includes(info.category) ? info.category : 'Top'), colour: String(info.colour || ''), vibes: Array.isArray(info.vibes) ? info.vibes.map(String).slice(0, 3) : [] });
+        try { await db.collection(col).doc(id).update(up); named++; } catch {}
+      }
     }
     quickStatus('');
-    if (ids.length && canResearch() && S.meta.refresh?.triggerId) {
-      try { await mcp.callTool('Claude Code Remote', 'fire_trigger', { trigger_id: S.meta.refresh.triggerId, text: `Research queue only, skip everything else this run. Research these new items from their photos: ${ids.join(', ')}. Follow the PHOTO MATCHING steps in step 2 for each: look at the photo, read any visible label or logo, find the exact product (brand, style name, colour) online by comparing candidate product photos side by side with theirs, set photoId to the brand's best clean product shot (keeping the user's photo in userPhotoId), and set match to exact, likely or none with a photoNote when it is not exact.` }, { cache: false }); } catch {}
-    }
-    toast(`Added ${ids.length} ${ids.length === 1 ? 'item' : 'items'}. Claude is filling in the details.`);
+    if (named < added.length) toast(`${named ? `Named ${named}. ` : ''}Claude will name the rest in the next few minutes.`);
   }
+
   for (const [inp, target] of [['#bulk-wardrobe', 'wardrobe']]) {
     $(inp).addEventListener('change', (e) => { const fs = [...e.target.files]; e.target.value = ''; bulkAdd(fs, S.wardCat === 'Active' ? 'active' : target); });
   }
@@ -1950,15 +2029,15 @@ details.dna[open] > summary { margin-bottom: 10px; }
     } catch (err) { toast(aiErr(err)); }
     finally { S.meBusy = null; btn.disabled = false; renderStyle(); }
   });
-  $('#board-clear').addEventListener('click', () => { S.flip = {}; $('#board-out').hidden = true; renderStyle(); });
+  $('#board-clear').addEventListener('click', () => { S.flip = {}; S.locked = new Set(); $('#board-out').hidden = true; renderStyle(); });
   $('#board-shuffle').addEventListener('click', async (e) => {
     if (sample && wearable().length >= 3) {
       const btn = e.currentTarget; btn.disabled = true; btn.textContent = 'Styling…';
       try {
         const pool = FLIP_ROWS.filter(r => r[1]).flatMap(([row, cats]) => rowItems(cats).map(p => ({ id: p.id, row, name: shortOf(p), brand: p.brand, colour: p.colour, category: p.category, season: p.season, occasions: p.occasions })));
-        const recent = (S.recentLooks || []).slice(-6);
-        const res = await sample.json(`You are a sharp personal stylist with real taste: think editorial, considered and wearable, never random. Australian English.${profileText()}\n\nMy pieces (JSON, grouped by row):\n${JSON.stringify(pool)}\n\nBuild ONE cohesive outfit from these ids: either a dress, or a top plus a bottom; always shoes; add a jumper/jacket layer if the weather or look needs it; a bag or belt only if it genuinely adds something. Colours, proportions, textures and formality must work together, and it should look like my style DNA. Don't repeat these recent looks: ${JSON.stringify(recent)}. Reply with only JSON: {"ids":["id1","id2"],"why":"one sentence on why it works"}`, { cache: false });
-        const ids = (res?.ids || []).map(String), f = {};
+        const recent = (S.recentLooks || []).slice(-6), keep = lockedIds();
+        const res = await sample.json(`You are a sharp personal stylist with real taste: think editorial, considered and wearable, never random. Australian English.${profileText()}\n\nMy pieces (JSON, grouped by row):\n${JSON.stringify(pool)}\n\n${keep.length ? `These locked pieces MUST stay in the outfit, build around them: ${JSON.stringify(keep)}. ` : ''}Build ONE cohesive outfit from these ids: either a dress, or a top plus a bottom; always shoes; add a jumper/jacket layer if the weather or look needs it; a bag or belt only if it genuinely adds something. Colours, proportions, textures and formality must work together, and it should look like my style DNA. Don't repeat these recent looks: ${JSON.stringify(recent)}. Reply with only JSON: {"ids":["id1","id2"],"why":"one sentence on why it works"}`, { cache: false });
+        const ids = [...new Set([...(res?.ids || []).map(String), ...keep])], f = {};
         for (const [row, cats] of FLIP_ROWS) { if (!cats) continue; const items = rowItems(cats); const i = items.findIndex(x => ids.includes(x.id)); if (i >= 0) f[row] = i; }
         if (Object.keys(f).length >= 2) {
           S.flip = f; S.recentLooks = [...(S.recentLooks || []), ids].slice(-10);
@@ -1967,13 +2046,15 @@ details.dna[open] > summary { margin-bottom: 10px; }
         }
       } catch {} finally { btn.disabled = false; btn.textContent = 'Style me'; }
     }
-    const r = (n) => Math.floor(Math.random() * n), f = {};
+    const r = (n) => Math.floor(Math.random() * n), cur = flipState(), f = {};
+    for (const row of S.locked) if (cur[row] != null && cur[row] >= 0) f[row] = cur[row];
+    const free = (row) => !S.locked.has(row);
     const n = (row) => rowItems(FLIP_ROWS.find(x => x[0] === row)[1]).length;
     const dress = n('Dress') && Math.random() < 0.3;
-    if (dress) f.Dress = r(n('Dress')); else { if (n('Top')) f.Top = r(n('Top')); if (n('Bottom')) f.Bottom = r(n('Bottom')); }
-    if (n('Shoes')) f.Shoes = r(n('Shoes'));
-    if (n('Layer') && (S.weather === 'cold' || (S.weather !== 'hot' && Math.random() < 0.5))) f.Layer = r(n('Layer'));
-    if (n('Bag') && Math.random() < 0.5) f.Bag = r(n('Bag'));
+    if (dress && free('Dress')) f.Dress = r(n('Dress')); else { if (n('Top') && free('Top')) f.Top = r(n('Top')); if (n('Bottom') && free('Bottom')) f.Bottom = r(n('Bottom')); }
+    if (n('Shoes') && free('Shoes')) f.Shoes = r(n('Shoes'));
+    if (free('Layer') && n('Layer') && (S.weather === 'cold' || (S.weather !== 'hot' && Math.random() < 0.5))) f.Layer = r(n('Layer'));
+    if (free('Bag') && n('Bag') && Math.random() < 0.5) f.Bag = r(n('Bag'));
     S.flip = f; $('#board-out').hidden = true; renderStyle();
   });
   $('#board-save').addEventListener('click', async () => {
@@ -2144,11 +2225,27 @@ details.dna[open] > summary { margin-bottom: 10px; }
         $('#board-out').hidden = true; renderStyle(); break;
       }
       case 'flip': { const f = flipState(), row = t.dataset.row; f[row] = (f[row] != null && f[row] >= 0 ? f[row] : 0) + Number(t.dataset.d); if (row === 'Dress') { f.Top = -1; f.Bottom = -1; } $('#board-out').hidden = true; renderStyle(); break; }
-      case 'flip-toggle': { const f = flipState(), row = t.dataset.row; f[row] = f[row] != null && f[row] >= 0 ? -1 : 0; if (row === 'Dress' && f.Dress === 0) { f.Top = -1; f.Bottom = -1; } $('#board-out').hidden = true; renderStyle(); break; }
+      case 'flip-toggle': { const f = flipState(), row = t.dataset.row; if (f[row] != null && f[row] >= 0) S.locked.delete(row); f[row] = f[row] != null && f[row] >= 0 ? -1 : 0; if (row === 'Dress' && f.Dress === 0) { f.Top = -1; f.Bottom = -1; } $('#board-out').hidden = true; renderStyle(); break; }
       case 'find-kind': S.findKind = t.dataset.v; renderFinds(); break;
       case 'ward-cat': S.wardCat = t.dataset.v; renderWardrobe(); break;
       case 'ward-occ': S.wardOcc = t.dataset.v; renderWardrobe(); break;
-      case 'weather': S.weather = t.dataset.v; S.flip = {}; $('#board-out').hidden = true; renderStyle(); break;
+      case 'weather': { const keep = lockedIds(); S.weather = t.dataset.v; S.flip = flipFromIds(keep); $('#board-out').hidden = true; renderStyle(); break; }
+      case 'today-add': {
+        const f = flipState(), already = flipChosen().some(x => x.id === id);
+        for (const [row, cats] of FLIP_ROWS) {
+          if (!cats) continue;
+          const i = rowItems(cats).findIndex(x => x.id === id); if (i < 0) continue;
+          if (already) { f[row] = -1; S.locked.delete(row); break; }
+          f[row] = i; S.locked.add(row);
+          if (row === 'Dress') { if (!S.locked.has('Top')) f.Top = -1; if (!S.locked.has('Bottom')) f.Bottom = -1; }
+          if (row === 'Top' || row === 'Bottom') { if (!S.locked.has('Dress')) f.Dress = -1; }
+          break;
+        }
+        renderStyle(); renderWardrobe();
+        toast(already ? 'Taken out of today’s look' : 'Added and locked in today’s look. Open Style me to build around it.');
+        break;
+      }
+      case 'lock': { flipState(); const row = t.dataset.row; S.locked.has(row) ? S.locked.delete(row) : S.locked.add(row); renderStyle(); break; }
       case 'pick-group': S.pickGroup = t.dataset.v; S.pickAll = false; renderStyle(); break;
       case 'occ': {
         const p = find('wardrobe'); if (!p) break;
@@ -2433,7 +2530,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
   // ---------- boot ----------
   const startTab = (location.hash || '').slice(1) || store.get('edit.tab');
   if (startTab === 'active') { S.tab = 'wardrobe'; S.wardCat = 'Active'; }
-  else if (['today', 'wants', 'finds', 'skin', 'makeup', 'hair', 'wardrobe', 'style', 'inspo', 'amazon', 'bin'].includes(startTab)) S.tab = startTab;
+  else if (['today', 'wants', 'finds', 'skin', 'makeup', 'hair', 'wardrobe', 'style', 'mystyle', 'inspo', 'amazon', 'bin'].includes(startTab)) S.tab = startTab;
   render();
 
   (async () => {
