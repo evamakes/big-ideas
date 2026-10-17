@@ -103,6 +103,7 @@ select.plain { border: 1px solid var(--line); background: var(--surface); border
 .pill.accent { background: var(--accent-soft); color: var(--accent); }
 .pill.ex { background: transparent; border: 1px dashed var(--line); }
 .pill.pay { background: transparent; border: 1px solid var(--tan); color: var(--tan); font-weight: 500; padding: 0 7px; margin-left: 4px; }
+.gap { margin: 0; border-left: 2px solid var(--accent); padding-left: 10px; display: grid; gap: 2px; font-size: 0.92rem; }
 .ongoing { border-left: 2px solid var(--tan); padding-left: 10px; display: grid; gap: 3px; }
 .coll-h { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--tan); padding-bottom: 6px; margin-top: 8px; }
 .briefs { display: grid; gap: 16px; margin-bottom: 20px; }
@@ -958,7 +959,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     const nf = newFinds().sort((a, b) => String(b.foundOn || '').localeCompare(String(a.foundOn || ''))).slice(0, 4);
     $('#today-finds').innerHTML = nf.length ? nf.map(f => {
       const v = VERDICT[(f.review || f).verdict];
-      return `<li>${thumb(f)}<span class="what"><b>${esc(shortOf(f))}</b><span class="meta">${esc([f.brand, FIND_KINDS[f.kind], f.price != null ? fmt(f.price) : ''].filter(Boolean).join(' · '))}</span>${v ? `<span class="pills"><span class="pill ${v[0]}">${esc(v[1])}</span></span>` : ''}</span><span class="tools"><button class="btn small ghost" data-tab="finds">View</button>${canWrite ? `<button class="btn small ghost" data-act="find-snooze" data-id="${esc(f.id)}" title="Hide for a month">Not now</button><button class="btn small ghost danger" data-act="find-nope" data-id="${esc(f.id)}" title="Never show me this, or things like it">Never</button>` : ''}</span></li>`;
+      return `<li>${thumb(f)}<span class="what"><b>${esc(shortOf(f))}</b><span class="meta">${esc([f.brand, FIND_KINDS[f.kind], f.price != null ? fmt(f.price) : ''].filter(Boolean).join(' · '))}</span>${f.gap ? `<span class="meta" style="color:var(--ink)">For: ${esc(f.gap)}</span>` : ''}${v ? `<span class="pills"><span class="pill ${v[0]}">${esc(v[1])}</span></span>` : ''}</span><span class="tools"><button class="btn small ghost" data-tab="finds">View</button>${canWrite ? `<button class="btn small ghost" data-act="find-snooze" data-id="${esc(f.id)}" title="Hide for a month">Not now</button><button class="btn small ghost danger" data-act="find-nope" data-id="${esc(f.id)}" title="Never show me this, or things like it">Never</button>` : ''}</span></li>`;
     }).join('') : `<li style="display:block"><span class="meta">New skincare, makeup and other finds from the daily refresh will land here, with what real reviewers say.</span></li>`;
   }
 
@@ -1074,6 +1075,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
           </div>
         </div>
         ${payOf(f).length ? `<div class="pills">${payPills(f)}</div>` : ''}
+        ${f.gap ? `<p class="gap"><span class="eyebrow">The gap</span>${esc(f.gap)}</p>` : ''}
         ${f.fitNote ? `<p class="notes"><b>Why you:</b> ${esc(f.fitNote)}</p>` : ''}
         ${ongoingBlock(f, f.price != null ? Number(f.price) + Number(f.delivery || 0) : null)}
         ${swapTarget ? `<p class="notes"><b>Could replace:</b> ${esc(nameOf(swapTarget))}</p>` : ''}
@@ -1267,7 +1269,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       return `<li>${thumb(x)}
         <span class="what"><b>${esc(shortOf(x))}</b><span class="pills"><span class="pill ${SUPPLY[x.supply][0]}">${SUPPLY[x.supply][1]}</span><span class="meta">${esc([x.brand, x.shade, COL_LABEL[x._col]].filter(Boolean).join(' · '))}</span></span>
         ${total ? `<span class="meta">${fmt(total)}${best ? `${best.delivery == null ? '+' : ''} delivered from ${esc(best.shop)}` : ' (last known price)'}</span>` : '<span class="meta">Price not checked yet</span>'}</span>
-        <span class="tools" style="flex-direction:column;align-items:stretch">${url ? `<a class="btn small ghost" href="${esc(url)}" target="_blank" rel="noopener">Shop ↗</a>` : ''}${canWrite ? `<button class="btn small" data-act="supply" data-v="ok" data-col="${x._col}" data-id="${esc(x.id)}">Bought</button>` : ''}</span></li>`;
+        <span class="tools" style="flex-direction:column;align-items:stretch">${url ? `<a class="btn small ghost" href="${esc(url)}" target="_blank" rel="noopener">Shop ↗</a>` : ''}${canWrite ? `<button class="btn small" data-act="supply" data-v="ok" data-col="${x._col}" data-id="${esc(x.id)}">Bought</button><button class="btn small ghost" data-act="supply" data-v="dismiss" data-col="${x._col}" data-id="${esc(x.id)}" title="Take it off the list">Dismiss</button><button class="btn small ghost danger" data-act="no-rebuy" data-col="${x._col}" data-id="${esc(x.id)}" title="Moves it to Swapped out">Won't buy again</button>` : ''}</span></li>`;
     });
     const amz = live('basket').filter(b => !b.ordered);
     if (amz.length) rows.push(`<li><div class="thumb">a</div><span class="what"><b>Amazon list</b><span class="meta">${amz.length} ${amz.length === 1 ? 'thing' : 'things'} waiting for the next order</span></span><button class="btn small ghost" data-tab="amazon">Open</button></li>`);
@@ -1947,7 +1949,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       case 'want-cat': S.wantCat = t.dataset.v; renderWants(); break;
       case 'supply': {
         const v = t.dataset.v;
-        act(async () => { await db.collection(col).doc(id).update(v === 'ok' ? { supply: null, restockedAt: now() } : { supply: v, supplyAt: now() }); toast(v === 'ok' ? 'Marked as stocked' : v === 'low' ? 'Added to your restock list' : 'Added to your restock list as run out'); });
+        act(async () => { await db.collection(col).doc(id).update(v === 'ok' ? { supply: null, restockedAt: now() } : v === 'dismiss' ? { supply: null } : { supply: v, supplyAt: now() }); toast(v === 'dismiss' ? 'Taken off the restock list' : v === 'ok' ? 'Marked as stocked' : v === 'low' ? 'Added to your restock list' : 'Added to your restock list as run out'); });
         break;
       }
       case 'restock-prices': {
@@ -2143,6 +2145,14 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
           await quickAdd(m.item, false);
           const missing = x.analysis.missing.map((mm, j) => j === i ? { ...mm, added: true } : mm);
           await db.collection('inspo').doc(id).update({ analysis: { ...x.analysis, missing } });
+        });
+        break;
+      }
+      case 'no-rebuy': {
+        const x = find(col); if (!x) break;
+        act(async () => {
+          await db.collection(col).doc(x.id).update({ status: 'out', supply: null, noRebuy: true, swapReason: x.swapReason || 'Wouldn’t buy again', swappedAt: now() });
+          toast('Moved to Swapped out. Claude won’t suggest it again.', async () => { await db.collection(col).doc(x.id).update({ status: 'current', supply: x.supply, noRebuy: false }); });
         });
         break;
       }
