@@ -371,7 +371,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
 .frow .lab { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); font-weight: 600; }
 .frow .card-in { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 10px; align-items: center; background: var(--sunk); border-radius: 10px; padding: 6px; min-width: 0; }
 .frow .card-in .img { width: 96px; height: 110px; border-radius: 8px; overflow: hidden; background: var(--surface); display: grid; place-items: center; color: var(--muted); font-family: var(--f-display); font-style: italic; }
-.frow .card-in .img img { width: 100%; height: 100%; object-fit: contain; background: #fff; }
+.frow .card-in .img img { width: 100%; height: 100%; object-fit: cover; object-position: center top; background: #fff; }
 .frow .card-in .nm { font-size: 0.82rem; overflow-wrap: anywhere; display: grid; gap: 4px; }
 .frow.off .card-in { opacity: 0.45; }
 .frow .arrow { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); cursor: pointer; font-size: 1.1rem; color: var(--ink); }
@@ -1415,7 +1415,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     if (!S.flip) {
       const t = S.meta.today;
       if (t && t.date === dayKey() && (t.ids || []).length) { S.flip = flipFromIds(t.ids); S.locked = new Set((t.locked || []).filter(r => S.flip[r] != null)); }
-      else S.flip = { Top: 0, Bottom: 0, Shoes: 0 };
+      else S.flip = {};
     }
     if (!S.locked) S.locked = new Set();
     return S.flip;
@@ -2228,11 +2228,15 @@ details.dna[open] > summary { margin-bottom: 10px; }
       const btn = e.currentTarget; btn.disabled = true; btn.textContent = 'Styling…';
       try {
         const seen = new Set(), pool = FLIP_ROWS.filter(r => r[1] && r[0] !== 'Outer').flatMap(([row, cats]) => rowItems(cats).filter(p => !seen.has(p.id) && seen.add(p.id)).map(p => ({ id: p.id, row, name: shortOf(p), brand: p.brand, colour: p.colour, category: p.category, season: p.season, occasions: p.occasions })));
-        const recent = (S.recentLooks || []).slice(-6), keep = lockedIds();
-        const res = await sample.json(`You are a sharp personal stylist with real taste: think editorial, considered and wearable, never random. Australian English.${profileText()}\n\nMy pieces (JSON, grouped by row):\n${JSON.stringify(pool)}\n\n${keep.length ? `These locked pieces MUST stay in the outfit, build around them: ${JSON.stringify(keep)}. ` : ''}Build ONE cohesive outfit from these ids${S.occasion === 'gym' ? ' (a workout outfit: an activewear top and bottom, trainers, a layer only if cool)' : S.occasion === 'work' ? ' (for work: polished and safe)' : ''}: either a dress, or a top plus a bottom; always shoes; layers are flexible: a button-up shirt can be the top, or worn open as a light layer over a fitted plain top, and that light layer can go under a heavier jacket or coat when it's cold (up to two layers, lighter one first in the ids list); a bag or belt only if it genuinely adds something. Colours, proportions, textures and formality must work together, and it should look like my style DNA. Don't repeat these recent looks: ${JSON.stringify(recent)}. Reply with only JSON: {"ids":["id1","id2"],"why":"one sentence on why it works"}`, { cache: false });
+        if (!S.recentLooks) { try { S.recentLooks = JSON.parse(store.get('edit.recentLooks') || '[]'); } catch { S.recentLooks = []; } }
+        const recent = S.recentLooks.slice(-8), keep = lockedIds(), recentIds = new Set(recent.flat());
+        // Shuffle so the order never nudges the same picks, and start from a piece not worn in recent looks
+        for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+        const fresh = pool.filter(p => !recentIds.has(p.id) && ['Top', 'Bottom', 'Dress', 'Layer'].includes(p.row)), anchor = !keep.length && fresh.length ? fresh[Math.floor(Math.random() * fresh.length)] : null;
+        const res = await sample.json(`You are a sharp personal stylist with real taste: think editorial, considered and wearable, never random. Australian English.${profileText()}\n\nMy pieces (JSON, grouped by row):\n${JSON.stringify(pool)}\n\n${keep.length ? `These locked pieces MUST stay in the outfit, build around them: ${JSON.stringify(keep)}. ` : ''}Build ONE cohesive outfit from these ids${S.occasion === 'gym' ? ' (a workout outfit: an activewear top and bottom, trainers, a layer only if cool)' : S.occasion === 'work' ? ' (for work: polished and safe)' : ''}: either a dress, or a top plus a bottom; always shoes; layers are flexible: a button-up shirt can be the top, or worn open as a light layer over a fitted plain top, and that light layer can go under a heavier jacket or coat when it's cold (up to two layers, lighter one first in the ids list); a bag or belt only if it genuinely adds something. Colours, proportions, textures and formality must work together, and it should look like my style DNA. ${anchor ? `Start from this piece and build the look around it: ${JSON.stringify(anchor.id)} (${anchor.name}). ` : ''}Don't repeat these recent looks, and use mostly different pieces from them: ${JSON.stringify(recent)}. Reply with only JSON: {"ids":["id1","id2"],"why":"one sentence on why it works"}`, { cache: false });
         const ids = [...new Set([...(res?.ids || []).map(String), ...keep])], f = flipFromIds(ids);
         if (Object.keys(f).length >= 2) {
-          S.flip = f; S.recentLooks = [...(S.recentLooks || []), ids].slice(-10);
+          S.flip = f; S.recentLooks = [...(S.recentLooks || []), ids].slice(-10); store.set('edit.recentLooks', JSON.stringify(S.recentLooks));
           const out = $('#board-out'); out.hidden = false; out.className = 'ai-out'; out.innerHTML = `<span class="by">Claude</span>${esc(res.why || '')}`;
           renderStyle(); return;
         }
