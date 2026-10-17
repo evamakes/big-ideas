@@ -2,20 +2,20 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;0,6..96,600;1,6..96,400;1,6..96,500&family=Jost:wght@300;400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;0,6..96,600;1,6..96,400;1,6..96,500&family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,600;12..96,700&family=Syne:wght@700;800&display=swap">
 <style>
 /* Layout: a personal beauty-counter ledger. Masthead + tabs, then one working panel per area. Stacks are grouped by step/area like a shelf. */
 :root {
-  --bg: #FBF8F1;
+  --bg: #FBF8F3;
   --surface: #FFFFFF;
-  --sunk: #F3EEE3;
-  --ink: #1F1A16;
-  --muted: #6E655A;
-  --line: #E8E0D2;
-  --accent: #8E1F3F;
+  --sunk: #F5EFF1;
+  --ink: #1E1520;
+  --muted: #6F6370;
+  --line: #ECE3E6;
+  --accent: #8A1E6E;
   --accent-ink: #FFFFFF;
-  --accent-soft: #F7E7E2;
-  --tan: #A9814F;
+  --accent-soft: #F6E4F0;
+  --tan: #B48A2C;
   --good: #2C7650;
   --good-soft: #E1F1E7;
   --warn: #9A5B05;
@@ -23,21 +23,22 @@
   --bad: #B02A1E;
   --bad-soft: #FBE4E1;
   --f-display: "Bodoni Moda", "Didot", "Bodoni 72", Georgia, serif;
-  --f-body: "Jost", "Futura", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --f-mono: "Jost", "Futura", system-ui, sans-serif;
+  --f-body: "Bricolage Grotesque", "Futura", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "Bricolage Grotesque", "Futura", system-ui, sans-serif;
+  --f-name: "Syne", "Futura", system-ui, sans-serif;
   --r: 10px;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #17140F; --surface: #201C16; --sunk: #2A251E; --ink: #F5EFE4; --muted: #ADA393; --line: #3A332A;
-    --accent: #E68AA4; --accent-ink: #2A0E17; --accent-soft: #3A2023; --tan: #C9A27A;
+    --bg: #161117; --surface: #1F1820; --sunk: #2A2129; --ink: #F6EEF3; --muted: #B3A4B0; --line: #3A2F38;
+    --accent: #E58BCF; --accent-ink: #2B0B24; --accent-soft: #3B1C34; --tan: #DDB45C;
     --good: #74CF9C; --good-soft: #15301F; --warn: #EDB65A; --warn-soft: #33270F; --bad: #F2887D; --bad-soft: #3B1A17;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #17140F; --surface: #201C16; --sunk: #2A251E; --ink: #F5EFE4; --muted: #ADA393; --line: #3A332A;
-  --accent: #E68AA4; --accent-ink: #2A0E17; --accent-soft: #3A2023; --tan: #C9A27A;
+  --bg: #161117; --surface: #1F1820; --sunk: #2A2129; --ink: #F6EEF3; --muted: #B3A4B0; --line: #3A2F38;
+  --accent: #E58BCF; --accent-ink: #2B0B24; --accent-soft: #3B1C34; --tan: #DDB45C;
   --good: #74CF9C; --good-soft: #15301F; --warn: #EDB65A; --warn-soft: #33270F; --bad: #F2887D; --bad-soft: #3B1A17;
   color-scheme: dark;
 }
@@ -51,7 +52,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 a { color: var(--accent); }
 .meta { color: var(--muted); font-size: 0.84rem; }
-.eyebrow { text-transform: uppercase; letter-spacing: 0.2em; font-size: 0.7rem; font-weight: 500; color: var(--muted); margin: 0; }
+.eyebrow { text-transform: uppercase; letter-spacing: 0.2em; font-size: 0.7rem; font-weight: 600; color: var(--tan); margin: 0; }
 
 /* Masthead */
 .top { border-bottom: 3px double var(--tan); background: var(--bg); }
@@ -59,8 +60,9 @@ a { color: var(--accent); }
 .brand-sub .star { font-size: 0.6rem; vertical-align: 1px; }
 .tab { text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.76rem; font-weight: 500; }
 .top-in { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; padding-block: 28px 12px; }
-.brand { font-family: var(--f-display); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; font-variation-settings: "opsz" 96; font-size: clamp(2.6rem, 7vw, 4rem); line-height: 0.95; letter-spacing: -0.02em; }
-.brand em { color: var(--accent); font-weight: 600; }
+.brand { font-family: var(--f-name); font-weight: 800; text-transform: uppercase; font-size: clamp(2.4rem, 6.6vw, 3.7rem); line-height: 0.9; letter-spacing: -0.035em; }
+.brand em { color: var(--accent); font-style: normal; font-weight: 800; }
+.brand em::after { content: ""; display: inline-block; width: 0.16em; height: 0.16em; border-radius: 50%; background: var(--tan); margin-left: 0.06em; vertical-align: baseline; }
 .top-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .sync { margin: 0; font-size: 0.82rem; color: var(--muted); display: flex; align-items: center; gap: 6px; }
 .sync::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
@@ -69,7 +71,7 @@ a { color: var(--accent); }
 .tabs { display: flex; gap: 4px; flex-wrap: wrap; }
 .tab { border: 0; background: none; padding: 10px 14px 12px; cursor: pointer; color: var(--muted); font-weight: 600; border-bottom: 2px solid transparent; white-space: nowrap; }
 .tab:hover { color: var(--ink); }
-.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+.tab[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--tan); }
 .tab .n { font-family: var(--f-mono); font-size: 0.75rem; font-weight: 400; color: var(--muted); margin-left: 4px; }
 .menu-btn { display: none; }
 @media (max-width: 700px) {
@@ -107,7 +109,7 @@ main.wrap { padding-block: 24px 64px; display: grid; gap: 20px; }
 .tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .chips { display: flex; gap: 6px; flex-wrap: wrap; }
 .chip { border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 5px 12px; font-size: 0.84rem; cursor: pointer; color: var(--muted); }
-.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 select.plain { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 7px 12px; font-size: 0.86rem; }
 .check { display: inline-flex; gap: 6px; align-items: center; font-size: 0.86rem; color: var(--muted); }
 
@@ -123,7 +125,7 @@ select.plain { border: 1px solid var(--line); background: var(--surface); border
 .more-menu > summary { list-style: none; cursor: pointer; }
 .more-menu > summary::-webkit-details-marker { display: none; }
 .more-menu .menu { position: absolute; right: 0; top: calc(100% + 4px); z-index: 30; display: grid; gap: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 8px; box-shadow: 0 10px 24px rgba(0,0,0,.12); white-space: nowrap; }
-@media (max-width: 520px) { .more-menu .menu { right: auto; left: 0; } }
+@media (max-width: 520px) { .more-menu:not(.push) .menu { right: auto; left: 0; } }
 .restock-tools { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; max-width: 330px; }
 @media (max-width: 520px) { .restock-tools { grid-column: 1 / -1; justify-content: flex-start; max-width: none; } }
 .sizes { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px 18px; margin: 0; }
@@ -145,10 +147,11 @@ select.plain { border: 1px solid var(--line); background: var(--surface); border
 .refresh { display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px 18px; }
 .refresh p { margin: 0; }
 .clamp:not(.open) { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.clamp2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .clamp1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
 .refresh .when { font-family: var(--f-display); font-style: italic; font-size: 1.2rem; }
 .today { display: grid; grid-template-columns: 1.1fr 1fr; gap: 20px; align-items: start; }
-.block { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; display: grid; gap: 14px; min-width: 0; }
+.block { background: var(--surface); border: 1px solid var(--line); border-top: 2px solid color-mix(in srgb, var(--tan) 55%, transparent); border-radius: var(--r); padding: 18px; display: grid; gap: 14px; min-width: 0; }
 .block-h { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
 .alerts { list-style: none; margin: 0; padding: 0; display: grid; }
 .alerts li { display: grid; grid-template-columns: 40px 1fr auto; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
@@ -174,7 +177,8 @@ select.plain { border: 1px solid var(--line); background: var(--surface); border
 
 /* Cards */
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
-.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+.card:hover { border-color: color-mix(in srgb, var(--tan) 60%, var(--line)); }
+.card { background: var(--surface); border: 1px solid var(--line); transition: border-color .2s; border-radius: var(--r); padding: 16px; display: grid; gap: 12px; align-content: start; min-width: 0; }
 .card.faded { opacity: 0.62; }
 .card-top { display: grid; grid-template-columns: 72px 1fr; gap: 12px; align-items: start; }
 .thumb { width: 72px; height: 72px; border-radius: 8px; background: var(--sunk); object-fit: cover; display: grid; place-items: center; font-family: var(--f-display); font-style: italic; font-size: 1.5rem; color: var(--muted); overflow: hidden; flex: none; }
@@ -498,7 +502,6 @@ details.dna[open] > summary { margin-bottom: 10px; }
   <section class="panel" data-panel="finds" hidden>
     <div id="briefs" class="briefs"></div>
     <div class="toolbar">
-      <p class="meta" style="margin:0;max-width:60ch">New products the daily refresh found for you, with what Reddit and independent reviewers actually say. Add the good ones to your wants or swap them into your stack.</p>
       <div class="chips" id="finds-chips"></div>
     </div>
     <div class="cards" id="finds-list"></div>
@@ -507,7 +510,6 @@ details.dna[open] > summary { margin-bottom: 10px; }
   <!-- SKIN -->
   <section class="panel" data-panel="skin" hidden>
     <div class="toolbar">
-      <p class="meta" style="margin:0;max-width:60ch">Your skincare stack by step. Swap a product out and the old one moves to “Swapped out” with your reason, so you remember what didn’t work.</p>
       <div class="tools">
         <button class="btn needs-ai" id="skin-check">Review my stack</button>
         <button class="btn primary" data-add="routine">+ Add a product</button>
@@ -528,7 +530,6 @@ details.dna[open] > summary { margin-bottom: 10px; }
       <div class="ai-out" id="beauty-ask-out" hidden></div>
     </div>
     <div class="toolbar">
-      <p class="meta" style="margin:0">Your makeup bag by area, with shades.</p>
       <div class="tools"><button class="btn primary" data-add="beauty">+ Add a product</button></div>
     </div>
     <div id="makeup-stack" style="display:grid;gap:22px"></div>
@@ -563,7 +564,6 @@ details.dna[open] > summary { margin-bottom: 10px; }
   <!-- HAIR -->
   <section class="panel" data-panel="hair" hidden>
     <div class="toolbar">
-      <p class="meta" style="margin:0;max-width:60ch">Your hair care by step. Swap things out the same way as skincare.</p>
       <div class="tools"><button class="btn primary" data-add="hair">+ Add a product</button></div>
     </div>
     <div id="hair-stack" style="display:grid;gap:22px"></div>
@@ -592,7 +592,6 @@ details.dna[open] > summary { margin-bottom: 10px; }
     </section>
     <section class="block">
       <div class="block-h"><h2>Jump to a piece</h2><span class="meta" id="pick-count"></span></div>
-      <p class="meta" style="margin:0">Tap anything from your wardrobe or wants to put it on the board. Use the arrows on the board to flip through each row.</p>
       <div class="pick-tools"><div class="chips" id="pick-chips"></div><input type="search" id="pick-q" placeholder="Search your pieces" aria-label="Search your pieces"></div>
       <div class="picks" id="style-picks"></div>
       <button class="link" id="pick-more" hidden></button>
@@ -601,7 +600,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
       <div class="block-h"><h2>Fit check</h2></div>
       <label class="drop" id="fit-drop" for="fit-file">
         <span id="fit-prev"><div class="thumb">+</div></span>
-        <span><b>Add a photo of you in an outfit</b><br><span class="meta">Claude says what’s working, what to tweak with pieces you own, and what would finish it.</span></span>
+        <span><b>Add a photo of you in an outfit</b></span>
         <input type="file" id="fit-file" accept="image/*">
       </label>
       <div class="ask-row"><textarea id="fit-note" rows="2" placeholder="Optional: where you’re wearing it, or what feels off"></textarea><button class="btn primary" id="fit-go">Check it</button></div>
@@ -624,7 +623,6 @@ details.dna[open] > summary { margin-bottom: 10px; }
     </section>
     <section class="block" id="igaps-block">
       <div class="block-h"><h2>Your style vs your wardrobe</h2><span class="tools"><span class="meta" id="igaps-when"></span><button class="btn small ghost needs-ai" id="igaps-go">Find my gaps</button></span></div>
-      <p class="meta" style="margin:0">What your Pinterest looks keep coming back to that your wardrobe doesn't have yet.</p>
       <ul class="gaps" id="igaps-list"></ul>
     </section>
     <section class="block">
@@ -634,7 +632,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
         <label class="btn small" for="me-file">Add photos of me</label><input type="file" id="me-file" accept="image/*" multiple hidden>
         <button class="btn small primary needs-ai" id="me-read">Read my colouring and shape</button>
       </div>
-      <p class="meta" style="margin:0">A full-length photo in fitted clothes against a plain wall, plus a close-up in daylight with no makeup, gives the best read. Your measurements and frame answers in My sizes sharpen it. Only you can see these.</p>
+      <p class="meta" style="margin:0">Best with a full-length photo and a daylight close-up, plus My sizes. Private to you.</p>
       <div id="me-analysis"></div>
     </section>
     <section class="block" id="sizes-block">
@@ -674,7 +672,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     </form>
     <section class="block">
       <div class="block-h"><h2>Next order</h2><span class="tools"><span class="meta" id="amz-total"></span><button class="btn small primary" data-act="amz-ordered" id="amz-ordered">Mark ticked as ordered</button></span></div>
-      <p class="meta" style="margin:0">Tick what you’re ordering, open each one on Amazon, add them to your cart there, then mark them ordered here.</p>
+      
       <ul class="bin" id="amz-list"></ul>
     </section>
     <details class="shelf" id="amz-history"><summary>Ordered before</summary><ul class="bin" id="amz-done" style="margin-top:12px"></ul></details>
@@ -683,7 +681,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
   <!-- BIN -->
   <section class="panel" data-panel="bin" hidden>
     <div class="toolbar">
-      <div><h2>Recently deleted</h2><p class="meta" style="margin:4px 0 0">Restore anything you deleted by mistake, or remove it for good.</p></div>
+      <div><h2>Recently deleted</h2></div>
       <div class="tools"><button class="btn small ghost danger" data-act="empty-bin" id="empty-bin">Empty bin</button></div>
     </div>
     <ul class="bin" id="bin-list"></ul>
@@ -978,9 +976,10 @@ details.dna[open] > summary { margin-bottom: 10px; }
   const perLabel = { week: 'wk', month: 'mth', year: 'yr' };
   function ongoingBlock(x, upfront) {
     const list = ongoingOf(x);
-    if (!list.length) return x?.ongoing && Array.isArray(x.ongoing) && !x.ongoing.length ? '<p class="notes" style="margin:0"><span class="pill good">No ongoing costs</span></p>' : '';
+    if (!list.length) return '';
     const yr = yearlyOf(x);
-    return `<div class="ongoing"><p class="eyebrow">Ongoing costs</p>${list.map(o => `<p class="notes" style="margin:0"><b>${fmt(o.amount)}/${perLabel[o.per] || esc(o.per || 'yr')}</b> ${esc(o.what || '')}${o.required === false ? ' <span class="meta">(optional)</span>' : ''}${o.note ? ` · <span class="meta">${esc(o.note)}</span>` : ''}</p>`).join('')}<p class="meta" style="margin:0">About ${fmt(yr)} a year${upfront != null ? ` · first year all in about <b style="color:var(--ink)">${fmt(Number(upfront) + yr)}</b>` : ''}</p></div>`;
+    // One line until opened: the yearly cost is what matters at a glance
+    return `<details class="more ongoing"><summary>+ about ${fmt(yr)} a year to run${upfront != null ? ` · ${fmt(Number(upfront) + yr)} first year` : ''}</summary>${list.map(o => `<p class="notes" style="margin:0"><b>${fmt(o.amount)}/${perLabel[o.per] || esc(o.per || 'yr')}</b> ${esc(o.what || '')}${o.required === false ? ' <span class="meta">(optional)</span>' : ''}${o.note ? ` · <span class="meta">${esc(o.note)}</span>` : ''}</p>`).join('')}</details>`;
   }
   const payOf = (o) => (Array.isArray(o?.pay) ? o.pay : o?.pay ? [o.pay] : []).map(String).filter(Boolean);
   const payPills = (o) => payOf(o).map(v => `<span class="pill pay">${esc(v)}</span>`).join('');
@@ -1069,7 +1068,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     const r = S.meta.refresh || {};
     const canRefresh = !!(mcp && r.triggerId && canWrite);
     $('#refresh').innerHTML = `<div style="display:grid;gap:4px;min-width:0">
-        <p class="eyebrow">Daily refresh · prices, stock, reviews & new finds</p>
+        <p class="eyebrow">Daily refresh</p>
         <p class="when">${r.lastRun ? `Last checked ${esc(ago(r.lastRun))}` : 'Hasn’t run yet'}${r.requestedAt && (!r.lastRun || r.requestedAt > r.lastRun) ? ' · a refresh is running' : ''}</p>
         ${r.summary ? `<p class="meta ${S.refreshOpen ? '' : 'clamp1'}">${esc(r.summary)}</p>${r.summary.length > 60 ? `<button class="link" data-act="refresh-more" style="justify-self:start;font-size:0.82rem">${S.refreshOpen ? 'Less' : 'More'}</button>` : ''}` : `<p class="meta">Each morning Claude checks your wants across shops, reads Reddit and independent reviews, and adds new finds here.</p>`}
       </div>
@@ -1135,8 +1134,8 @@ details.dna[open] > summary { margin-bottom: 10px; }
         <div class="card-top">${thumb(w)}
           <div class="card-title">
             <h3>${esc(shortOf(w))}</h3>
-            <span class="meta">${esc([w.brand, fullOf(w), w.variant].filter(Boolean).join(' · '))}</span>
-            <div class="pills">${w.example ? '<span class="pill ex">Example</span>' : ''}${w.category ? `<span class="pill">${esc(w.category)}</span>` : ''}${w.priority === 'must' ? '<span class="pill accent">Must have</span>' : ''}${w.status === 'bought' ? '<span class="pill good">Bought</span>' : ''}</div>
+            <span class="meta clamp1">${esc([w.brand, fullOf(w), w.variant].filter(Boolean).join(' · '))}</span>
+            <div class="pills">${w.example ? '<span class="pill ex">Example</span>' : ''}${w.priority === 'must' ? '<span class="pill accent">Must have</span>' : ''}${w.status === 'bought' ? '<span class="pill good">Bought</span>' : ''}</div>
           </div>
         </div>
         <div class="price-row">
@@ -1150,23 +1149,25 @@ details.dna[open] > summary { margin-bottom: 10px; }
         ${ongoingBlock(w, p.best ? p.best._total : p.last)}
         ${variantsBlock('wishlist', w)}
         ${stackNoteBlock(w)}
-        ${p.offers.length || p.preloved.length ? `<details class="more"><summary>${p.offers.length + p.preloved.length} ${p.offers.length + p.preloved.length === 1 ? 'shop' : 'shops'} compared, delivered to ${esc(deliverTo())}${p.lastChecked ? ` · ${esc(ago(p.lastChecked))}` : ''}</summary><ul class="offers" style="gap:8px">${p.offers.map(o => `<li style="grid-template-columns:1fr auto">
+        ${p.offers.length || p.preloved.length ? `<details class="more"><summary title="Delivered to ${esc(deliverTo())}">${p.offers.length + p.preloved.length} ${p.offers.length + p.preloved.length === 1 ? 'shop' : 'shops'}${p.lastChecked ? ` · ${esc(ago(p.lastChecked))}` : ''}</summary><ul class="offers" style="gap:8px">${p.offers.map(o => `<li style="grid-template-columns:1fr auto">
             <span style="min-width:0">${safeUrl(o.url) ? `<a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(o.shop)}</a>` : esc(o.shop)}${payPills(o)}<br><span class="meta">${fmt(o.price)} + ${o.delivery == null ? 'delivery not known' : Number(o.delivery) ? fmt(o.delivery) + ' delivery' : 'free delivery'}${Number(o.membership) ? ` + ${fmt(o.membership)} membership` : ''}${o.stock && o.stock !== 'unknown' ? ` · ${esc(STOCK[o.stock] || '')}` : ''}${o.note ? ` · ${esc(o.note)}` : ''}</span></span>
             <span class="mono" style="text-align:right">${fmt(o._total)}${o.delivery == null ? '+' : ''}</span></li>`).join('')}</ul>${p.preloved.length ? `<p class="eyebrow" style="margin:10px 0 4px">Pre-loved & refurbished</p><ul class="offers">${p.preloved.map(o => `<li style="grid-template-columns:1fr auto"><span style="min-width:0">${safeUrl(o.url) ? `<a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(o.shop)}</a>` : esc(o.shop)} · ${esc(CONDITION[o.condition] || o.condition)}${o.similar ? ' · similar' : ''}${payPills(o)}<br><span class="meta">${fmt(o.price)} + ${o.delivery == null ? 'delivery not known' : Number(o.delivery) ? fmt(o.delivery) + ' delivery' : 'free delivery'}${o.note ? ` · ${esc(o.note)}` : ''}</span></span><span class="mono" style="text-align:right">${fmt(o._total)}${o.delivery == null ? '+' : ''}</span></li>`).join('')}</ul>` : ''}${p.others.length ? `<p class="eyebrow" style="margin:10px 0 4px">Other colours</p><ul class="offers">${p.others.map(o => `<li style="grid-template-columns:1fr auto"><span style="min-width:0">${safeUrl(o.url) ? `<a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(o.shop)}</a>` : esc(o.shop)} · ${esc(o.colour)}<br><span class="meta">${fmt(o.price)} + ${o.delivery == null ? 'delivery not known' : Number(o.delivery) ? fmt(o.delivery) + ' delivery' : 'free delivery'}${o.note ? ` · ${esc(o.note)}` : ''}</span></span><span class="mono" style="text-align:right">${fmt(o._total)}${o.delivery == null ? '+' : ''}</span></li>`).join('')}</ul>` : ''}</details>` : ''}
-        ${w.notes ? `<p class="notes">${esc(w.notes)}</p>` : ''}
+        ${w.notes ? `<p class="notes clamp2" title="${esc(w.notes)}">${esc(w.notes)}</p>` : ''}
         ${reviewBlock(w.reviews)}
         ${altsBlock('wishlist', w)}
         ${aiBox(w.id)}
         <div class="actions">
           ${safeUrl(w.url) ? `<a class="btn small" href="${esc(w.url)}" target="_blank" rel="noopener">Shop ↗</a>` : ''}
+          ${canWrite ? `<button class="btn small ghost" data-act="bought" data-id="${esc(w.id)}">${w.status === 'bought' ? 'Undo' : 'I have it'}</button>` : ''}
+          <details class="more-menu push"><summary class="btn small ghost" aria-label="More options">⋯</summary><div class="menu">
           ${canWrite && w.status !== 'bought' ? `<button class="btn small ghost" data-act="logprice" data-id="${esc(w.id)}">Log price</button>` : ''}
           ${sample && w.category === 'Clothes' && live('wardrobe').length ? `<button class="btn small ghost" data-act="ai-pairs" data-id="${esc(w.id)}">Goes with?</button>` : ''}
           ${sample && (w.variants || []).length ? `<button class="btn small ghost" data-act="ai-compare" data-col="wishlist" data-id="${esc(w.id)}">Compare with what I own</button>` : ''}
           ${canResearch() && w.altResearch !== 'queued' ? `<button class="btn small ghost" data-act="alts" data-col="wishlist" data-id="${esc(w.id)}">Similar or cheaper</button>` : ''}
           ${canResearch() && w.research !== 'queued' && w.research !== 'done' ? `<button class="btn small ghost" data-act="research" data-col="wishlist" data-id="${esc(w.id)}">Research it</button>` : ''}
-          ${canWrite ? `<button class="btn small ghost push" data-act="bought" data-id="${esc(w.id)}">${w.status === 'bought' ? 'Undo' : 'I have it'}</button>` : ''}
           ${canWrite ? `<button class="btn small ghost" data-act="edit" data-col="wishlist" data-id="${esc(w.id)}">Edit</button>` : ''}
           ${delBtn('wishlist', w.id)}
+          </div></details>
         </div>
       </article>`;
   }
@@ -2348,6 +2349,8 @@ details.dna[open] > summary { margin-bottom: 10px; }
   $('#menu-btn').addEventListener('click', () => setMenu(!$('#tabs-wrap').classList.contains('open')));
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setMenu(false); });
   document.addEventListener('click', (e) => { if (!e.target.closest('#tabs-wrap')) setMenu(false); });
+  // Close any open ⋯ menu when tapping elsewhere
+  document.addEventListener('click', (e) => { $$('details.more-menu[open]').forEach(d => { if (!d.contains(e.target)) d.open = false; }); });
   function setTab(tab) { setMenu(false); S.tab = tab; store.set('edit.tab', tab); history.replaceState(null, '', '#' + tab); render(); window.scrollTo({ top: 0 }); }
   document.addEventListener('toggle', (e) => { if (e.target.matches?.('details.bundles')) S.bundlesOpen = e.target.open; }, true);
   document.addEventListener('toggle', (e) => { const d = e.target; if (d.dataset?.var) { S.openVar = S.openVar || {}; S.openVar[d.dataset.var] = d.open; } }, true);
