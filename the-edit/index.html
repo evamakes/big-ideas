@@ -189,7 +189,11 @@ textarea { resize: vertical; min-height: 44px; }
 
 /* Wardrobe */
 .closet { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
-.piece { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; display: grid; cursor: pointer; text-align: left; padding: 0; min-width: 0; }
+.piece { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; display: grid; grid-template-rows: 1fr auto; min-width: 0; }
+.piece-open { border: 0; background: none; padding: 0; display: grid; align-content: start; cursor: pointer; text-align: left; color: inherit; font: inherit; min-width: 0; }
+.occ { display: flex; gap: 4px; padding: 0 12px 12px; flex-wrap: wrap; }
+.occ-t { border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: 999px; padding: 1px 8px; font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; }
+.occ-t[aria-pressed="true"] { background: var(--tan); border-color: var(--tan); color: #fff; }
 .piece .img { aspect-ratio: 4 / 5; max-width: 100%; background: var(--sunk); display: grid; place-items: center; overflow: hidden; }
 .piece .img img { width: 100%; height: 100%; object-fit: cover; }
 .piece .img span { font-family: var(--f-display); font-style: italic; font-size: 1.1rem; color: var(--muted); padding: 10px; text-align: center; }
@@ -465,7 +469,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     <div class="outfits" id="outfits"></div>
     <div class="section-h"><h2>In my wardrobe</h2></div>
     <div class="toolbar">
-      <div class="chips" id="wardrobe-chips"></div>
+      <div style="display:grid;gap:8px"><div class="chips" id="wardrobe-chips"></div><div class="chips" id="wardrobe-occ"></div></div>
       <div class="tools"><label class="btn" for="bulk-wardrobe">Add photos</label><input type="file" id="bulk-wardrobe" accept="image/*" multiple hidden><button class="btn primary" data-add="wardrobe" id="ward-add">+ Add a piece</button></div>
     </div>
     <div class="closet" id="wardrobe-list"></div>
@@ -618,6 +622,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
   const SKIN_STEPS = ['Cleanser', 'Toner', 'Exfoliant', 'Serum', 'Treatment', 'Eye cream', 'Moisturiser', 'Oil', 'SPF', 'Mask', 'Other'];
   const WHEN = { am: 'AM', pm: 'PM', both: 'AM & PM' };
   const FREQ = { daily: 'Daily', alt: 'Every other day', few: '2–3× a week', weekly: 'Weekly' };
+  const OCCASIONS = { work: 'Work', casual: 'Casual', fun: 'Fun' };
   const WARD_CATS = ['Top', 'Knit', 'Shirt', 'Bottoms', 'Jeans', 'Skirt', 'Dress', 'Outerwear', 'Shoes', 'Bag', 'Accessory', 'Active'];
   const FIND_KINDS = { skincare: 'Skincare', makeup: 'Makeup', clothes: 'Clothes', office: 'Office', other: 'Other' };
   const VERDICT = { loved: ['good', 'Reviewers love it'], mixed: ['warn', 'Mixed reviews'], skip: ['bad', 'Probably skip'] };
@@ -681,6 +686,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       { k: 'label', label: 'Short name', type: 'text', full: true, ph: 'e.g. Blue gym leggings', hint: 'What shows on the card. The full product name and brand sit underneath.' },
       { k: 'category', label: 'Category', type: 'select', options: opts(WARD_CATS) },
       { k: 'colour', label: 'Colour', type: 'text' },
+      { k: 'occasions', label: 'Occasions', type: 'tags', full: true, ph: 'work, casual, fun' },
       { k: 'vibes', label: 'Vibes', type: 'tags', full: true, ph: 'comma separated, e.g. office, weekend, date night', hint: 'Used when mixing outfits.' },
       { k: 'season', label: 'Season', type: 'select', options: opts({ all: 'All year', warm: 'Warm weather', cool: 'Cool weather' }) },
       PHOTO,
@@ -715,7 +721,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
   const S = {
     wishlist: [], finds: [], briefs: [], routine: [], beauty: [], hair: [], wardrobe: [], outfits: [], inspo: [], basket: [], meta: {}, canImages: false, inspoBusy: {},
     status: 'connecting',
-    tab: 'today', wantCat: 'All', wantSort: 'alert', showBought: false, findKind: 'All', wardCat: 'All',
+    tab: 'today', wardOcc: 'All', wantCat: 'All', wantSort: 'alert', showBought: false, findKind: 'All', wardCat: 'All',
     cardAi: {}, suggestions: [], gaps: [],
   };
   let db = null, assets = null, sample = null, mcp = null, canWrite = true;
@@ -1168,11 +1174,12 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
   }
   function pieceBtn(p) {
     const src = photoSrc(p);
-    return `<button class="piece" data-act="${canWrite ? 'edit' : ''}" data-col="wardrobe" data-id="${esc(p.id)}">
+    const occ = Array.isArray(p.occasions) ? p.occasions : [];
+    return `<div class="piece"><button class="piece-open" data-act="${canWrite ? 'edit' : ''}" data-col="wardrobe" data-id="${esc(p.id)}">
         <div class="img">${src ? `<img src="${esc(src)}" alt="" loading="lazy">` : `<span>${esc(shortOf(p))}</span>`}</div>
         <div class="cap"><b>${esc(shortOf(p))}</b><span class="meta">${esc([p.brand, fullOf(p), p.colour].filter(Boolean).join(' · '))}</span>
         ${(p.vibes || []).length || p.example || p.research ? `<div class="pills">${p.example ? '<span class="pill ex">Example</span>' : ''}${researchPill(p)}${(p.vibes || []).slice(0, 3).map(v => `<span class="pill">${esc(v)}</span>`).join('')}</div>` : ''}</div>
-      </button>`;
+      </button>${p.category === 'Active' ? '' : `<div class="occ">${Object.entries(OCCASIONS).map(([k, l]) => `<button class="occ-t" data-act="${canWrite ? 'occ' : ''}" data-id="${esc(p.id)}" data-v="${k}" aria-pressed="${occ.includes(k)}">${l}</button>`).join('')}</div>`}</div>`;
   }
   function renderHair() {
     const known = new Set(HAIR_STEPS);
@@ -1221,7 +1228,11 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
   function renderWardrobe() {
     const all = live('wardrobe');
     chipRow($('#wardrobe-chips'), WARD_CATS.filter(c => all.some(w => w.category === c)).map(c => [c, c]), S.wardCat, 'ward-cat');
-    const list = all.filter(w => S.wardCat === 'All' || w.category === S.wardCat)
+    const occOn = S.wardCat !== 'Active';
+    const untagged = all.filter(p => p.category !== 'Active' && !(p.occasions || []).length).length;
+    $('#wardrobe-occ').innerHTML = occOn ? [['All', 'Any occasion'], ...Object.entries(OCCASIONS).map(([k, l]) => [k, `${l} ${all.filter(p => (p.occasions || []).includes(k)).length}`])].map(([v, l]) => `<button class="chip" aria-pressed="${v === S.wardOcc}" data-act="ward-occ" data-v="${esc(v)}">${esc(l)}</button>`).join('')
+      + (untagged && sample && canWrite ? `<button class="btn small ghost" data-act="occ-auto"${S.occBusy ? ' disabled' : ''}>${S.occBusy ? 'Tagging…' : `Tag ${untagged} for me`}</button>` : '') : '';
+    const list = all.filter(w => S.wardCat === 'All' || w.category === S.wardCat).filter(w => !occOn || S.wardOcc === 'All' || (w.occasions || []).includes(S.wardOcc))
       .sort((a, b) => WARD_CATS.indexOf(a.category) - WARD_CATS.indexOf(b.category) || String(a.name).localeCompare(String(b.name)));
     $('#wardrobe-list').innerHTML = list.length ? list.map(pieceBtn).join('') : emptyState('wardrobe', 'Add what’s in your wardrobe (a photo helps). Then Claude can mix outfits from your own pieces and spot missing basics.');
     $('#ward-add').dataset.preset = S.wardCat === 'Active' ? 'Active' : '';
@@ -1501,7 +1512,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
   };
   const slimMakeup = (b) => ({ product: b.name, brand: b.brand, type: b.type, shade: b.shade, finish: b.finish, status: STACK[statusOf(b)], rating: b.rating, feedback: b.feedback, swapReason: b.swapReason });
   const slimSkin = (r) => ({ product: r.product, brand: r.brand, step: r.step, when: WHEN[r.when], freq: FREQ[r.freq], actives: r.actives, status: STACK[statusOf(r)], rating: r.rating, feedback: r.feedback, swapReason: r.swapReason });
-  const slimPiece = (p) => ({ id: p.id, name: p.name, category: p.category, colour: p.colour, vibes: p.vibes, season: p.season, notes: p.notes });
+  const slimPiece = (p) => ({ id: p.id, name: p.name, category: p.category, colour: p.colour, vibes: p.vibes, occasions: p.occasions, season: p.season, notes: p.notes });
 
   async function cardAsk(id, prompt, onDone) {
     if (!sample) return;
@@ -1556,6 +1567,20 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       else renderWardrobe();
     } catch (err) { out.innerHTML = `<div class="ai-out err" style="grid-column:1/-1">${esc(aiErr(err))}</div>`; }
     finally { btn.disabled = false; btn.textContent = 'Style me'; }
+  }
+  async function autoTagOccasions() {
+    const pieces = live('wardrobe').filter(p => p.category !== 'Active' && !(p.occasions || []).length);
+    if (!pieces.length || !sample) return;
+    S.occBusy = true; renderWardrobe();
+    try {
+      const res = await sample.json(`Tag each clothing piece with the occasions it suits. Australian English.${profileText()}\n\nPieces (JSON):\n${JSON.stringify(pieces.map(slimPiece))}\n\nOccasions: "work" (office-appropriate, smart casual), "casual" (everyday, weekend, errands), "fun" (going out, drinks, dates, events). A piece can have more than one. Reply with only JSON: {"<id>": ["work","casual"], ...}`, { cache: false });
+      for (const p of pieces) {
+        const tags = (Array.isArray(res?.[p.id]) ? res[p.id] : []).map(String).filter(t => OCCASIONS[t]);
+        if (tags.length) await db.collection('wardrobe').doc(p.id).update({ occasions: tags });
+      }
+      toast('Tagged. Tap a tag on any piece to change it.');
+    } catch (err) { toast(aiErr(err)); }
+    S.occBusy = false; renderWardrobe();
   }
   // Swap one suggested outfit for a fresh one, steering away from everything already on screen or saved
   async function rollOutfit(i) {
@@ -1955,6 +1980,14 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       case 'flip-toggle': { const f = flipState(), row = t.dataset.row; f[row] = f[row] != null && f[row] >= 0 ? -1 : 0; if (row === 'Dress' && f.Dress === 0) { f.Top = -1; f.Bottom = -1; } $('#board-out').hidden = true; renderStyle(); break; }
       case 'find-kind': S.findKind = t.dataset.v; renderFinds(); break;
       case 'ward-cat': S.wardCat = t.dataset.v; renderWardrobe(); break;
+      case 'ward-occ': S.wardOcc = t.dataset.v; renderWardrobe(); break;
+      case 'occ': {
+        const p = find('wardrobe'); if (!p) break;
+        const cur = Array.isArray(p.occasions) ? p.occasions : [], v = t.dataset.v;
+        act(() => db.collection('wardrobe').doc(p.id).update({ occasions: cur.includes(v) ? cur.filter(x => x !== v) : [...cur, v] }));
+        break;
+      }
+      case 'occ-auto': autoTagOccasions(); break;
       case 'profile': openForm('profile', null); break;
       case 'refresh-now': refreshNow(t); break;
       case 'edit': { const it = find(col); if (it) openForm(col, it); break; }
