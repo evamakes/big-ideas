@@ -349,7 +349,6 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       <button class="tab" role="tab" data-tab="makeup">Makeup<span class="n" id="n-makeup"></span></button>
       <button class="tab" role="tab" data-tab="hair">Hair<span class="n" id="n-hair"></span></button>
       <button class="tab" role="tab" data-tab="wardrobe">Wardrobe<span class="n" id="n-wardrobe"></span></button>
-      <button class="tab" role="tab" data-tab="active">Active<span class="n" id="n-active"></span></button>
       <button class="tab" role="tab" data-tab="style">Style me</button>
       <button class="tab" role="tab" data-tab="inspo">Inspo<span class="n" id="n-inspo"></span></button>
       <button class="tab" role="tab" data-tab="amazon">Amazon list<span class="n" id="n-amazon"></span></button>
@@ -467,9 +466,11 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     <div class="section-h"><h2>In my wardrobe</h2></div>
     <div class="toolbar">
       <div class="chips" id="wardrobe-chips"></div>
-      <div class="tools"><label class="btn" for="bulk-wardrobe">Add photos</label><input type="file" id="bulk-wardrobe" accept="image/*" multiple hidden><button class="btn primary" data-add="wardrobe">+ Add a piece</button></div>
+      <div class="tools"><label class="btn" for="bulk-wardrobe">Add photos</label><input type="file" id="bulk-wardrobe" accept="image/*" multiple hidden><button class="btn primary" data-add="wardrobe" id="ward-add">+ Add a piece</button></div>
     </div>
     <div class="closet" id="wardrobe-list"></div>
+    <div class="section-h" id="ward-wants-h" hidden><h2>Activewear I want</h2></div>
+    <div class="cards" id="ward-wants"></div>
   </section>
 
   <!-- HAIR -->
@@ -481,19 +482,6 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     <div id="hair-stack" style="display:grid;gap:22px"></div>
   </section>
 
-  <!-- ACTIVE -->
-  <section class="panel" data-panel="active" hidden>
-    <div class="toolbar">
-      <p class="meta" style="margin:0;max-width:60ch">Activewear you own and want.</p>
-      <div class="tools">
-        <label class="btn" for="bulk-active">Add photos</label><input type="file" id="bulk-active" accept="image/*" multiple hidden>
-        <button class="btn primary" data-add="wardrobe" data-preset="Active">+ Add a piece</button>
-      </div>
-    </div>
-    <div class="closet" id="active-list"></div>
-    <div class="section-h" id="active-wants-h"><h2>Activewear I want</h2></div>
-    <div class="cards" id="active-wants"></div>
-  </section>
 
   <!-- STYLE ME -->
   <section class="panel" data-panel="style" hidden>
@@ -907,14 +895,13 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     $('#n-finds').textContent = (newFinds().length + live('briefs').length) || '';
     $('#n-skin').textContent = stackCount('routine') || '';
     $('#n-makeup').textContent = stackCount('beauty') || '';
-    $('#n-wardrobe').textContent = live('wardrobe').filter(p => p.category !== 'Active').length || '';
+    $('#n-wardrobe').textContent = live('wardrobe').length || '';
     $('#n-inspo').textContent = live('inspo').length || '';
     $('#n-amazon').textContent = live('basket').filter(b => !b.ordered).length || '';
     $('#n-hair').textContent = stackCount('hair') || '';
-    $('#n-active').textContent = live('wardrobe').filter(p => p.category === 'Active').length || '';
     $$('.needs-img').forEach(el => el.hidden = !S.canImages);
     $('#quick').hidden = !db || !canWrite || ['bin', 'inspo', 'style', 'amazon'].includes(S.tab);
-    if (!S.quickTouched) { $('#quick-own').value = ['skin', 'makeup', 'hair', 'wardrobe', 'active'].includes(S.tab) ? 'own' : 'want'; setQuickFile(quickFile); }
+    if (!S.quickTouched) { $('#quick-own').value = ['skin', 'makeup', 'hair', 'wardrobe'].includes(S.tab) ? 'own' : 'want'; setQuickFile(quickFile); }
     $('#quick-own option[value="try"]').hidden = !['skin', 'makeup', 'hair', 'wants', 'today', 'finds'].includes(S.tab);
     const nb = binItems().length;
     $('#bin-btn').textContent = nb ? `Bin (${nb})` : 'Bin';
@@ -1191,13 +1178,6 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     const known = new Set(HAIR_STEPS);
     renderStack('hair', $('#hair-stack'), HAIR_STEPS.map(s => [s, [s]]), x => known.has(x.step) ? x.step : 'Other');
   }
-  function renderActive() {
-    const mine = live('wardrobe').filter(p => p.category === 'Active');
-    $('#active-list').innerHTML = mine.length ? mine.map(pieceBtn).join('') : emptyState('wardrobe', 'Add your activewear, or tap Add photos to snap a few pieces at once.');
-    const wants = live('wishlist').filter(w => w.category === 'Activewear' && w.status !== 'bought');
-    $('#active-wants-h').hidden = !wants.length;
-    $('#active-wants').innerHTML = wants.map(wantCard).join('');
-  }
   const FLIP_ROWS = [['Top', ['Top', 'Knit', 'Shirt']], ['Layer', ['Outerwear']], ['Bottom', ['Bottoms', 'Jeans', 'Skirt']], ['Dress', ['Dress']], ['Shoes', ['Shoes']], ['Bag', ['Bag', 'Accessory']], ['Active', ['Active']], ['Want', null]];
   const rowItems = (cats) => cats ? live('wardrobe').filter(p => cats.includes(p.category)).map(p => ({ ...p, _col: 'wardrobe' })) : live('wishlist').filter(w => ['Clothes', 'Activewear'].includes(w.category) && w.status !== 'bought').map(w => ({ ...w, _col: 'wishlist' }));
   function flipState() { if (!S.flip) { S.flip = { Top: 0, Bottom: 0, Shoes: 0 }; } return S.flip; }
@@ -1239,11 +1219,15 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     $('#board-ask').disabled = !chosen.length;
   }
   function renderWardrobe() {
-    const all = live('wardrobe').filter(p => p.category !== 'Active');
+    const all = live('wardrobe');
     chipRow($('#wardrobe-chips'), WARD_CATS.filter(c => all.some(w => w.category === c)).map(c => [c, c]), S.wardCat, 'ward-cat');
     const list = all.filter(w => S.wardCat === 'All' || w.category === S.wardCat)
       .sort((a, b) => WARD_CATS.indexOf(a.category) - WARD_CATS.indexOf(b.category) || String(a.name).localeCompare(String(b.name)));
     $('#wardrobe-list').innerHTML = list.length ? list.map(pieceBtn).join('') : emptyState('wardrobe', 'Add what’s in your wardrobe (a photo helps). Then Claude can mix outfits from your own pieces and spot missing basics.');
+    $('#ward-add').dataset.preset = S.wardCat === 'Active' ? 'Active' : '';
+    const activeWants = S.wardCat === 'Active' ? live('wishlist').filter(w => w.category === 'Activewear' && w.status !== 'bought') : [];
+    $('#ward-wants-h').hidden = !activeWants.length;
+    $('#ward-wants').innerHTML = activeWants.map(wantCard).join('');
     const saved = live('outfits').sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
     $('#saved-h').hidden = !saved.length;
     $('#outfits').innerHTML = saved.map((o, i) => outfitCard(o, i, true)).join('');
@@ -1358,7 +1342,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
 
   function render() {
     renderChrome();
-    renderToday(); renderWants(); renderFinds(); renderSkin(); renderMakeup(); renderHair(); renderWardrobe(); renderActive(); renderStyle(); renderInspo(); renderShopList(); renderAmazon(); renderBin();
+    renderToday(); renderWants(); renderFinds(); renderSkin(); renderMakeup(); renderHair(); renderWardrobe(); renderStyle(); renderInspo(); renderShopList(); renderAmazon(); renderBin();
   }
 
   // ---------- writes ----------
@@ -1650,7 +1634,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       const col = ({ skin: 'routine', makeup: 'beauty', hair: 'hair' })[S.tab] && mode !== 'want' ? ({ skin: 'routine', makeup: 'beauty', hair: 'hair' })[S.tab] : mode === 'own' && ['wardrobe', 'active'].includes(S.tab) ? 'wardrobe' : 'wishlist';
       const base = { source: link, label: `From ${sourceName(link)}`, quickPhrase: link, research: 'queued', createdAt: now(), variants: [] };
       const doc = col === 'wishlist' ? { ...base, name: `Something from ${sourceName(link)}`, brand: '', category: 'Other', price: null, priceHistory: [], stock: 'unknown', priority: mode === 'try' ? 'maybe' : 'want', status: 'want' }
-        : col === 'wardrobe' ? { ...base, name: `Something from ${sourceName(link)}`, category: S.tab === 'active' ? 'Active' : 'Top', vibes: [], season: 'all' }
+        : col === 'wardrobe' ? { ...base, name: `Something from ${sourceName(link)}`, category: (S.tab === 'wardrobe' && S.wardCat === 'Active') ? 'Active' : 'Top', vibes: [], season: 'all' }
         : col === 'beauty' ? { ...base, name: `Something from ${sourceName(link)}`, brand: '', type: 'Other', status: mode === 'try' ? 'try' : 'current' }
         : { ...base, product: `Something from ${sourceName(link)}`, brand: '', step: 'Other', status: mode === 'try' ? 'try' : 'current', ...(col === 'routine' ? { when: 'both' } : {}), freq: 'daily' };
       const ref = await db.collection(col).add(doc);
@@ -1684,7 +1668,8 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     const ref = await db.collection(col).add(doc);
     const queued = await fireResearch(col, ref.id, (phrase || name) + (photoId ? ' (identify from the attached photo: the userPhotoId asset)' : ''));
     quickStatus('');
-    const where = { beauty: 'makeup', routine: 'skin', hair: 'hair', wardrobe: doc.category === 'Active' ? 'active' : 'wardrobe', wishlist: 'wants' }[col];
+    const where = { beauty: 'makeup', routine: 'skin', hair: 'hair', wardrobe: 'wardrobe', wishlist: 'wants' }[col];
+    if (col === 'wardrobe') S.wardCat = doc.category === 'Active' ? 'Active' : S.wardCat;
     toast(queued ? `Added to ${COL_LABEL[col]}. Claude is checking shops, shades and reviews.` : `Added to ${COL_LABEL[col]}${variants.length ? ` with ${variants.length} ${col === 'beauty' || kind === 'makeup' ? 'shades' : 'colours'}` : ''}.`);
     if (S.tab !== where) setTab(where);
     return ref.id;
@@ -1708,7 +1693,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
   }
   $('#quick-photo').addEventListener('change', (e) => {
     const fs = [...e.target.files];
-    if (fs.length > 1 && $('#quick-own').value !== 'brief') { bulkAdd(fs, $('#quick-own').value === 'own' ? (S.tab === 'active' ? 'active' : 'wardrobe') : 'wants'); e.target.value = ''; return; }
+    if (fs.length > 1 && $('#quick-own').value !== 'brief') { bulkAdd(fs, $('#quick-own').value === 'own' ? ((S.tab === 'wardrobe' && S.wardCat === 'Active') ? 'active' : 'wardrobe') : 'wants'); e.target.value = ''; return; }
     setQuickFile(fs[0]);
   });
   $('#quick-in').addEventListener('paste', (e) => { const f = [...(e.clipboardData?.files || [])].find(f => /^image\//.test(f.type)); if (f) { e.preventDefault(); setQuickFile(f); } });
@@ -1757,8 +1742,8 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     }
     toast(`Added ${ids.length} ${ids.length === 1 ? 'item' : 'items'}. Claude is filling in the details.`);
   }
-  for (const [inp, target] of [['#bulk-wardrobe', 'wardrobe'], ['#bulk-active', 'active']]) {
-    $(inp).addEventListener('change', (e) => { const fs = [...e.target.files]; e.target.value = ''; bulkAdd(fs, target); });
+  for (const [inp, target] of [['#bulk-wardrobe', 'wardrobe']]) {
+    $(inp).addEventListener('change', (e) => { const fs = [...e.target.files]; e.target.value = ''; bulkAdd(fs, S.wardCat === 'Active' ? 'active' : target); });
   }
 
   // ---------- style me ----------
@@ -2190,7 +2175,8 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
 
   // ---------- boot ----------
   const startTab = (location.hash || '').slice(1) || store.get('edit.tab');
-  if (['today', 'wants', 'finds', 'skin', 'makeup', 'hair', 'wardrobe', 'active', 'style', 'inspo', 'amazon', 'bin'].includes(startTab)) S.tab = startTab;
+  if (startTab === 'active') { S.tab = 'wardrobe'; S.wardCat = 'Active'; }
+  else if (['today', 'wants', 'finds', 'skin', 'makeup', 'hair', 'wardrobe', 'style', 'inspo', 'amazon', 'bin'].includes(startTab)) S.tab = startTab;
   render();
 
   (async () => {
