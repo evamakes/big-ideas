@@ -2,7 +2,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,500,100,1;1,9..144,500,100,1;1,9..144,700,100,1&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=DM+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;0,6..96,600;1,6..96,400;1,6..96,500&family=Jost:wght@300;400;500;600&display=swap">
 <style>
 /* Layout: a personal beauty-counter ledger. Masthead + tabs, then one working panel per area. Stacks are grouped by step/area like a shelf. */
 :root {
@@ -15,28 +15,29 @@
   --accent: #8E1F3F;
   --accent-ink: #FFFFFF;
   --accent-soft: #F7E7E2;
+  --tan: #A9814F;
   --good: #2C7650;
   --good-soft: #E1F1E7;
   --warn: #9A5B05;
   --warn-soft: #FBEFD8;
   --bad: #B02A1E;
   --bad-soft: #FBE4E1;
-  --f-display: "Fraunces", "Cooper Black", Georgia, serif;
-  --f-body: "Bricolage Grotesque", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --f-mono: "DM Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --f-display: "Bodoni Moda", "Didot", "Bodoni 72", Georgia, serif;
+  --f-body: "Jost", "Futura", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "Jost", "Futura", system-ui, sans-serif;
   --r: 10px;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #17140F; --surface: #201C16; --sunk: #2A251E; --ink: #F5EFE4; --muted: #ADA393; --line: #3A332A;
-    --accent: #E68AA4; --accent-ink: #2A0E17; --accent-soft: #3A2023;
+    --accent: #E68AA4; --accent-ink: #2A0E17; --accent-soft: #3A2023; --tan: #C9A27A;
     --good: #74CF9C; --good-soft: #15301F; --warn: #EDB65A; --warn-soft: #33270F; --bad: #F2887D; --bad-soft: #3B1A17;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #17140F; --surface: #201C16; --sunk: #2A251E; --ink: #F5EFE4; --muted: #ADA393; --line: #3A332A;
-  --accent: #E68AA4; --accent-ink: #2A0E17; --accent-soft: #3A2023;
+  --accent: #E68AA4; --accent-ink: #2A0E17; --accent-soft: #3A2023; --tan: #C9A27A;
   --good: #74CF9C; --good-soft: #15301F; --warn: #EDB65A; --warn-soft: #33270F; --bad: #F2887D; --bad-soft: #3B1A17;
   color-scheme: dark;
 }
@@ -44,19 +45,21 @@
 body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5; }
 .wrap { max-width: 1140px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 h1, h2, h3 { text-wrap: balance; margin: 0; }
-h2, .refresh .when, .stat .v, .stack-group > .gh h3 { font-variation-settings: "SOFT" 100, "WONK" 1; }
-h2 { font-family: var(--f-display); font-style: italic; font-weight: 500; font-size: 1.45rem; letter-spacing: -0.01em; }
+h2 { font-family: var(--f-display); font-style: normal; font-weight: 500; font-size: 1.5rem; letter-spacing: 0; }
 h3 { font-size: 1rem; font-weight: 600; }
 button, input, select, textarea { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 a { color: var(--accent); }
 .meta { color: var(--muted); font-size: 0.84rem; }
-.eyebrow { text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.72rem; font-weight: 600; color: var(--muted); margin: 0; }
+.eyebrow { text-transform: uppercase; letter-spacing: 0.2em; font-size: 0.7rem; font-weight: 500; color: var(--muted); margin: 0; }
 
 /* Masthead */
-.top { border-bottom: 1px solid var(--line); background: var(--bg); }
+.top { border-bottom: 3px double var(--tan); background: var(--bg); }
+.brand-sub { color: var(--tan); margin-top: 8px; letter-spacing: 0.32em; }
+.brand-sub .star { font-size: 0.6rem; vertical-align: 1px; }
+.tab { text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.76rem; font-weight: 500; }
 .top-in { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; padding-block: 28px 12px; }
-.brand { font-family: var(--f-display); font-weight: 600; font-variation-settings: "SOFT" 100, "WONK" 1, "opsz" 144; font-size: clamp(2.6rem, 7vw, 4rem); line-height: 0.95; letter-spacing: -0.02em; }
+.brand { font-family: var(--f-display); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; font-variation-settings: "opsz" 96; font-size: clamp(2.6rem, 7vw, 4rem); line-height: 0.95; letter-spacing: -0.02em; }
 .brand em { color: var(--accent); font-weight: 600; }
 .top-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .sync { margin: 0; font-size: 0.82rem; color: var(--muted); display: flex; align-items: center; gap: 6px; }
@@ -71,6 +74,7 @@ a { color: var(--accent); }
 .tab .new { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-left: 5px; vertical-align: middle; }
 
 main.wrap { padding-block: 24px 64px; display: grid; gap: 20px; }
+[hidden] { display: none !important; }
 .panel { display: grid; gap: 20px; }
 
 /* Controls */
@@ -98,6 +102,15 @@ select.plain { border: 1px solid var(--line); background: var(--surface); border
 .pill.bad { background: var(--bad-soft); color: var(--bad); }
 .pill.accent { background: var(--accent-soft); color: var(--accent); }
 .pill.ex { background: transparent; border: 1px dashed var(--line); }
+.pill.pay { background: transparent; border: 1px solid var(--tan); color: var(--tan); font-weight: 500; padding: 0 7px; margin-left: 4px; }
+.ongoing { border-left: 2px solid var(--tan); padding-left: 10px; display: grid; gap: 3px; }
+.coll-h { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--tan); padding-bottom: 6px; margin-top: 8px; }
+.briefs { display: grid; gap: 16px; margin-bottom: 20px; }
+.briefs:empty { display: none; }
+.brief { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; display: grid; gap: 14px; min-width: 0; }
+.brief .ask-text { font-family: var(--f-display); font-style: italic; font-size: 1.25rem; line-height: 1.3; margin: 0; overflow-wrap: anywhere; }
+.x, .outfit .x { border: 0; background: none; cursor: pointer; color: var(--muted); font-size: 1.2rem; line-height: 1; padding: 2px 4px; }
+.x:hover, .outfit .x:hover { color: var(--ink); }
 
 .banner { display: flex; justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap; background: var(--accent-soft); border-radius: var(--r); padding: 12px 16px; font-size: 0.9rem; }
 
@@ -320,6 +333,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     <div>
       <p class="eyebrow" id="today-date">Today</p>
       <h1 class="brand">The <em>Edit</em></h1>
+      <p class="eyebrow brand-sub"><span class="star">★</span> Bermagui · New South Wales <span class="star">★</span></p>
     </div>
     <div class="top-tools">
       <p class="sync" id="sync">Connecting…</p>
@@ -349,7 +363,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     <input type="text" id="quick-in" placeholder="Add anything, e.g. Jooycee aura blush, or paste a screenshot" aria-label="Product to add">
     <label class="btn small ghost" id="quick-photo-label" for="quick-photo" title="Add a photo or screenshot">Photo</label>
     <input type="file" id="quick-photo" accept="image/*" multiple hidden>
-    <select id="quick-own" aria-label="Want it or own it"><option value="want">I want it</option><option value="own">I own it</option></select>
+    <select id="quick-own" aria-label="Want it, own it, or find me options"><option value="want">I want it</option><option value="own">I own it</option><option value="try">Maybe, to try</option><option value="brief">Find me options</option></select>
     <button class="btn primary" type="submit" id="quick-go">Add</button>
   </form>
   <p class="quick-status" id="quick-status" hidden></p>
@@ -362,6 +376,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     <section class="block" id="shop-block">
       <div class="block-h"><h2>To restock</h2><span class="tools"><span class="meta" id="shop-total"></span><button class="btn small ghost" data-act="restock-prices" id="restock-btn">Check prices now</button></span></div>
       <ul class="alerts" id="shop-list"></ul>
+      <div id="shop-bundles"></div>
     </section>
     <div class="today">
       <section class="block">
@@ -396,6 +411,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
 
   <!-- FINDS -->
   <section class="panel" data-panel="finds" hidden>
+    <div id="briefs" class="briefs"></div>
     <div class="toolbar">
       <p class="meta" style="margin:0;max-width:60ch">New products the daily refresh found for you, with what Reddit and independent reviewers actually say. Add the good ones to your wants or swap them into your stack.</p>
       <div class="chips" id="finds-chips"></div>
@@ -587,19 +603,22 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
 <script>
 (() => {
   // ---------- config ----------
-  const COLS = ['wishlist', 'finds', 'routine', 'beauty', 'hair', 'wardrobe', 'outfits', 'inspo', 'basket'];
-  const COL_LABEL = { wishlist: 'Wants', finds: 'Finds', routine: 'Skin', beauty: 'Makeup', hair: 'Hair', wardrobe: 'Wardrobe', outfits: 'Outfits', inspo: 'Inspo', basket: 'Amazon list' };
+  const COLS = ['wishlist', 'finds', 'routine', 'beauty', 'hair', 'wardrobe', 'outfits', 'inspo', 'basket', 'briefs'];
+  const COL_LABEL = { wishlist: 'Wants', finds: 'Finds', routine: 'Skin', beauty: 'Makeup', hair: 'Hair', wardrobe: 'Wardrobe', outfits: 'Outfits', inspo: 'Inspo', basket: 'Amazon list', briefs: 'Briefs' };
   const SUPPLY = { low: ['warn', 'Running low'], out: ['bad', 'Run out'] };
   const HAIR_STEPS = ['Shampoo', 'Conditioner', 'Mask', 'Leave-in', 'Oil / serum', 'Styling', 'Scalp', 'Tools', 'Other'];
   const RESEARCH = { queued: ['warn', 'Researching…'], draft: ['', 'Draft from Claude · not checked yet'], failed: ['bad', 'Couldn’t confirm this one'] };
   const WANT_CATS = ['Clothes', 'Activewear', 'Beauty', 'Skincare', 'Hair', 'Health', 'Office', 'Home', 'Tech', 'Other'];
   const WANT_GROUPS = [['Clothes', ['Clothes', 'Activewear']], ['Tech', ['Tech']], ['Home & living', ['Home', 'Office']], ['Health & wellness', ['Beauty', 'Skincare', 'Hair', 'Health']], ['Other', ['Other']]];
   const groupOfCat = (c) => (WANT_GROUPS.find(g => g[1].includes(c)) || ['Other'])[0];
+  const CONDITION = { refurbished: 'Refurbished', secondhand: 'Pre-loved', 'open-box': 'Open box', ex_demo: 'Ex-demo' };
   const STOCK = { in: 'In stock', low: 'Low stock', selling: 'Selling fast', out: 'Out of stock', unknown: 'Not sure' };
   const PRIORITY = { must: 'Must have', want: 'Want', maybe: 'Maybe' };
-  const STACK = { grail: 'Holy grail', current: 'In my stack', testing: 'Testing', shelf: 'On the shelf', out: 'Swapped out' };
-  const STACK_TONE = { grail: 'accent', current: 'good', testing: 'warn', shelf: '', out: 'bad' };
+  const STACK = { grail: 'Holy grail', current: 'In my stack', testing: 'Testing', try: 'Maybe to try', shelf: 'On the shelf', out: 'Swapped out' };
+  const INACTIVE = ['out', 'shelf', 'try'];
+  const STACK_TONE = { grail: 'accent', current: 'good', testing: 'warn', try: 'pay', shelf: '', out: 'bad' };
   const LEGACY = { using: 'current', nope: 'out', totry: 'shelf' };
+  const sourceName = (u) => { try { const h = new URL(u).hostname.replace(/^www\.|^vm\.|^vt\.|^m\./, ''); return ({ 'tiktok.com': 'TikTok', 'instagram.com': 'Instagram', 'youtube.com': 'YouTube', 'youtu.be': 'YouTube', 'reddit.com': 'Reddit', 'pinterest.com': 'Pinterest', 'pin.it': 'Pinterest' })[h] || h; } catch { return 'the web'; } };
   const statusOf = (x) => LEGACY[x.status] || (STACK[x.status] ? x.status : 'current');
   const MAKEUP_AREAS = [
     ['Face', ['Primer', 'Foundation', 'Skin tint', 'Concealer', 'Powder', 'Setting spray']],
@@ -621,6 +640,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
   const FORMS = {
     wishlist: { title: 'want', fields: [
       { k: 'name', label: 'What is it?', type: 'text', req: true, full: true, ph: 'e.g. Relaxed wool blazer' },
+      { k: 'label', label: 'Short name', type: 'text', full: true, ph: 'e.g. Blue gym leggings', hint: 'What shows on the card. The full product name and brand sit underneath.' },
       { k: 'brand', label: 'Brand / shop', type: 'text', ph: 'e.g. COS' },
       { k: 'category', label: 'Category', type: 'select', options: opts(WANT_CATS) },
       { k: 'url', label: 'Link', type: 'url', full: true, ph: 'https://…' },
@@ -633,6 +653,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     ]},
     beauty: { title: 'makeup product', fields: [
       { k: 'name', label: 'Product', type: 'text', req: true, full: true, ph: 'e.g. Soft Pinch Liquid Blush' },
+      { k: 'label', label: 'Short name', type: 'text', full: true, ph: 'e.g. Blue gym leggings', hint: 'What shows on the card. The full product name and brand sit underneath.' },
       { k: 'brand', label: 'Brand', type: 'text' },
       { k: 'type', label: 'Type', type: 'select', options: opts(MAKEUP_TYPES) },
       { k: 'shade', label: 'Shade', type: 'text', ph: 'e.g. Hope' },
@@ -646,6 +667,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     ]},
     routine: { title: 'skincare product', fields: [
       { k: 'product', label: 'Product', type: 'text', req: true, full: true, ph: 'e.g. Gentle cleanser' },
+      { k: 'label', label: 'Short name', type: 'text', full: true, ph: 'e.g. Blue gym leggings', hint: 'What shows on the card. The full product name and brand sit underneath.' },
       { k: 'brand', label: 'Brand', type: 'text' },
       { k: 'step', label: 'Step', type: 'select', options: opts(SKIN_STEPS) },
       { k: 'when', label: 'When', type: 'select', options: opts({ am: 'Morning', pm: 'Night', both: 'Morning & night' }) },
@@ -658,6 +680,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     ]},
     hair: { title: 'hair product', fields: [
       { k: 'product', label: 'Product', type: 'text', req: true, full: true, ph: 'e.g. Miracle Hair Elixir' },
+      { k: 'label', label: 'Short name', type: 'text', full: true, ph: 'e.g. Blue gym leggings', hint: 'What shows on the card. The full product name and brand sit underneath.' },
       { k: 'brand', label: 'Brand', type: 'text' },
       { k: 'step', label: 'Step', type: 'select', options: opts(HAIR_STEPS) },
       { k: 'freq', label: 'How often', type: 'select', options: opts({ daily: 'Every wash', alt: 'Every other wash', few: '2–3× a week', weekly: 'Weekly' }) },
@@ -668,6 +691,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     ]},
     wardrobe: { title: 'piece', fields: [
       { k: 'name', label: 'Piece', type: 'text', req: true, full: true, ph: 'e.g. Cream cable knit' },
+      { k: 'label', label: 'Short name', type: 'text', full: true, ph: 'e.g. Blue gym leggings', hint: 'What shows on the card. The full product name and brand sit underneath.' },
       { k: 'category', label: 'Category', type: 'select', options: opts(WARD_CATS) },
       { k: 'colour', label: 'Colour', type: 'text' },
       { k: 'vibes', label: 'Vibes', type: 'tags', full: true, ph: 'comma separated, e.g. office, weekend, date night', hint: 'Used when mixing outfits.' },
@@ -702,7 +726,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
 
   // ---------- state ----------
   const S = {
-    wishlist: [], finds: [], routine: [], beauty: [], hair: [], wardrobe: [], outfits: [], inspo: [], basket: [], meta: {}, canImages: false, inspoBusy: {},
+    wishlist: [], finds: [], briefs: [], routine: [], beauty: [], hair: [], wardrobe: [], outfits: [], inspo: [], basket: [], meta: {}, canImages: false, inspoBusy: {},
     status: 'connecting',
     tab: 'today', wantCat: 'All', wantSort: 'alert', showBought: false, findKind: 'All', wardCat: 'All',
     cardAi: {}, suggestions: [], gaps: [],
@@ -720,6 +744,9 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
   const dayKey = (d = new Date()) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   const daysSince = (k) => k ? Math.floor((new Date(dayKey()) - new Date(String(k).slice(0, 10))) / 864e5) : null;
   const nameOf = (x) => x.name || x.product || 'Untitled';
+  // label = short plain name ("Blue gym leggings"); the full product name sits underneath on cards
+  const shortOf = (x) => x.label || nameOf(x);
+  const fullOf = (x) => x.label && x.label !== nameOf(x) ? nameOf(x) : '';
   const live = (col) => S[col].filter(x => !x.deleted);
   const selName = (x) => x.shade || x.variant || '';
   const photoSrc = (x) => {
@@ -800,13 +827,29 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     const totalOf = (o) => o.total != null ? Number(o.total) : Number(o.price) + Number(o.delivery || 0) + Number(o.membership || 0);
     // Offers tagged with a colour only count for that colour; cheaper offers in other colours are kept aside as a tip
     const sel = String(it.variant || '').toLowerCase();
-    const all = (it.offers || []).filter(o => o && o.price != null).map(o => ({ ...o, _total: totalOf(o) })).sort((a, b) => a._total - b._total);
+    const every = (it.offers || []).filter(o => o && o.price != null).map(o => ({ ...o, _total: totalOf(o) })).sort((a, b) => a._total - b._total);
+    const isUsed = (o) => o.condition && o.condition !== 'new';
+    const all = every.filter(o => !isUsed(o)), preloved = every.filter(isUsed);
     const fits = (o) => !o.colour || !sel || String(o.colour).toLowerCase() === sel;
     const offers = all.filter(fits), others = all.filter(o => !fits(o));
     const best = offers[0];
     const otherDeal = others.find(o => !best || o._total < best._total) || null;
-    return { h, last, prev, peak, drop, rise, offPeak, atTarget, lastChecked, stale: daysSince(lastChecked), offers, others, best, otherDeal };
+    return { h, last, prev, peak, drop, rise, offPeak, atTarget, lastChecked, stale: daysSince(lastChecked), offers, others, best, otherDeal, preloved };
   }
+  // Ongoing costs (subscriptions, refills, consumables) normalised to a list and a yearly figure
+  const PER = { week: 52, month: 12, year: 1 };
+  const ongoingOf = (x) => (Array.isArray(x?.ongoing) ? x.ongoing : x?.ongoing ? [x.ongoing] : []).filter(o => o && Number(o.amount) > 0);
+  const yearlyOf = (x) => ongoingOf(x).reduce((t, o) => t + Number(o.amount) * (PER[o.per] || 1), 0);
+  const perLabel = { week: 'wk', month: 'mth', year: 'yr' };
+  function ongoingBlock(x, upfront) {
+    const list = ongoingOf(x);
+    if (!list.length) return x?.ongoing && Array.isArray(x.ongoing) && !x.ongoing.length ? '<p class="notes" style="margin:0"><span class="pill good">No ongoing costs</span></p>' : '';
+    const yr = yearlyOf(x);
+    return `<div class="ongoing"><p class="eyebrow">Ongoing costs</p>${list.map(o => `<p class="notes" style="margin:0"><b>${fmt(o.amount)}/${perLabel[o.per] || esc(o.per || 'yr')}</b> ${esc(o.what || '')}${o.required === false ? ' <span class="meta">(optional)</span>' : ''}${o.note ? ` · <span class="meta">${esc(o.note)}</span>` : ''}</p>`).join('')}<p class="meta" style="margin:0">About ${fmt(yr)} a year${upfront != null ? ` · first year all in about <b style="color:var(--ink)">${fmt(Number(upfront) + yr)}</b>` : ''}</p></div>`;
+  }
+  const payOf = (o) => (Array.isArray(o?.pay) ? o.pay : o?.pay ? [o.pay] : []).map(String).filter(Boolean);
+  const payPills = (o) => payOf(o).map(v => `<span class="pill pay">${esc(v)}</span>`).join('');
+
   function wantAlerts(it) {
     const p = priceInfo(it), out = [];
     if (p.drop) out.push({ tone: 'good', label: `Down ${fmt(p.drop)}`, detail: `${Math.round(p.drop / p.prev * 100)}% since last check`, rank: 1 });
@@ -850,7 +893,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
 
   // ---------- rendering ----------
   const activeWants = () => live('wishlist').filter(w => w.status !== 'bought');
-  const newFinds = () => live('finds').filter(f => f.status !== 'added');
+  const newFinds = () => live('finds').filter(f => f.status !== 'added' && !(f.snoozedUntil && f.snoozedUntil > dayKey()));
   const binItems = () => COLS.flatMap(c => S[c].filter(x => x.deleted).map(x => ({ col: c, x }))).sort((a, b) => String(b.x.deletedAt || '').localeCompare(String(a.x.deletedAt || '')));
 
   function renderChrome() {
@@ -860,9 +903,9 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     sync.textContent = S.status === 'live' ? (canWrite ? 'Saved to your Edit' : 'View only') : S.status === 'off' ? 'Not connected' : 'Connecting…';
     $$('.tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.tab === S.tab)));
     $$('[data-panel]').forEach(p => p.hidden = p.dataset.panel !== S.tab);
-    const stackCount = (c) => live(c).filter(x => !['out', 'shelf'].includes(statusOf(x))).length;
+    const stackCount = (c) => live(c).filter(x => !INACTIVE.includes(statusOf(x))).length;
     $('#n-wants').textContent = activeWants().length || '';
-    $('#n-finds').textContent = newFinds().length || '';
+    $('#n-finds').textContent = (newFinds().length + live('briefs').length) || '';
     $('#n-skin').textContent = stackCount('routine') || '';
     $('#n-makeup').textContent = stackCount('beauty') || '';
     $('#n-wardrobe').textContent = live('wardrobe').filter(p => p.category !== 'Active').length || '';
@@ -872,7 +915,8 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     $('#n-active').textContent = live('wardrobe').filter(p => p.category === 'Active').length || '';
     $$('.needs-img').forEach(el => el.hidden = !S.canImages);
     $('#quick').hidden = !db || !canWrite || ['bin', 'inspo', 'style', 'amazon'].includes(S.tab);
-    if (!S.quickTouched) $('#quick-own').value = ['skin', 'makeup', 'hair', 'wardrobe', 'active'].includes(S.tab) ? 'own' : 'want';
+    if (!S.quickTouched) { $('#quick-own').value = ['skin', 'makeup', 'hair', 'wardrobe', 'active'].includes(S.tab) ? 'own' : 'want'; setQuickFile(quickFile); }
+    $('#quick-own option[value="try"]').hidden = !['skin', 'makeup', 'hair', 'wants', 'today', 'finds'].includes(S.tab);
     const nb = binItems().length;
     $('#bin-btn').textContent = nb ? `Bin (${nb})` : 'Bin';
     $('#profile-btn').hidden = !db || !canWrite;
@@ -903,7 +947,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       [fmt(totalWant).replace(/\.00$/, ''), `on the want list (${wants.length})`],
       [deals, deals === 1 ? 'deal to look at' : 'deals to look at'],
       [newFinds().length, 'new finds'],
-      [live('wardrobe').length, 'pieces in the wardrobe'],
+      ...(wants.some(w => yearlyOf(w)) ? [[fmt(wants.reduce((t, w) => t + yearlyOf(w), 0)).replace(/\.00$/, ''), 'a year in ongoing costs']] : [[live('wardrobe').length, 'pieces in the wardrobe']]),
     ].map(([v, k]) => `<div class="stat"><span class="v">${esc(v)}</span><span class="k">${esc(k)}</span></div>`).join('');
 
     const rows = [];
@@ -913,14 +957,14 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     const uniq = rows.filter(({ w }) => !seen.has(w.id) && seen.add(w.id));
     $('#alerts').innerHTML = uniq.length ? uniq.slice(0, 7).map(({ w, a }) => `
       <li>${thumb(w)}
-        <span class="what"><b>${esc(w.name)}</b><span class="pills"><span class="pill ${a.tone}">${esc(a.label)}</span><span class="meta">${esc(a.detail)}</span></span></span>
+        <span class="what"><b>${esc(shortOf(w))}</b><span class="pills"><span class="pill ${a.tone}">${esc(a.label)}</span><span class="meta">${esc(a.detail)}</span></span></span>
         ${w.url && safeUrl(w.url) ? `<a class="btn small ghost" href="${esc(w.url)}" target="_blank" rel="noopener">Shop ↗</a>` : '<span></span>'}</li>`).join('')
       : `<li style="display:block"><span class="meta">${wants.length ? 'Nothing has dropped or is running low.' : 'Add things you want. Price drops and low stock show up here.'}</span></li>`;
 
     const nf = newFinds().sort((a, b) => String(b.foundOn || '').localeCompare(String(a.foundOn || ''))).slice(0, 4);
     $('#today-finds').innerHTML = nf.length ? nf.map(f => {
       const v = VERDICT[(f.review || f).verdict];
-      return `<li>${thumb(f)}<span class="what"><b>${esc(f.name)}</b><span class="meta">${esc([f.brand, FIND_KINDS[f.kind], f.price != null ? fmt(f.price) : ''].filter(Boolean).join(' · '))}</span>${v ? `<span class="pills"><span class="pill ${v[0]}">${esc(v[1])}</span></span>` : ''}</span><button class="btn small ghost" data-tab="finds">View</button></li>`;
+      return `<li>${thumb(f)}<span class="what"><b>${esc(shortOf(f))}</b><span class="meta">${esc([f.brand, FIND_KINDS[f.kind], f.price != null ? fmt(f.price) : ''].filter(Boolean).join(' · '))}</span>${v ? `<span class="pills"><span class="pill ${v[0]}">${esc(v[1])}</span></span>` : ''}</span><span class="tools"><button class="btn small ghost" data-tab="finds">View</button>${canWrite ? `<button class="x" data-act="find-snooze" data-id="${esc(f.id)}" aria-label="Hide for now" title="Hide for now">×</button>` : ''}</span></li>`;
     }).join('') : `<li style="display:block"><span class="meta">New skincare, makeup and other finds from the daily refresh will land here, with what real reviewers say.</span></li>`;
   }
 
@@ -954,22 +998,24 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       return `<article class="card ${w.status === 'bought' ? 'faded' : ''}">
         <div class="card-top">${thumb(w)}
           <div class="card-title">
-            <h3>${esc(w.name)}</h3>
-            <span class="meta">${esc([w.brand, w.variant].filter(Boolean).join(' · '))}</span>
+            <h3>${esc(shortOf(w))}</h3>
+            <span class="meta">${esc([w.brand, fullOf(w), w.variant].filter(Boolean).join(' · '))}</span>
             <div class="pills">${w.example ? '<span class="pill ex">Example</span>' : ''}${w.category ? `<span class="pill">${esc(w.category)}</span>` : ''}${w.priority === 'must' ? '<span class="pill accent">Must have</span>' : ''}${w.status === 'bought' ? '<span class="pill good">Bought</span>' : ''}</div>
           </div>
         </div>
         <div class="price-row">
-          <div class="price">${p.last == null && w.rrp ? `<span class="meta">about</span> ${fmt(w.rrp)}` : fmt(p.last)}<small>${[p.best ? `<b style="color:var(--ink)">${fmt(p.best._total)}${p.best.delivery == null ? '+' : ''}</b> delivered from ${esc(p.best.shop)}` : '', w.size ? esc(w.size) : '', p.offPeak ? `${fmt(p.offPeak)} off peak` : ''].filter(Boolean).join(' · ') || '&nbsp;'}</small></div>
+          <div class="price">${p.last == null && w.rrp ? `<span class="meta">about</span> ${fmt(w.rrp)}` : fmt(p.last)}<small>${[p.best ? `<b style="color:var(--ink)">${fmt(p.best._total)}${p.best.delivery == null ? '+' : ''}</b> delivered from ${esc(p.best.shop)}${payOf(p.best).length ? ` · ${esc(payOf(p.best).join(', '))}` : ''}` : '', w.size ? esc(w.size) : '', p.offPeak ? `${fmt(p.offPeak)} off peak` : ''].filter(Boolean).join(' · ') || '&nbsp;'}</small></div>
           ${spark(p.h)}
         </div>
         ${p.otherDeal ? `<p class="notes" style="margin:0"><span class="pill good">Cheaper in ${esc(p.otherDeal.colour)}</span> ${fmt(p.otherDeal._total)}${p.otherDeal.delivery == null ? '+' : ''} delivered from ${esc(p.otherDeal.shop)}${p.otherDeal.note ? ` · ${esc(p.otherDeal.note)}` : ''}</p>` : ''}
         ${al.length || w.research ? `<div class="pills">${researchPill(w)}${al.map(a => `<span class="pill ${a.tone}">${esc(a.label)}</span>`).join('')}</div>` : ''}
+        ${p.preloved.length ? `<p class="notes" style="margin:0"><span class="pill pay" style="margin:0">${esc(CONDITION[p.preloved[0].condition] || 'Pre-loved')}</span> ${fmt(p.preloved[0]._total)}${p.preloved[0].delivery == null ? '+' : ''} delivered from ${esc(p.preloved[0].shop)}${p.preloved[0].similar ? ' · similar, not the exact one' : ''}${p.preloved.length > 1 ? ` · ${p.preloved.length - 1} more below` : ''}</p>` : ''}
+        ${ongoingBlock(w, p.best ? p.best._total : p.last)}
         ${variantsBlock('wishlist', w)}
         ${stackNoteBlock(w)}
-        ${p.offers.length ? `<details class="more"><summary>${p.offers.length} ${p.offers.length === 1 ? 'shop' : 'shops'} compared, delivered to ${esc(deliverTo())}${p.lastChecked ? ` · ${esc(ago(p.lastChecked))}` : ''}</summary><ul class="offers" style="gap:8px">${p.offers.map(o => `<li style="grid-template-columns:1fr auto">
-            <span style="min-width:0">${safeUrl(o.url) ? `<a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(o.shop)}</a>` : esc(o.shop)}<br><span class="meta">${fmt(o.price)} + ${o.delivery == null ? 'delivery not known' : Number(o.delivery) ? fmt(o.delivery) + ' delivery' : 'free delivery'}${Number(o.membership) ? ` + ${fmt(o.membership)} membership` : ''}${o.stock && o.stock !== 'unknown' ? ` · ${esc(STOCK[o.stock] || '')}` : ''}${o.note ? ` · ${esc(o.note)}` : ''}</span></span>
-            <span class="mono" style="text-align:right">${fmt(o._total)}${o.delivery == null ? '+' : ''}</span></li>`).join('')}</ul>${p.others.length ? `<p class="eyebrow" style="margin:10px 0 4px">Other colours</p><ul class="offers">${p.others.map(o => `<li style="grid-template-columns:1fr auto"><span style="min-width:0">${safeUrl(o.url) ? `<a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(o.shop)}</a>` : esc(o.shop)} · ${esc(o.colour)}<br><span class="meta">${fmt(o.price)} + ${o.delivery == null ? 'delivery not known' : Number(o.delivery) ? fmt(o.delivery) + ' delivery' : 'free delivery'}${o.note ? ` · ${esc(o.note)}` : ''}</span></span><span class="mono" style="text-align:right">${fmt(o._total)}${o.delivery == null ? '+' : ''}</span></li>`).join('')}</ul>` : ''}</details>` : ''}
+        ${p.offers.length || p.preloved.length ? `<details class="more"><summary>${p.offers.length + p.preloved.length} ${p.offers.length + p.preloved.length === 1 ? 'shop' : 'shops'} compared, delivered to ${esc(deliverTo())}${p.lastChecked ? ` · ${esc(ago(p.lastChecked))}` : ''}</summary><ul class="offers" style="gap:8px">${p.offers.map(o => `<li style="grid-template-columns:1fr auto">
+            <span style="min-width:0">${safeUrl(o.url) ? `<a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(o.shop)}</a>` : esc(o.shop)}${payPills(o)}<br><span class="meta">${fmt(o.price)} + ${o.delivery == null ? 'delivery not known' : Number(o.delivery) ? fmt(o.delivery) + ' delivery' : 'free delivery'}${Number(o.membership) ? ` + ${fmt(o.membership)} membership` : ''}${o.stock && o.stock !== 'unknown' ? ` · ${esc(STOCK[o.stock] || '')}` : ''}${o.note ? ` · ${esc(o.note)}` : ''}</span></span>
+            <span class="mono" style="text-align:right">${fmt(o._total)}${o.delivery == null ? '+' : ''}</span></li>`).join('')}</ul>${p.preloved.length ? `<p class="eyebrow" style="margin:10px 0 4px">Pre-loved & refurbished</p><ul class="offers">${p.preloved.map(o => `<li style="grid-template-columns:1fr auto"><span style="min-width:0">${safeUrl(o.url) ? `<a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(o.shop)}</a>` : esc(o.shop)} · ${esc(CONDITION[o.condition] || o.condition)}${o.similar ? ' · similar' : ''}${payPills(o)}<br><span class="meta">${fmt(o.price)} + ${o.delivery == null ? 'delivery not known' : Number(o.delivery) ? fmt(o.delivery) + ' delivery' : 'free delivery'}${o.note ? ` · ${esc(o.note)}` : ''}</span></span><span class="mono" style="text-align:right">${fmt(o._total)}${o.delivery == null ? '+' : ''}</span></li>`).join('')}</ul>` : ''}${p.others.length ? `<p class="eyebrow" style="margin:10px 0 4px">Other colours</p><ul class="offers">${p.others.map(o => `<li style="grid-template-columns:1fr auto"><span style="min-width:0">${safeUrl(o.url) ? `<a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(o.shop)}</a>` : esc(o.shop)} · ${esc(o.colour)}<br><span class="meta">${fmt(o.price)} + ${o.delivery == null ? 'delivery not known' : Number(o.delivery) ? fmt(o.delivery) + ' delivery' : 'free delivery'}${o.note ? ` · ${esc(o.note)}` : ''}</span></span><span class="mono" style="text-align:right">${fmt(o._total)}${o.delivery == null ? '+' : ''}</span></li>`).join('')}</ul>` : ''}</details>` : ''}
         ${w.notes ? `<p class="notes">${esc(w.notes)}</p>` : ''}
         ${reviewBlock(w.reviews)}
         ${altsBlock('wishlist', w)}
@@ -988,7 +1034,36 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       </article>`;
   }
 
+  const BRIEF = { queued: ['warn', 'Searching…'], waiting: ['warn', 'Searches at the next refresh'], done: ['good', 'Options ready'], failed: ['bad', 'Needs more detail'] };
+  function renderBriefs() {
+    const list = live('briefs').sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+    $('#briefs').innerHTML = list.map(b => {
+      const st = BRIEF[b.status] || BRIEF.queued, opts = Array.isArray(b.options) ? b.options : [];
+      return `<section class="brief">
+        <div class="section-h"><div style="display:grid;gap:4px;min-width:0"><p class="eyebrow">You asked for</p><p class="ask-text">“${esc(b.text)}”</p></div><span class="pill ${st[0]}">${esc(st[1])}</span></div>
+        ${b.summary ? `<p class="notes" style="margin:0">${esc(b.summary)}</p>` : ''}
+        ${b.status === 'failed' && b.note ? `<p class="notes" style="margin:0">${esc(b.note)}</p>` : ''}
+        ${opts.length ? `<div class="cards">${opts.map((o, i) => {
+          const v = VERDICT[o.verdict], total = o.total ?? (o.price != null ? Number(o.price) + Number(o.delivery || 0) : null);
+          return `<article class="card">
+            <div class="card-top">${thumb(o)}<div class="card-title"><h3>${esc(o.name)}</h3><span class="meta">${esc([o.brand, o.colour].filter(Boolean).join(' · '))}</span><div class="pills">${v ? `<span class="pill ${v[0]}">${esc(v[1])}</span>` : ''}${payPills(o)}</div></div></div>
+            <div class="price">${fmt(o.price)}<small>${total != null ? `<b style="color:var(--ink)">${fmt(total)}${o.delivery == null ? '+' : ''}</b> delivered` : ''}${o.shop ? ` from ${esc(o.shop)}` : ''}</small></div>
+            ${o.why ? `<p class="notes" style="margin:0">${esc(o.why)}</p>` : ''}
+            ${o.reviewSummary ? `<p class="meta" style="margin:0">${esc(o.reviewSummary)}</p>` : ''}
+            ${ongoingBlock(o, total)}
+            <div class="actions">
+              ${safeUrl(o.url) ? `<a class="btn small" href="${esc(o.url)}" target="_blank" rel="noopener">Shop ↗</a>` : ''}
+              ${canWrite ? (o.added ? '<span class="pill good">In your wants</span>' : `<button class="btn small ghost" data-act="brief-want" data-id="${esc(b.id)}" data-i="${i}">Add to wants</button>`) : ''}
+            </div>
+          </article>`;
+        }).join('')}</div>` : ''}
+        ${canWrite ? `<div class="actions">${canResearch() && b.status !== 'queued' ? `<button class="btn small ghost" data-act="brief-again" data-id="${esc(b.id)}">${opts.length ? 'Find more like this' : 'Search again'}</button>` : ''}${delBtn('briefs', b.id, 'Done with this')}</div>` : ''}
+      </section>`;
+    }).join('');
+  }
+
   function renderFinds() {
+    renderBriefs();
     const all = newFinds();
     chipRow($('#finds-chips'), Object.entries(FIND_KINDS).filter(([k]) => all.some(f => f.kind === k)), S.findKind, 'find-kind');
     const list = all.filter(f => S.findKind === 'All' || f.kind === S.findKind).sort((a, b) => String(b.foundOn || '').localeCompare(String(a.foundOn || '')));
@@ -999,12 +1074,14 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       return `<article class="card">
         <div class="card-top">${thumb(f)}
           <div class="card-title">
-            <h3>${esc(f.name)}</h3>
-            <span class="meta">${esc([f.brand, f.category].filter(Boolean).join(' · '))}</span>
+            <h3>${esc(shortOf(f))}</h3>
+            <span class="meta">${esc([f.brand, fullOf(f), f.category].filter(Boolean).join(' · '))}</span>
             <div class="pills">${f.example ? '<span class="pill ex">Example</span>' : ''}<span class="pill">${esc(FIND_KINDS[f.kind] || 'Find')}</span>${f.price != null ? `<span class="pill">${fmt(f.price)}${f.shop ? ' · ' + esc(f.shop) : ''}</span>` : ''}</div>
           </div>
         </div>
+        ${payOf(f).length ? `<div class="pills">${payPills(f)}</div>` : ''}
         ${f.fitNote ? `<p class="notes"><b>Why you:</b> ${esc(f.fitNote)}</p>` : ''}
+        ${ongoingBlock(f, f.price != null ? Number(f.price) + Number(f.delivery || 0) : null)}
         ${swapTarget ? `<p class="notes"><b>Could replace:</b> ${esc(nameOf(swapTarget))}</p>` : ''}
         ${reviewBlock(f.review || f)}
         ${altsBlock('finds', f)}
@@ -1014,7 +1091,8 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
           ${canWrite ? `<button class="btn small ghost" data-act="find-want" data-id="${esc(f.id)}">Add to wants</button>` : ''}
           ${canWrite && (f.kind === 'skincare' || f.kind === 'makeup') ? `<button class="btn small ghost" data-act="find-stack" data-id="${esc(f.id)}">${swapTarget ? 'Swap it in' : 'Add to my stack'}</button>` : ''}
           ${canResearch() && f.altResearch !== 'queued' ? `<button class="btn small ghost" data-act="alts" data-col="finds" data-id="${esc(f.id)}">Similar or cheaper</button>` : ''}
-          ${delBtn('finds', f.id, 'Not for me')}
+          ${canWrite ? `<button class="btn small ghost" data-act="find-snooze" data-id="${esc(f.id)}">Not now</button>` : ''}
+          ${canWrite ? `<button class="btn small ghost danger" data-act="find-nope" data-id="${esc(f.id)}">Not for me</button>` : ''}
         </div>
       </article>`;
     }).join('');
@@ -1027,11 +1105,13 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     return `<div class="sitem ${st === 'out' ? 'out' : ''}">
       ${thumb(x, isSkin ? '' : 'round')}
       <div class="body">
-        <b>${esc(nameOf(x))}</b>
+        <b>${esc(shortOf(x))}</b>
+        ${fullOf(x) ? `<span class="meta">${esc(fullOf(x))}</span>` : ''}
         <span class="meta">${esc(sub.filter(Boolean).join(' · '))}</span>
         ${!isSkin && x.shade ? `<span>${swatch}${esc(x.shade)}</span>` : ''}
         ${isSkin && x.actives ? `<span class="meta">Actives: ${esc(x.actives)}</span>` : ''}
         <div class="pills">${x.example ? '<span class="pill ex">Example</span>' : ''}<span class="pill ${STACK_TONE[st]}">${esc(STACK[st])}</span>${SUPPLY[x.supply] ? `<span class="pill ${SUPPLY[x.supply][0]}">${SUPPLY[x.supply][1]}</span>` : ''}${researchPill(x)}${stars(x.rating)}</div>
+        ${safeUrl(x.source) ? `<a class="meta" href="${esc(x.source)}" target="_blank" rel="noopener">Seen on ${esc(sourceName(x.source))} ↗</a>` : ''}
         ${st === 'out' && (x.swapReason || x.swappedFor) ? `<p class="notes">${x.swappedFor ? `Swapped for ${esc(x.swappedFor)}. ` : ''}${esc(x.swapReason || '')}</p>` : ''}
         ${x.feedback ? `<p class="notes">“${esc(x.feedback)}”</p>` : ''}
         ${otherShades(col, x)}
@@ -1041,13 +1121,14 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
         ${aiBox(x.id)}
       </div>
       <div class="actions">
-        ${canWrite && st !== 'out' && st !== 'shelf' ? (x.supply === 'out' ? `<button class="btn small" data-act="supply" data-v="ok" data-col="${col}" data-id="${esc(x.id)}">Restocked</button>`
+        ${canWrite && !INACTIVE.includes(st) ? (x.supply === 'out' ? `<button class="btn small" data-act="supply" data-v="ok" data-col="${col}" data-id="${esc(x.id)}">Restocked</button>`
           : x.supply === 'low' ? `<button class="btn small" data-act="supply" data-v="out" data-col="${col}" data-id="${esc(x.id)}">Run out</button><button class="btn small ghost" data-act="supply" data-v="ok" data-col="${col}" data-id="${esc(x.id)}">Restocked</button>`
           : `<button class="btn small ghost" data-act="supply" data-v="low" data-col="${col}" data-id="${esc(x.id)}">Running low</button><button class="btn small ghost" data-act="supply" data-v="out" data-col="${col}" data-id="${esc(x.id)}">Run out</button>`) : ''}
         ${canResearch() && st !== 'out' && x.altResearch !== 'queued' ? `<button class="btn small ghost" data-act="alts" data-col="${col}" data-id="${esc(x.id)}">Similar or cheaper</button>` : ''}
         ${canResearch() && x.research && x.research !== 'queued' && x.research !== 'done' ? `<button class="btn small ghost" data-act="research" data-col="${col}" data-id="${esc(x.id)}">Research it</button>` : ''}
-        ${canWrite && st !== 'out' && st !== 'shelf' ? `<button class="btn small" data-act="swap" data-col="${col}" data-id="${esc(x.id)}">Swap out</button>` : ''}
+        ${canWrite && !INACTIVE.includes(st) ? `<button class="btn small" data-act="swap" data-col="${col}" data-id="${esc(x.id)}">Swap out</button>` : ''}
         ${canWrite && (st === 'out' || st === 'shelf') ? `<button class="btn small" data-act="restack" data-col="${col}" data-id="${esc(x.id)}">Back in my stack</button>` : ''}
+        ${canWrite && st === 'try' ? `<button class="btn small" data-act="restack" data-col="${col}" data-id="${esc(x.id)}">Got it</button><button class="btn small ghost" data-act="try-want" data-col="${col}" data-id="${esc(x.id)}">Add to wants</button>` : ''}
         ${sample && st !== 'out' ? `<button class="btn small ghost" data-act="ai-alt" data-col="${col}" data-id="${esc(x.id)}">${st === 'testing' ? 'Is it worth it?' : 'Alternatives'}</button>` : ''}
         ${canWrite ? `<button class="btn small ghost push" data-act="edit" data-col="${col}" data-id="${esc(x.id)}">Edit</button>` : ''}
         ${delBtn(col, x.id)}
@@ -1057,15 +1138,18 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
   function renderStack(col, el, groups, groupOf) {
     const items = live(col);
     if (!items.length) { el.innerHTML = emptyState(col, col === 'hair' ? 'Add your shampoo, conditioner, masks and oils.' : col === 'routine' ? 'Add the skincare you use. You’ll see it by step and can swap things out as you go.' : 'Add your makeup with shades and how it went. Claude uses your notes to suggest swaps.'); return; }
-    const active = items.filter(x => !['out', 'shelf'].includes(statusOf(x)));
+    const active = items.filter(x => !INACTIVE.includes(statusOf(x)));
     const rank = { grail: 0, current: 1, testing: 2 };
-    let html = '';
+    let html = `<div class="coll-h"><h2>My collection</h2><span class="meta">${active.length} in use</span></div>`;
     for (const [label, members] of groups) {
       const g = active.filter(x => members.includes(groupOf(x))).sort((a, b) => members.indexOf(groupOf(a)) - members.indexOf(groupOf(b)) || (rank[statusOf(a)] ?? 3) - (rank[statusOf(b)] ?? 3));
       if (!g.length) continue;
       html += `<section class="stack-group"><div class="gh"><h3>${esc(label)}</h3><span class="meta">${g.length}</span></div><div class="stack-list">${g.map(x => stackItem(col, x)).join('')}</div></section>`;
     }
     if (!active.length) html += `<div class="empty"><span>Nothing in your stack right now.</span></div>`;
+    const maybes = items.filter(x => statusOf(x) === 'try').sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+    html += `<div class="coll-h"><h2>Maybes to try</h2><span class="meta">${maybes.length ? `${maybes.length} saved` : ''}</span></div>`
+      + (maybes.length ? `<div class="stack-list">${maybes.map(x => stackItem(col, x)).join('')}</div>` : `<div class="empty"><span>Spotted something on TikTok? Paste the link in the box at the top and pick “Maybe, to try”.</span></div>`);
     for (const st of ['shelf', 'out']) {
       const g = items.filter(x => statusOf(x) === st);
       if (g.length) html += `<details class="shelf" data-key="${col}-${st}" ${store.get('edit.open.' + col + st) ? 'open' : ''}><summary>${esc(STACK[st])} (${g.length})</summary><div class="stack-list">${g.map(x => stackItem(col, x)).join('')}</div></details>`;
@@ -1083,24 +1167,24 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
 
   function pieceTile(p) {
     const src = photoSrc(p);
-    return `<div class="mini"><div class="img">${src ? `<img src="${esc(src)}" alt="" loading="lazy">` : initial(p.name)}</div><span>${esc(p.name)}</span></div>`;
+    return `<div class="mini"><div class="img">${src ? `<img src="${esc(src)}" alt="" loading="lazy">` : initial(shortOf(p))}</div><span>${esc(shortOf(p))}</span></div>`;
   }
   function outfitCard(o, i, saved) {
     const items = (o.itemIds || []).map(id => [...live('wardrobe'), ...live('wishlist')].find(w => w.id === id)).filter(Boolean);
     return `<article class="outfit">
-      <div class="section-h"><h3>${esc(o.title || 'Outfit')}</h3>${o.vibe ? `<span class="meta">${esc(o.vibe)}</span>` : ''}</div>
+      <div class="section-h"><h3>${esc(o.title || 'Outfit')}</h3><span style="display:flex;gap:8px;align-items:baseline">${o.vibe ? `<span class="meta">${esc(o.vibe)}</span>` : ''}${saved ? '' : `<button class="x" data-act="outfit-close" data-i="${i}" aria-label="Close this outfit" title="Close">×</button>`}</span></div>
       <div class="outfit-items">${items.map(pieceTile).join('') || '<span class="meta">These pieces have been removed.</span>'}</div>
       ${o.note ? `<p class="notes">${esc(o.note)}</p>` : ''}
       ${o.missing ? `<p class="notes"><b>Would finish it:</b> ${esc(o.missing)}</p>` : ''}
       <div class="actions">${saved ? delBtn('outfits', o.id, 'Remove')
-        : (canWrite ? `<button class="btn small" data-act="save-outfit" data-i="${i}">Save outfit</button>` : '')}</div>
+        : `${canWrite ? `<button class="btn small" data-act="save-outfit" data-i="${i}">Save outfit</button>` : ''}${sample ? `<button class="btn small ghost" data-act="outfit-roll" data-i="${i}"${o.rolling ? ' disabled' : ''}>${o.rolling ? 'Rolling…' : 'Roll again'}</button>` : ''}`}</div>
     </article>`;
   }
   function pieceBtn(p) {
     const src = photoSrc(p);
     return `<button class="piece" data-act="${canWrite ? 'edit' : ''}" data-col="wardrobe" data-id="${esc(p.id)}">
-        <div class="img">${src ? `<img src="${esc(src)}" alt="" loading="lazy">` : `<span>${esc(p.name)}</span>`}</div>
-        <div class="cap"><b>${esc(p.name)}</b><span class="meta">${esc([p.brand, p.colour, p.category].filter(Boolean).join(' · '))}</span>
+        <div class="img">${src ? `<img src="${esc(src)}" alt="" loading="lazy">` : `<span>${esc(shortOf(p))}</span>`}</div>
+        <div class="cap"><b>${esc(shortOf(p))}</b><span class="meta">${esc([p.brand, fullOf(p), p.colour].filter(Boolean).join(' · '))}</span>
         ${(p.vibes || []).length || p.example || p.research ? `<div class="pills">${p.example ? '<span class="pill ex">Example</span>' : ''}${researchPill(p)}${(p.vibes || []).slice(0, 3).map(v => `<span class="pill">${esc(v)}</span>`).join('')}</div>` : ''}</div>
       </button>`;
   }
@@ -1146,7 +1230,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       return `<div class="frow ${on ? '' : 'off'}"><span class="lab">${esc(row)}</span>
         <button class="arrow" data-act="flip" data-row="${row}" data-d="-1" aria-label="Previous ${row.toLowerCase()}">‹</button>
         <div class="card-in"><div class="img">${on ? (src ? `<img src="${esc(src)}" alt="" key="${esc(x.id)}">` : initial(x.name)) : '—'}</div>
-          <div class="nm">${on ? `<b>${x._col === 'wishlist' ? 'Want · ' : ''}${esc(x.name)}</b><span class="meta">${i + 1} of ${items.length}</span>` : `<span class="meta">${items.length} to flip through</span>`}
+          <div class="nm">${on ? `<b>${x._col === 'wishlist' ? 'Want · ' : ''}${esc(shortOf(x))}</b><span class="meta">${i + 1} of ${items.length}</span>` : `<span class="meta">${items.length} to flip through</span>`}
           <button class="link" data-act="flip-toggle" data-row="${row}" style="justify-self:start">${on ? 'Take off' : 'Add a ' + row.toLowerCase()}</button></div></div>
         <button class="arrow" data-act="flip" data-row="${row}" data-d="1" aria-label="Next ${row.toLowerCase()}">›</button></div>`;
     }).join('');
@@ -1166,6 +1250,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     $('#outfits').innerHTML = saved.map((o, i) => outfitCard(o, i, true)).join('');
     const vo = $('#vibe-out');
     if (S.suggestions.length) { vo.hidden = false; vo.innerHTML = S.suggestions.map((o, i) => outfitCard(o, i, false)).join(''); }
+    else if (vo.querySelector('.outfit')) { vo.hidden = true; vo.innerHTML = ''; }
     const go = $('#gaps-out');
     if (S.gaps.length) {
       go.hidden = false;
@@ -1174,7 +1259,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     }
   }
 
-  const restockItems = () => ['routine', 'hair', 'beauty'].flatMap(c => live(c).filter(x => SUPPLY[x.supply] && !['out', 'shelf'].includes(statusOf(x))).map(x => ({ ...x, _col: c })));
+  const restockItems = () => ['routine', 'hair', 'beauty'].flatMap(c => live(c).filter(x => SUPPLY[x.supply] && !INACTIVE.includes(statusOf(x))).map(x => ({ ...x, _col: c })));
   function renderShopList() {
     const items = restockItems().sort((a, b) => (a.supply === 'out' ? 0 : 1) - (b.supply === 'out' ? 0 : 1));
     $('#shop-block').hidden = !items.length && !live('basket').some(b => !b.ordered);
@@ -1184,7 +1269,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       if (total) { sum += total; known++; }
       const url = (best && safeUrl(best.url)) || safeUrl(x.url);
       return `<li>${thumb(x)}
-        <span class="what"><b>${esc(nameOf(x))}</b><span class="pills"><span class="pill ${SUPPLY[x.supply][0]}">${SUPPLY[x.supply][1]}</span><span class="meta">${esc([x.brand, x.shade, COL_LABEL[x._col]].filter(Boolean).join(' · '))}</span></span>
+        <span class="what"><b>${esc(shortOf(x))}</b><span class="pills"><span class="pill ${SUPPLY[x.supply][0]}">${SUPPLY[x.supply][1]}</span><span class="meta">${esc([x.brand, x.shade, COL_LABEL[x._col]].filter(Boolean).join(' · '))}</span></span>
         ${total ? `<span class="meta">${fmt(total)}${best ? `${best.delivery == null ? '+' : ''} delivered from ${esc(best.shop)}` : ' (last known price)'}</span>` : '<span class="meta">Price not checked yet</span>'}</span>
         <span class="tools" style="flex-direction:column;align-items:stretch">${url ? `<a class="btn small ghost" href="${esc(url)}" target="_blank" rel="noopener">Shop ↗</a>` : ''}${canWrite ? `<button class="btn small" data-act="supply" data-v="ok" data-col="${x._col}" data-id="${esc(x.id)}">Bought</button>` : ''}</span></li>`;
     });
@@ -1193,6 +1278,15 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     $('#shop-list').innerHTML = rows.join('');
     $('#shop-total').textContent = known ? `about ${fmt(sum)} delivered${known < items.length ? ' (some prices unknown)' : ''}` : '';
     $('#restock-btn').hidden = !items.length || !(mcp && S.meta.refresh?.triggerId && canWrite);
+    // Shops that can fill the whole restock list (or most of it) in one delivered order
+    const ids = new Set(items.map(x => `${x._col}/${x.id}`)), rs = S.meta.restock || {};
+    const bundles = (rs.bundles || []).map(b => ({ ...b, has: (b.covers || []).filter(c => ids.has(c)) })).filter(b => b.has.length >= 2 || (b.has.length && ids.size === 1))
+      .sort((a, b) => (b.has.length - a.has.length) || ((a.total ?? 1e9) - (b.total ?? 1e9))).slice(0, 4);
+    const nm = (c) => { const x = items.find(i => `${i._col}/${i.id}` === c); return x ? shortOf(x) : ''; };
+    $('#shop-bundles').innerHTML = items.length >= 2 && bundles.length ? `<p class="eyebrow" style="margin:6px 0 8px">One order${rs.checked ? ` · checked ${esc(ago(rs.checked))}` : ''}</p><ul class="alerts">${bundles.map(b => `<li style="grid-template-columns:1fr auto">
+        <span class="what"><span><b>${esc(b.shop)}</b>${payPills(b)}</span><span class="meta">${b.has.length === ids.size ? 'Has everything' : `Has ${b.has.length} of ${ids.size}`}: ${esc(b.has.map(nm).filter(Boolean).join(', '))}${(b.missing || []).filter(c => ids.has(c)).length ? ` · not ${esc(b.missing.filter(c => ids.has(c)).map(nm).filter(Boolean).join(', '))}` : ''}</span>
+        <span class="meta">${b.subtotal != null ? fmt(b.subtotal) : ''}${b.delivery != null ? ` + ${Number(b.delivery) ? fmt(b.delivery) + ' delivery' : 'free delivery'}` : ' + delivery'}${b.total != null ? ` = <b style="color:var(--ink)">${fmt(b.total)}</b>` : ''}${b.note ? ` · ${esc(b.note)}` : ''}</span></span>
+        ${safeUrl(b.url) ? `<a class="btn small ghost" href="${esc(b.url)}" target="_blank" rel="noopener">Shop ↗</a>` : '<span></span>'}</li>`).join('')}</ul>` : '';
   }
   function renderAmazon() {
     const all = live('basket'), open = all.filter(b => !b.ordered).sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)));
@@ -1214,7 +1308,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     const items = binItems();
     $('#empty-bin').hidden = !items.length || !canWrite;
     $('#bin-list').innerHTML = items.length ? items.map(({ col, x }) => `<li>${thumb(x)}
-      <span class="what"><b>${esc(nameOf(x))}</b><span class="meta">${esc(COL_LABEL[col])} · deleted ${esc(ago(x.deletedAt) || '')}</span></span>
+      <span class="what"><b>${esc(shortOf(x))}</b><span class="meta">${esc(COL_LABEL[col])} · deleted ${esc(ago(x.deletedAt) || '')}</span></span>
       <span class="tools">${canWrite ? `<button class="btn small" data-act="restore" data-col="${col}" data-id="${esc(x.id)}">Restore</button><button class="btn small ghost danger" data-act="purge" data-col="${col}" data-id="${esc(x.id)}">Delete for good</button>` : ''}</span></li>`).join('')
       : `<li style="display:block" class="empty">The bin is empty.</li>`;
   }
@@ -1450,7 +1544,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       `You are a beauty advisor. ${STYLE}${profileText()}\n\nMy makeup, shades and feedback (JSON):\n${JSON.stringify(live('beauty').map(slimMakeup))}\n\nWhat I’m after: ${ask}\n\nGive at most 3 suggestions. For each: product and brand, the shade to try (relative to shades I already wear), why (tied to my feedback), and what reviewers commonly complain about. Under 230 words.`);
   });
   $('#skin-check').addEventListener('click', (e) => {
-    const items = live('routine').filter(x => !['out', 'shelf'].includes(statusOf(x)));
+    const items = live('routine').filter(x => !INACTIVE.includes(statusOf(x)));
     if (!items.length) { toast('Add a few products first.'); return; }
     streamInto($('#skin-ai'), e.currentTarget,
       `Review my skincare stack. ${STYLE}${profileText()}\n\nCurrent stack (JSON):\n${JSON.stringify(items.map(slimSkin))}\n\nThings I swapped out and why: ${JSON.stringify(live('routine').filter(x => statusOf(x) === 'out').map(slimSkin))}\n\nCheck: ingredient clashes, overlap or redundancy (products doing the same job), gaps (especially daily SPF in Australia), and which one product is the weakest link and what to swap it for. At most 7 short points, most important first. End with one line noting this isn’t medical advice and to see a GP or dermatologist for ongoing skin concerns.`);
@@ -1478,6 +1572,23 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       else renderWardrobe();
     } catch (err) { out.innerHTML = `<div class="ai-out err" style="grid-column:1/-1">${esc(aiErr(err))}</div>`; }
     finally { btn.disabled = false; btn.textContent = 'Style me'; }
+  }
+  // Swap one suggested outfit for a fresh one, steering away from everything already on screen or saved
+  async function rollOutfit(i) {
+    const cur = S.suggestions[i], pieces = live('wardrobe');
+    if (!cur || !sample) return;
+    cur.rolling = true; renderWardrobe();
+    const avoid = [...S.suggestions.map(o => o.itemIds), ...live('outfits').map(o => o.itemIds)];
+    const vibe = cur.vibe && cur.vibe !== 'Mixed up' ? cur.vibe : '';
+    try {
+      const res = await sample.json(`You are a personal stylist working only from my wardrobe. Write in Australian English.${profileText()}\n\nMy wardrobe (JSON):\n${JSON.stringify(pieces.map(slimPiece))}\n\n${vibe ? `Vibe / occasion: ${vibe}` : 'No occasion given: mix it up with an unexpected but wearable combination.'}\n\nBuild ONE new outfit using ONLY ids from my wardrobe. It must be clearly different from these combinations: ${JSON.stringify(avoid)}. Reply with only JSON like:\n{"title":"Short evocative name","itemIds":["id1","id2"],"note":"One sentence styling tip","missing":"One piece I don't own that would finish it, or empty string"}`, { cache: false });
+      const o = Array.isArray(res) ? res[0] : res, ids = new Set(pieces.map(w => w.id));
+      const itemIds = (Array.isArray(o?.itemIds) ? o.itemIds : []).map(String).filter(id => ids.has(id));
+      const idx = S.suggestions.indexOf(cur);
+      if (itemIds.length && idx >= 0) S.suggestions[idx] = { title: String(o.title || 'Outfit'), note: String(o.note || ''), missing: String(o.missing || ''), vibe: cur.vibe, itemIds };
+      else { cur.rolling = false; toast('Couldn’t find another combo. Try again.'); }
+    } catch (err) { cur.rolling = false; toast(aiErr(err)); }
+    renderWardrobe();
   }
   $('#vibe-go').addEventListener('click', () => styleMe());
   $('#gaps-go').addEventListener('click', async (e) => {
@@ -1516,28 +1627,60 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
   }
   const WANT_CAT_OF = { makeup: 'Beauty', skincare: 'Skincare', hair: 'Hair', health: 'Health', clothes: 'Clothes', activewear: 'Activewear', home: 'Home', office: 'Office', tech: 'Tech' };
   function quickStatus(msg) { const el = $('#quick-status'); el.textContent = msg || ''; el.hidden = !msg; }
+  async function addBrief(text, file) {
+    let photoIds = [];
+    if (file && assets) { quickStatus('Uploading the picture…'); try { photoIds = [(await assets.upload(file)).id]; } catch {} }
+    const ref = await db.collection('briefs').add({ name: text.slice(0, 80) || 'Find me options', text: text || '(see the photo)', photoIds, status: canResearch() ? 'queued' : 'waiting', createdAt: now() });
+    let queued = false;
+    if (canResearch()) {
+      try { await mcp.callTool('Claude Code Remote', 'fire_trigger', { trigger_id: S.meta.research.triggerId, text: `Brief request: collection=briefs doc_id=${ref.id}` }, { cache: false }); queued = true; }
+      catch { await db.collection('briefs').doc(ref.id).update({ status: 'waiting' }).catch(() => {}); }
+    }
+    quickStatus('');
+    toast(queued ? 'Claude is hunting for options. They’ll land at the top of Finds in about 10 minutes.' : 'Saved. The next refresh will find options for this.');
+    if (S.tab !== 'finds') setTab('finds');
+  }
+  const isLink = (v) => /^https?:\/\/\S+$/i.test(String(v || '').trim());
   async function quickAdd(phrase, own, file) {
+    // own: true = I own it, 'try' = a maybe for my stack (or a "maybe" want for anything else)
+    const mode = own === 'try' ? 'try' : own ? 'own' : 'want';
+    const link = isLink(phrase) ? phrase.trim() : '';
+    if (link) {
+      // A pasted TikTok / Instagram / shop link: the research run opens it and works out the product
+      const col = ({ skin: 'routine', makeup: 'beauty', hair: 'hair' })[S.tab] && mode !== 'want' ? ({ skin: 'routine', makeup: 'beauty', hair: 'hair' })[S.tab] : mode === 'own' && ['wardrobe', 'active'].includes(S.tab) ? 'wardrobe' : 'wishlist';
+      const base = { source: link, label: `From ${sourceName(link)}`, quickPhrase: link, research: 'queued', createdAt: now(), variants: [] };
+      const doc = col === 'wishlist' ? { ...base, name: `Something from ${sourceName(link)}`, brand: '', category: 'Other', price: null, priceHistory: [], stock: 'unknown', priority: mode === 'try' ? 'maybe' : 'want', status: 'want' }
+        : col === 'wardrobe' ? { ...base, name: `Something from ${sourceName(link)}`, category: S.tab === 'active' ? 'Active' : 'Top', vibes: [], season: 'all' }
+        : col === 'beauty' ? { ...base, name: `Something from ${sourceName(link)}`, brand: '', type: 'Other', status: mode === 'try' ? 'try' : 'current' }
+        : { ...base, product: `Something from ${sourceName(link)}`, brand: '', step: 'Other', status: mode === 'try' ? 'try' : 'current', ...(col === 'routine' ? { when: 'both' } : {}), freq: 'daily' };
+      const ref = await db.collection(col).add(doc);
+      const queued = await fireResearch(col, ref.id, `${link} (a link the user pasted: open it and identify the product it shows)`);
+      toast(queued ? `Saved. Claude is opening the ${sourceName(link)} link to work out what it is.` : 'Saved the link. The next refresh will work out what it is.');
+      return ref.id;
+    }
     let info = {}, photoId = null;
     if (file && assets) { quickStatus('Uploading the picture…'); try { photoId = (await assets.upload(file)).id; } catch {} }
     if (sample) {
       quickStatus(phrase ? `Looking up “${phrase}”…` : 'Working out what’s in the picture…');
       try {
         const withImg = file && S.canImages;
-        info = await sample.json(`Identify this product from a shopper's ${withImg ? 'photo or screenshot' : 'short description'} and fill in its details from what you know. Australian English, prices in AUD.\n\n${phrase ? `Description: "${phrase}"` : 'Description: (none, use the picture)'}\n\nReply with only JSON:\n{"kind":"makeup|skincare|hair|health|clothes|activewear|home|office|tech|other","name":"official product name","brand":"brand","type":"makeup only, one of: ${MAKEUP_TYPES.join(', ')}","step":"skincare: one of ${SKIN_STEPS.join(', ')}; hair: one of ${HAIR_STEPS.join(', ')}","category":"clothes only, one of: ${WARD_CATS.join(', ')}","rrp":typical Australian price as a number or null,"finish":"makeup finish or empty","actives":"skincare key actives or empty","colour":"clothes colour if named","variants":[{"name":"shade or colour name","hex":"#rrggbb approximate","note":"short descriptor e.g. warm peach, satin"}],"selected":"the shade or colour the shopper named, matching a variant name, or empty","summary":"one sentence on what it is","confidence":"high|medium|low"}\n\nList every shade or colourway you know (up to 24). If unsure, give your best guess and set confidence to low.`, file && S.canImages ? { images: [file] } : undefined);
+        info = await sample.json(`Identify this product from a shopper's ${withImg ? 'photo or screenshot' : 'short description'} and fill in its details from what you know. Australian English, prices in AUD.\n\n${phrase ? `Description: "${phrase}"` : 'Description: (none, use the picture)'}\n\nReply with only JSON:\n{"kind":"makeup|skincare|hair|health|clothes|activewear|home|office|tech|other","name":"official product name","label":"2-4 word plain description, colour + what it is, e.g. Blue gym leggings, Burgundy Mary Janes, Rice toner","brand":"brand","type":"makeup only, one of: ${MAKEUP_TYPES.join(', ')}","step":"skincare: one of ${SKIN_STEPS.join(', ')}; hair: one of ${HAIR_STEPS.join(', ')}","category":"clothes only, one of: ${WARD_CATS.join(', ')}","rrp":typical Australian price as a number or null,"finish":"makeup finish or empty","actives":"skincare key actives or empty","colour":"clothes colour if named","variants":[{"name":"shade or colour name","hex":"#rrggbb approximate","note":"short descriptor e.g. warm peach, satin"}],"selected":"the shade or colour the shopper named, matching a variant name, or empty","summary":"one sentence on what it is","confidence":"high|medium|low"}\n\nList every shade or colourway you know (up to 24). If unsure, give your best guess and set confidence to low.`, file && S.canImages ? { images: [file] } : undefined);
       } catch (e) { if (e?.code === 'not_granted' || e?.code === 'sampling_disabled') info = {}; else info = {}; }
     }
     const kind = String(info.kind || 'other');
+    own = mode === 'own' || (mode === 'try' && ['makeup', 'skincare', 'hair'].includes(kind));
+    const stackStatus = mode === 'try' ? 'try' : 'current';
     const variants = (Array.isArray(info.variants) ? info.variants : []).slice(0, 24).map(v => ({ name: String(v.name || '').slice(0, 60), hex: isHex(v.hex) ? v.hex : '', note: String(v.note || '').slice(0, 80) })).filter(v => v.name);
     const sel = variants.find(v => v.name.toLowerCase() === String(info.selected || '').toLowerCase());
     const name = String(info.name || phrase || 'New item').slice(0, 140), brand = String(info.brand || '').slice(0, 80);
-    const common = { variants, summary: String(info.summary || ''), confidence: info.confidence || 'low', quickPhrase: phrase || '(from a photo)', research: 'draft', createdAt: now(), ...(photoId ? { photoId, userPhotoId: photoId } : {}) };
+    const common = { ...(info.label ? { label: String(info.label).slice(0, 40) } : {}), variants, summary: String(info.summary || ''), confidence: info.confidence || 'low', quickPhrase: phrase || '(from a photo)', research: 'draft', createdAt: now(), ...(photoId ? { photoId, userPhotoId: photoId } : {}) };
     let col, doc;
-    if (own && kind === 'makeup') { col = 'beauty'; doc = { name, brand, type: MAKEUP_TYPES.includes(info.type) ? info.type : 'Other', finish: info.finish || '', shade: sel?.name || '', shadeHex: sel?.hex || '', status: 'current', ...common }; }
-    else if (own && kind === 'skincare') { col = 'routine'; doc = { product: name, brand, step: SKIN_STEPS.includes(info.step) ? info.step : 'Other', when: 'both', freq: 'daily', actives: info.actives || '', status: 'current', ...common, variants: [] }; }
-    else if (own && kind === 'hair') { col = 'hair'; doc = { product: name, brand, step: HAIR_STEPS.includes(info.step) ? info.step : 'Other', freq: 'daily', status: 'current', ...common, variants: [] }; }
+    if (own && kind === 'makeup') { col = 'beauty'; doc = { name, brand, type: MAKEUP_TYPES.includes(info.type) ? info.type : 'Other', finish: info.finish || '', shade: sel?.name || '', shadeHex: sel?.hex || '', status: stackStatus, ...common }; }
+    else if (own && kind === 'skincare') { col = 'routine'; doc = { product: name, brand, step: SKIN_STEPS.includes(info.step) ? info.step : 'Other', when: 'both', freq: 'daily', actives: info.actives || '', status: stackStatus, ...common, variants: [] }; }
+    else if (own && kind === 'hair') { col = 'hair'; doc = { product: name, brand, step: HAIR_STEPS.includes(info.step) ? info.step : 'Other', freq: 'daily', status: stackStatus, ...common, variants: [] }; }
     else if (own && kind === 'activewear') { col = 'wardrobe'; doc = { name, brand, category: 'Active', colour: sel?.name || info.colour || '', vibes: ['active'], season: 'all', ...common, variants: [] }; }
     else if (own && kind === 'clothes') { col = 'wardrobe'; doc = { name, brand, category: WARD_CATS.includes(info.category) ? info.category : 'Top', colour: sel?.name || info.colour || '', vibes: [], season: 'all', ...common, variants: [] }; }
-    else { col = 'wishlist'; doc = { name, brand, category: WANT_CAT_OF[kind] || 'Other', variant: sel?.name || info.colour || '', shadeHex: sel?.hex || '', rrp: Number(info.rrp) > 0 ? Number(info.rrp) : null, price: null, priceHistory: [], stock: 'unknown', priority: 'want', status: 'want', ...common }; }
+    else { col = 'wishlist'; doc = { name, brand, category: WANT_CAT_OF[kind] || 'Other', variant: sel?.name || info.colour || '', shadeHex: sel?.hex || '', rrp: Number(info.rrp) > 0 ? Number(info.rrp) : null, price: null, priceHistory: [], stock: 'unknown', priority: mode === 'try' ? 'maybe' : 'want', status: 'want', ...common }; }
     const ref = await db.collection(col).add(doc);
     const queued = await fireResearch(col, ref.id, (phrase || name) + (photoId ? ' (identify from the attached photo: the userPhotoId asset)' : ''));
     quickStatus('');
@@ -1551,21 +1694,21 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     const inp = $('#quick-in'), phrase = inp.value.trim();
     if (!phrase && !quickFile) { inp.focus(); return; }
     const btn = $('#quick-go'); btn.disabled = true;
-    try { await quickAdd(phrase, $('#quick-own').value === 'own', quickFile); inp.value = ''; setQuickFile(null); }
+    try { if ($('#quick-own').value === 'brief') await addBrief(phrase, quickFile); else await quickAdd(phrase, { own: true, try: 'try' }[$('#quick-own').value] || false, quickFile); inp.value = ''; setQuickFile(null); }
     catch { quickStatus(''); toast('Couldn’t add that. Try again.'); }
     finally { btn.disabled = false; }
   });
-  $('#quick-own').addEventListener('change', () => { S.quickTouched = true; });
+  $('#quick-own').addEventListener('change', () => { S.quickTouched = true; setQuickFile(quickFile); });
   let quickFile = null;
   function setQuickFile(f) {
     quickFile = f && /^image\//.test(f.type) ? f : null;
     const b = $('#quick-photo-label');
     b.innerHTML = quickFile ? `<img src="${URL.createObjectURL(quickFile)}" alt="" style="width:26px;height:26px;border-radius:6px;object-fit:cover">` : 'Photo';
-    $('#quick-in').placeholder = quickFile ? 'Optional: add a note, e.g. the brand' : 'Add anything, e.g. Jooycee aura blush, or paste a screenshot';
+    $('#quick-in').placeholder = $('#quick-own').value === 'try' ? 'Paste a TikTok or Instagram link, or type what you saw' : $('#quick-own').value === 'brief' ? 'Describe it or the vibe, e.g. linen midi for a country wedding, earthy, under $250' : quickFile ? 'Optional: add a note, e.g. the brand' : 'Add anything: a name, a TikTok or shop link, or paste a screenshot';
   }
   $('#quick-photo').addEventListener('change', (e) => {
     const fs = [...e.target.files];
-    if (fs.length > 1) { bulkAdd(fs, $('#quick-own').value === 'own' ? (S.tab === 'active' ? 'active' : 'wardrobe') : 'wants'); e.target.value = ''; return; }
+    if (fs.length > 1 && $('#quick-own').value !== 'brief') { bulkAdd(fs, $('#quick-own').value === 'own' ? (S.tab === 'active' ? 'active' : 'wardrobe') : 'wants'); e.target.value = ''; return; }
     setQuickFile(fs[0]);
   });
   $('#quick-in').addEventListener('paste', (e) => { const f = [...(e.clipboardData?.files || [])].find(f => /^image\//.test(f.type)); if (f) { e.preventDefault(); setQuickFile(f); } });
@@ -1597,11 +1740,11 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
         let info = {};
         if (sample && S.canImages) {
           try {
-            info = await sample.json(`Identify the ${target === 'wants' ? 'product' : 'clothing item'} in this photo. If it is a screenshot of a shop listing, read the product name, brand and price from it. Australian English.\nReply with only JSON: {"name":"short descriptive name, e.g. Cream cable knit jumper","brand":"brand if visible or known, else empty","category":"one of ${WARD_CATS.join(', ')}","colour":"main colour","vibes":["2-3 style tags"],"kind":"clothes|activewear|makeup|skincare|hair|home|office|tech|other","price":number or null}`, { images: [f], modelTier: 'quick', cache: false });
+            info = await sample.json(`Identify the ${target === 'wants' ? 'product' : 'clothing item'} in this photo. If it is a screenshot of a shop listing, read the product name, brand and price from it. Australian English.\nReply with only JSON: {"name":"short descriptive name, e.g. Cream cable knit jumper","label":"2-4 word plain description, e.g. Blue gym leggings","brand":"brand if visible or known, else empty","category":"one of ${WARD_CATS.join(', ')}","colour":"main colour","vibes":["2-3 style tags"],"kind":"clothes|activewear|makeup|skincare|hair|home|office|tech|other","price":number or null}`, { images: [f], modelTier: 'quick', cache: false });
           } catch {}
         }
         let col, doc;
-        const base = { photoId, userPhotoId: photoId, ownPhoto: target !== 'wants', research: canResearch() ? 'queued' : 'draft', quickPhrase: '(from a photo)', createdAt: now() };
+        const base = { ...(info.label ? { label: String(info.label).slice(0, 40) } : {}), photoId, userPhotoId: photoId, ownPhoto: target !== 'wants', research: canResearch() ? 'queued' : 'draft', quickPhrase: '(from a photo)', createdAt: now() };
         if (target === 'wants') { col = 'wishlist'; doc = { ...base, name: String(info.name || 'New item'), brand: String(info.brand || ''), category: WANT_CAT_OF[info.kind] || 'Clothes', variant: String(info.colour || ''), rrp: Number(info.price) > 0 ? Number(info.price) : null, price: null, priceHistory: [], stock: 'unknown', priority: 'want', status: 'want' }; }
         else { col = 'wardrobe'; doc = { ...base, name: String(info.name || 'New piece'), brand: String(info.brand || ''), category: target === 'active' || info.kind === 'activewear' ? 'Active' : (WARD_CATS.includes(info.category) ? info.category : 'Top'), colour: String(info.colour || ''), vibes: Array.isArray(info.vibes) ? info.vibes.map(String).slice(0, 3) : [], season: 'all' }; }
         const ref = await db.collection(col).add(doc);
@@ -1798,7 +1941,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       case 'restock-prices': {
         t.disabled = true;
         const ids = restockItems().map(x => `${x._col}/${x.id}`);
-        mcp.callTool('Claude Code Remote', 'fire_trigger', { trigger_id: S.meta.refresh.triggerId, text: `Restock only, skip everything else this run. Apply the PRICING RULES to these products the user is running low on or has run out of, and write \`offers\` (cheapest delivered total first) and \`price\` on each doc: ${ids.join(', ')}.` }, { cache: false })
+        mcp.callTool('Claude Code Remote', 'fire_trigger', { trigger_id: S.meta.refresh.triggerId, text: `Restock only, skip everything else this run. Apply the PRICING RULES to these products the user is running low on or has run out of, and write \`offers\` (cheapest delivered total first) and \`price\` on each doc, then work out the ONE ORDER bundles in \`meta/restock\`: ${ids.join(', ')}.` }, { cache: false })
           .then(() => toast('Checking prices. They’ll appear here in a few minutes.')).catch(() => { t.disabled = false; toast('Couldn’t start that. Allow the Claude Code connection and try again.'); });
         break;
       }
@@ -1833,6 +1976,15 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       case 'logprice': { const it = find('wishlist'); if (it) openForm('logprice', it); break; }
       case 'swap': { const it = find(col); if (it) openForm('swap', it, {}, { fromCol: col }); break; }
       case 'restack': act(() => db.collection(col).doc(id).update({ status: 'current' })); break;
+      case 'try-want': {
+        const x = find(col); if (!x) break;
+        act(async () => {
+          await db.collection('wishlist').add({ name: nameOf(x), label: x.label || '', brand: x.brand || '', category: { routine: 'Skincare', beauty: 'Beauty', hair: 'Hair' }[col], variant: x.shade || '', url: x.url || '', source: x.source || '', photoId: x.photoId || null, price: x.price ?? null, priceHistory: [], stock: 'unknown', priority: 'maybe', status: 'want', research: 'queued', createdAt: now() }).then(ref => fireResearch('wishlist', ref.id, [x.brand, nameOf(x), x.shade].filter(Boolean).join(' ')));
+          await db.collection(col).doc(x.id).update({ deleted: true, deletedAt: now() });
+          toast('Moved to your wants. Claude is pricing it.');
+        });
+        break;
+      }
       case 'bought': {
         const it = find('wishlist'); if (!it) break;
         if (it.status === 'bought') act(() => db.collection('wishlist').doc(id).update({ status: 'want', boughtOn: null }));
@@ -1971,6 +2123,48 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
           await quickAdd(m.item, false);
           const missing = x.analysis.missing.map((mm, j) => j === i ? { ...mm, added: true } : mm);
           await db.collection('inspo').doc(id).update({ analysis: { ...x.analysis, missing } });
+        });
+        break;
+      }
+      case 'find-snooze': {
+        const f = find('finds'); if (!f) break;
+        const until = new Date(); until.setDate(until.getDate() + 30);
+        act(async () => { await db.collection('finds').doc(f.id).update({ snoozedUntil: dayKey(until) }); toast('Hidden for a month', async () => { await db.collection('finds').doc(f.id).update({ snoozedUntil: null }); }); });
+        break;
+      }
+      case 'find-nope': {
+        const f = find('finds'); if (!f) break;
+        // Kept in the bin with a flag so the refresh learns what not to suggest again
+        act(async () => { await db.collection('finds').doc(f.id).update({ deleted: true, deletedAt: now(), disliked: true }); toast('Got it, not for you. Claude won’t suggest things like it.', async () => { await db.collection('finds').doc(f.id).update({ deleted: false, deletedAt: null, disliked: false }); }); });
+        break;
+      }
+      case 'outfit-close': { S.suggestions.splice(Number(t.dataset.i), 1); renderWardrobe(); break; }
+      case 'outfit-roll': rollOutfit(Number(t.dataset.i)); break;
+      case 'brief-again': {
+        const b = find('briefs'); if (!b) break;
+        t.disabled = true;
+        act(async () => {
+          await mcp.callTool('Claude Code Remote', 'fire_trigger', { trigger_id: S.meta.research.triggerId, text: `Brief request: collection=briefs doc_id=${b.id}${(b.options || []).length ? ' more=true (keep the existing options and add 3-4 different ones)' : ''}` }, { cache: false });
+          await db.collection('briefs').doc(b.id).update({ status: 'queued', requestedAt: now() });
+          toast('Claude is searching again.');
+        });
+        break;
+      }
+      case 'brief-want': {
+        const b = find('briefs'), i = Number(t.dataset.i), o = b && (b.options || [])[i]; if (!o) break;
+        act(async () => {
+          const today = dayKey(), total = o.total ?? (o.price != null ? Number(o.price) + Number(o.delivery || 0) : null);
+          const ref = await db.collection('wishlist').add({
+            name: o.name, brand: o.brand || '', category: WANT_CATS.includes(o.category) ? o.category : 'Other', variant: o.colour || '',
+            url: o.url || '', price: o.price ?? null, priceHistory: o.price != null ? [{ d: today, p: o.price }] : [], lastChecked: o.price != null ? today : null,
+            offers: o.price != null && o.shop ? [{ shop: o.shop, price: o.price, delivery: o.delivery ?? null, total, url: o.url || '', pay: payOf(o), stock: 'unknown', checked: today }] : [],
+            ...(o.ongoing ? { ongoing: o.ongoing } : {}), photoId: o.photoId || null, notes: o.why || '',
+            priority: 'want', status: 'want', stock: 'unknown', createdAt: now(), fromBrief: b.id,
+          });
+          const options = (b.options || []).map((x, j) => j === i ? { ...x, added: true } : x);
+          await db.collection('briefs').doc(b.id).update({ options });
+          await fireResearch('wishlist', ref.id, [o.brand, o.name, o.colour].filter(Boolean).join(' '));
+          toast('Added to your wants. Claude is comparing shops for it.');
         });
         break;
       }
