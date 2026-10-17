@@ -105,6 +105,9 @@ select.plain { border: 1px solid var(--line); background: var(--surface); border
 .pill.pay { background: transparent; border: 1px solid var(--tan); color: var(--tan); font-weight: 500; padding: 0 7px; margin-left: 4px; }
 .restock-tools { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; max-width: 330px; }
 @media (max-width: 520px) { .restock-tools { grid-column: 1 / -1; justify-content: flex-start; max-width: none; } }
+.sizes { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px 18px; margin: 0; }
+.sizes dt { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.sizes dd { margin: 2px 0 0; }
 .gap { margin: 0; border-left: 2px solid var(--accent); padding-left: 10px; display: grid; gap: 2px; font-size: 0.92rem; }
 .ongoing { border-left: 2px solid var(--tan); padding-left: 10px; display: grid; gap: 3px; }
 .coll-h { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--tan); padding-bottom: 6px; margin-top: 8px; }
@@ -394,7 +397,6 @@ details.dna[open] > summary { margin-bottom: 10px; }
       <button class="tab" role="tab" data-tab="wardrobe">Wardrobe<span class="n" id="n-wardrobe"></span></button>
       <button class="tab" role="tab" data-tab="style">Style me</button>
       <button class="tab" role="tab" data-tab="mystyle">My style</button>
-      <button class="tab" role="tab" data-tab="inspo">Inspo<span class="n" id="n-inspo"></span></button>
       <button class="tab" role="tab" data-tab="amazon">Amazon list<span class="n" id="n-amazon"></span></button>
     </nav>
   </div>
@@ -562,6 +564,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
         <input type="file" id="fit-file" accept="image/*">
       </label>
       <div class="ask-row"><textarea id="fit-note" rows="2" placeholder="Optional: where you’re wearing it, or what feels off"></textarea><button class="btn primary" id="fit-go">Check it</button></div>
+      <div class="inspo-list" id="inspo-list" style="margin-top:16px"></div>
     </section>
   </section>
 
@@ -579,9 +582,13 @@ details.dna[open] > summary { margin-bottom: 10px; }
       </details>
     </section>
     <section class="block" id="igaps-block">
-      <div class="block-h"><h2>Inspo vs your wardrobe</h2><span class="tools"><span class="meta" id="igaps-when"></span><button class="btn small ghost needs-ai" id="igaps-go">Find my gaps</button></span></div>
-      <p class="meta" style="margin:0">What your Pinterest and Inspo looks keep coming back to that your wardrobe doesn't have yet.</p>
+      <div class="block-h"><h2>Your style vs your wardrobe</h2><span class="tools"><span class="meta" id="igaps-when"></span><button class="btn small ghost needs-ai" id="igaps-go">Find my gaps</button></span></div>
+      <p class="meta" style="margin:0">What your Pinterest looks keep coming back to that your wardrobe doesn't have yet.</p>
       <ul class="gaps" id="igaps-list"></ul>
+    </section>
+    <section class="block" id="sizes-block">
+      <div class="block-h"><h2>My sizes</h2><span class="tools"><button class="btn small ghost" data-act="sizes">Edit</button></span></div>
+      <div id="sizes-body"></div>
     </section>
     <section class="block">
       <div class="block-h"><h2>Me</h2></div>
@@ -611,7 +618,6 @@ details.dna[open] > summary { margin-bottom: 10px; }
         </div>
       </div>
     </div>
-    <div class="inspo-list" id="inspo-list"></div>
   </section>
 
   <!-- AMAZON LIST -->
@@ -770,6 +776,21 @@ details.dna[open] > summary { margin-bottom: 10px; }
       { k: 'shade', label: 'Shade', type: 'text', only: 'beauty' },
       { k: 'reason', label: 'Why the old one is going', type: 'textarea', full: true, ph: 'e.g. broke me out, too drying, oxidised orange' },
       PHOTO,
+    ]},
+    sizes: { title: 'My sizes', fields: [
+      { k: 'height', label: 'Height (cm)', type: 'text', ph: 'e.g. 168' },
+      { k: 'bust', label: 'Bust (cm)', type: 'text', ph: 'fullest part' },
+      { k: 'underbust', label: 'Underbust (cm)', type: 'text', ph: 'for bras and swim' },
+      { k: 'waist', label: 'Waist (cm)', type: 'text', ph: 'narrowest part' },
+      { k: 'hips', label: 'Hips (cm)', type: 'text', ph: 'fullest part' },
+      { k: 'inseam', label: 'Inside leg (cm)', type: 'text', ph: 'crotch to floor' },
+      { k: 'footLength', label: 'Foot length (cm)', type: 'text', ph: 'heel to longest toe' },
+      { k: 'braSize', label: 'Bra size', type: 'text', ph: 'e.g. 12C' },
+      { k: 'topSize', label: 'Usual top size', type: 'text', ph: 'e.g. AU 10 / S' },
+      { k: 'bottomSize', label: 'Usual bottoms size', type: 'text', ph: 'e.g. AU 10' },
+      { k: 'jeansSize', label: 'Usual jeans size', type: 'text', ph: 'e.g. 28' },
+      { k: 'shoeSize', label: 'Usual shoe size', type: 'text', ph: 'e.g. AU 8 / EU 39' },
+      { k: 'fitNotes', label: 'Fit notes', type: 'textarea', full: true, ph: 'e.g. long torso, size up in Shein, Abrand 29 fits perfectly, like a relaxed fit in tops' },
     ]},
     profile: { title: 'About me', fields: [
       { k: 'skinType', label: 'Skin type', type: 'text', ph: 'e.g. combination, sensitive' },
@@ -976,7 +997,6 @@ details.dna[open] > summary { margin-bottom: 10px; }
     $('#n-skin').textContent = stackCount('routine') || '';
     $('#n-makeup').textContent = stackCount('beauty') || '';
     $('#n-wardrobe').textContent = live('wardrobe').length || '';
-    $('#n-inspo').textContent = live('inspo').length || '';
     $('#n-amazon').textContent = live('basket').filter(b => !b.ordered).length || '';
     $('#n-hair').textContent = stackCount('hair') || '';
     $$('.needs-img').forEach(el => el.hidden = !S.canImages);
@@ -1059,6 +1079,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     if (!list.length) { el.innerHTML = emptyState('wishlist', all.length ? 'Nothing in this category.' : 'Add things you’re eyeing: clothes, beauty, office bits. The daily refresh checks prices and stock across shops.'); return; }
     el.innerHTML = list.map(wantCard).join('');
   }
+  const sizePickHtml = (x) => x.sizePick?.size ? `<p class="notes" style="margin:0"><b>Your size: ${esc(x.sizePick.size)}</b>${x.sizePick.why ? ` · ${esc(x.sizePick.why)}` : ''}</p>` : '';
   function wantCard(w) {
       const p = priceInfo(w), al = wantAlerts(w);
       return `<article class="card ${w.status === 'bought' ? 'faded' : ''}">
@@ -1073,6 +1094,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
           <div class="price">${p.last == null && w.rrp ? `<span class="meta">about</span> ${fmt(w.rrp)}` : fmt(p.last)}<small>${[p.best ? `<b style="color:var(--ink)">${fmt(p.best._total)}${p.best.delivery == null ? '+' : ''}</b> delivered from ${esc(p.best.shop)}${payOf(p.best).length ? ` · ${esc(payOf(p.best).join(', '))}` : ''}` : '', w.size ? esc(w.size) : '', p.offPeak ? `${fmt(p.offPeak)} off peak` : ''].filter(Boolean).join(' · ') || '&nbsp;'}</small></div>
           ${spark(p.h)}
         </div>
+        ${sizePickHtml(w)}
         ${p.otherDeal ? `<p class="notes" style="margin:0"><span class="pill good">Cheaper in ${esc(p.otherDeal.colour)}</span> ${fmt(p.otherDeal._total)}${p.otherDeal.delivery == null ? '+' : ''} delivered from ${esc(p.otherDeal.shop)}${p.otherDeal.note ? ` · ${esc(p.otherDeal.note)}` : ''}</p>` : ''}
         ${al.length || w.research ? `<div class="pills">${researchPill(w)}${al.map(a => `<span class="pill ${a.tone}">${esc(a.label)}</span>`).join('')}</div>` : ''}
         ${p.preloved.length ? `<p class="notes" style="margin:0"><span class="pill pay" style="margin:0">${esc(CONDITION[p.preloved[0].condition] || 'Pre-loved')}</span> ${fmt(p.preloved[0]._total)}${p.preloved[0].delivery == null ? '+' : ''} delivered from ${esc(p.preloved[0].shop)}${p.preloved[0].similar ? ' · similar, not the exact one' : ''}${p.preloved.length > 1 ? ` · ${p.preloved.length - 1} more below` : ''}</p>` : ''}
@@ -1116,6 +1138,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
             <div class="price">${fmt(o.price)}<small>${total != null ? `<b style="color:var(--ink)">${fmt(total)}${o.delivery == null ? '+' : ''}</b> delivered` : ''}${o.shop ? ` from ${esc(o.shop)}` : ''}</small></div>
             ${o.why ? `<p class="notes" style="margin:0">${esc(o.why)}</p>` : ''}
             ${o.reviewSummary ? `<p class="meta" style="margin:0">${esc(o.reviewSummary)}</p>` : ''}
+            ${sizePickHtml(o)}
             ${ongoingBlock(o, total)}
             <div class="actions">
               ${safeUrl(o.url) ? `<a class="btn small" href="${esc(o.url)}" target="_blank" rel="noopener">Shop ↗</a>` : ''}
@@ -1148,6 +1171,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
         ${payOf(f).length ? `<div class="pills">${payPills(f)}</div>` : ''}
         ${f.gap ? `<p class="gap"><span class="eyebrow">The gap</span>${esc(f.gap)}</p>` : ''}
         ${f.fitNote ? `<p class="notes"><b>Why you:</b> ${esc(f.fitNote)}</p>` : ''}
+        ${sizePickHtml(f)}
         ${ongoingBlock(f, f.price != null ? Number(f.price) + Number(f.delivery || 0) : null)}
         ${swapTarget ? `<p class="notes"><b>Could replace:</b> ${esc(nameOf(swapTarget))}</p>` : ''}
         ${reviewBlock(f.review || f)}
@@ -1279,7 +1303,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     renderStack('hair', $('#hair-stack'), HAIR_STEPS.map(s => [s, [s]]), x => known.has(x.step) ? x.step : 'Other');
   }
   const LAYER_CATS = ['Knit', 'Jumper', 'Cardigan', 'Jacket', 'Outerwear'];
-  const FLIP_ROWS = [['Top', ['Top', 'Shirt']], ['Layer', LAYER_CATS], ['Bottom', ['Bottoms', 'Jeans', 'Skirt']], ['Dress', ['Dress']], ['Shoes', ['Shoes']], ['Bag', ['Bag', 'Accessory']], ['Active', ['Active']], ['Want', null]];
+  const FLIP_ROWS = [['Top', ['Top', 'Shirt']], ['Layer', [...LAYER_CATS, 'Shirt']], ['Bottom', ['Bottoms', 'Jeans', 'Skirt']], ['Dress', ['Dress']], ['Shoes', ['Shoes']], ['Bag', ['Bag', 'Accessory']], ['Active', ['Active']], ['Want', null]];
   // Weather: hot leaves out cool-season pieces and layers; cold leaves out warm-season pieces
   const WEATHER = { any: 'Any weather', hot: 'Hot', mild: 'Mild', cold: 'Cold' };
   const WEATHER_TEXT = { hot: 'Hot day, 27°C or more', mild: 'Mild day, around 18–24°C', cold: 'Cold day, under 15°C' };
@@ -1352,7 +1376,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     const ig = (S.meta.style || {}).gaps || [];
     $('#igaps-when').textContent = S.igapsBusy ? 'Comparing…' : (S.meta.style || {}).gapsAt ? `Checked ${ago(S.meta.style.gapsAt)}` : '';
     $('#igaps-list').innerHTML = ig.length ? ig.map((g, i) => `<li><span class="pill ${g.priority === 'high' ? 'accent' : ''}">${g.priority === 'high' ? 'Key gap' : 'Nice to have'}</span><span><b>${esc(g.item)}</b><br><span class="meta">${esc(g.why || '')}${g.pairsWith ? ` · Wear with: ${esc(g.pairsWith)}` : ''}</span></span>${canWrite ? `<span class="tools">${g.briefed ? '<span class="meta">Options coming</span>' : `<button class="btn small" data-act="igap-brief" data-i="${i}">Find options</button>`}${g.wanted ? '<span class="meta">In wants</span>' : `<button class="btn small ghost" data-act="igap-want" data-i="${i}">Add to wants</button>`}</span>` : ''}</li>`).join('')
-      : `<li style="display:block"><span class="meta">${(S.meta.style || {}).summary ? 'Tap Find my gaps to compare your wardrobe with your style DNA and inspo.' : 'Add your Pinterest board above first, then Claude can compare it with your wardrobe.'}</span></li>`;
+      : `<li style="display:block"><span class="meta">${(S.meta.style || {}).summary ? 'Tap Find my gaps to compare your wardrobe with your style DNA and Pinterest.' : 'Add your Pinterest board above first, then Claude can compare it with your wardrobe.'}</span></li>`;
     $('#board-weather').innerHTML = Object.entries(WEATHER).map(([k, l]) => `<button class="chip" aria-pressed="${k === S.weather}" data-act="weather" data-v="${k}">${l}</button>`).join('');
     const f = flipState();
     const rows = FLIP_ROWS.map(([row, cats]) => {
@@ -1465,11 +1489,18 @@ details.dna[open] > summary { margin-bottom: 10px; }
       : `<li style="display:block" class="empty">The bin is empty.</li>`;
   }
 
+  function renderSizes() {
+    const p = S.meta.profile || {}, f = FORMS.sizes.fields.filter(x => p[x.k]);
+    $('#sizes-body').innerHTML = f.length
+      ? `<dl class="sizes">${f.map(x => `<div><dt>${esc(x.label.replace(/ \(cm\)$/, ''))}</dt><dd>${esc(p[x.k])}${/\(cm\)/.test(x.label) && /^\d+(\.\d+)?$/.test(String(p[x.k]).trim()) ? ' cm' : ''}</dd></div>`).join('')}</dl>`
+      : `<p class="meta" style="margin:0">Add your measurements and usual sizes. Claude then checks each brand’s size guide and tells you the size to buy on your wants and finds.</p>`;
+  }
   function renderInspo() {
     $('#inspo-go').hidden = !canWrite || !db || !assets;
-    const list = live('inspo').sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+    // Inspo tab retired: only fit checks show, under Fit check in Style me
+    const list = live('inspo').filter(x => x.kind === 'fit').sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
     const el = $('#inspo-list');
-    if (!list.length) { el.innerHTML = `<div class="empty">Save makeup looks and outfits you love. Each one gets a plan for recreating it with your own products and pieces.</div>`; return; }
+    if (!list.length) { el.innerHTML = ''; return; }
     const owned = [...live('beauty'), ...live('wardrobe')];
     el.innerHTML = list.map(x => {
       const a = x.analysis || {}, busy = S.inspoBusy[x.id];
@@ -1510,7 +1541,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
 
   function render() {
     renderChrome();
-    renderToday(); renderWants(); renderFinds(); renderSkin(); renderMakeup(); renderHair(); renderWardrobe(); renderStyle(); renderInspo(); renderShopList(); renderAmazon(); renderBin();
+    renderToday(); renderWants(); renderFinds(); renderSkin(); renderMakeup(); renderHair(); renderWardrobe(); renderStyle(); renderSizes(); renderInspo(); renderShopList(); renderAmazon(); renderBin();
   }
 
   // ---------- writes ----------
@@ -1559,12 +1590,13 @@ details.dna[open] > summary { margin-bottom: 10px; }
     if (col === 'logprice') { title = `Log price · ${item.name}`; src = { price: priceInfo(item).last ?? '', stock: item.stock || 'in' }; }
     else if (col === 'swap') { title = `Swap out ${nameOf(item)}`; src = preset; note = `It moves to “Swapped out” with your reason. The new one goes in as Testing${ctx.fromCol === 'routine' ? `, in the same step (${item.step || 'Other'}, ${WHEN[item.when] || 'AM'})` : `, as a ${item.type || 'product'}`}.`; }
     else if (col === 'profile') { title = 'About me'; src = S.meta.profile || {}; note = 'Used for recommendations and by the daily refresh when it looks for finds.'; }
+    else if (col === 'sizes') { title = 'My sizes'; src = S.meta.profile || {}; note = 'Measure in centimetres over light clothing. Claude checks each brand’s size guide against these and tells you which size to buy.'; }
     else { title = (item ? 'Edit ' : 'Add a ') + def.title; src = item || preset; }
     $('#dlg-title').textContent = title;
     const fields = def.fields.filter(f => !f.only || f.only === ctx.fromCol);
     $('#dlg-body').innerHTML = (note ? `<p class="dlg-note">${esc(note)}</p>` : '') + fields.map(f => fieldHtml(f, src[f.k], f.type === 'photo' ? (item && col !== 'swap' ? item : null) : null)).join('');
     const del = $('#dlg-del');
-    del.hidden = !item || ['logprice', 'swap', 'profile'].includes(col);
+    del.hidden = !item || ['logprice', 'swap', 'profile', 'sizes'].includes(col);
     $('#dlg-save').disabled = false;
     dlg.showModal();
     const first = $('#dlg-body input:not([type=file]), #dlg-body select, #dlg-body textarea');
@@ -1611,7 +1643,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
         await db.collection('wishlist').doc(item.id).update({ priceHistory: hist, price: data.price, stock: data.stock, lastChecked: today });
         const p = priceInfo({ ...item, priceHistory: hist });
         toast(p.drop ? `Down ${fmt(p.drop)}. Logged.` : 'Price logged');
-      } else if (col === 'profile') {
+      } else if (col === 'profile' || col === 'sizes') {
         await db.doc('meta/profile').set({ ...(S.meta.profile || {}), ...data, updatedAt: now() });
         toast('Saved');
       } else if (col === 'swap') {
@@ -2084,8 +2116,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
       const fresh = { kind: 'fit', note: $('#fit-note').value.trim(), photoId: up.id, createdAt: now() };
       const ref = await db.collection('inspo').add(fresh);
       const f = fitFile; fitFile = null; $('#fit-note').value = ''; $('#fit-prev').innerHTML = '<div class="thumb">+</div>';
-      toast('Saved to Inspo. Claude is looking now.');
-      setTab('inspo');
+      toast('Claude is looking at your outfit now.');
       analyseInspo({ id: ref.id, ...fresh }, f);
     } catch { toast('Couldn’t save that photo.'); }
     finally { btn.disabled = false; }
@@ -2261,6 +2292,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
         break;
       }
       case 'profile': openForm('profile', null); break;
+      case 'sizes': openForm('sizes', null); break;
       case 'refresh-now': refreshNow(t); break;
       case 'edit': { const it = find(col); if (it) openForm(col, it); break; }
       case 'logprice': { const it = find('wishlist'); if (it) openForm('logprice', it); break; }
@@ -2530,7 +2562,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
   // ---------- boot ----------
   const startTab = (location.hash || '').slice(1) || store.get('edit.tab');
   if (startTab === 'active') { S.tab = 'wardrobe'; S.wardCat = 'Active'; }
-  else if (['today', 'wants', 'finds', 'skin', 'makeup', 'hair', 'wardrobe', 'style', 'mystyle', 'inspo', 'amazon', 'bin'].includes(startTab)) S.tab = startTab;
+  else if (['today', 'wants', 'finds', 'skin', 'makeup', 'hair', 'wardrobe', 'style', 'mystyle', 'amazon', 'bin'].includes(startTab)) S.tab = startTab;
   render();
 
   (async () => {
