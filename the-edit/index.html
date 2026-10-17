@@ -494,7 +494,6 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       { k: 'variant', label: 'Size / shade / colour', type: 'text', ph: 'e.g. 10, Black' },
       { k: 'priority', label: 'Priority', type: 'select', options: opts(PRIORITY) },
       { k: 'price', label: 'Current price (AUD)', type: 'number' },
-      { k: 'target', label: 'Buy if it drops to', type: 'number' },
       { k: 'stock', label: 'Stock', type: 'select', options: opts(STOCK) },
       PHOTO,
       { k: 'notes', label: 'Notes', type: 'textarea', full: true, ph: 'Why you want it, sale dates, sizing notes…' },
@@ -592,6 +591,15 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     const word = col === 'beauty' || ['Beauty', 'Skincare'].includes(x.category) ? 'shades' : 'colours';
     return `<div><p class="eyebrow" style="margin-bottom:8px">${vs.length} ${word}${cur ? ` · <span style="color:var(--ink)">${esc(cur)}</span>` : ''}</p><div class="swatches">${vs.map((v, i) => `<button class="sw" data-act="pick-variant" data-col="${col}" data-id="${esc(x.id)}" data-i="${i}" aria-pressed="${v.name === cur}" title="${esc(v.note || v.name)}" ${canWrite ? '' : 'disabled'}><i style="background:${isHex(v.hex) ? v.hex : 'var(--sunk)'}"></i><span>${esc(v.name)}</span></button>`).join('')}</div></div>`;
   }
+  // In a stack you own one shade: show it, and tuck the rest away as "add this shade to wants"
+  function otherShades(col, x) {
+    const vs = (x.variants || []).filter(v => v && v.name && v.name !== selName(x)).slice(0, 24);
+    if (!vs.length || !canWrite) return '';
+    return `<details class="more"><summary>Other shades (${vs.length})</summary><p class="meta" style="margin:6px 0 8px">Tap a shade to add it to your wants.</p><div class="swatches">${vs.map(v => {
+      const i = x.variants.indexOf(v);
+      return `<button class="sw" data-act="want-shade" data-col="${col}" data-id="${esc(x.id)}" data-i="${i}" title="${esc(v.note || v.name)}"><i style="background:${isHex(v.hex) ? v.hex : 'var(--sunk)'}"></i><span>${esc(v.name)}</span></button>`;
+    }).join('')}</div></details>`;
+  }
   const stackNoteBlock = (x) => x.stackNote ? `<div class="note-block"><b>Against what you own</b><span>${esc(x.stackNote)}</span></div>` : '';
   const canResearch = () => !!(mcp && S.meta.research?.triggerId && canWrite);
   const initial = (s) => esc((s || '?').trim().charAt(0).toUpperCase());
@@ -645,7 +653,6 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
   }
   function wantAlerts(it) {
     const p = priceInfo(it), out = [];
-    if (p.atTarget) out.push({ tone: 'good', label: 'Hit your target', detail: `${fmt(p.last)}${p.best ? ' at ' + p.best.shop : ''} (target ${fmt(it.target)})`, rank: 0 });
     if (p.drop) out.push({ tone: 'good', label: `Down ${fmt(p.drop)}`, detail: `${Math.round(p.drop / p.prev * 100)}% since last check`, rank: 1 });
     if (it.stock === 'out') out.push({ tone: 'bad', label: 'Out of stock', detail: 'Check for restocks or a similar piece', rank: 2 });
     if (it.stock === 'low' || it.stock === 'selling') out.push({ tone: 'warn', label: STOCK[it.stock], detail: 'Might go soon', rank: 2 });
@@ -668,12 +675,21 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     if (!r || !(r.summary || (r.pros || []).length)) return '';
     const v = VERDICT[r.verdict];
     const src = (r.sources || []).filter(s => safeUrl(s.url)).slice(0, 5);
-    return `<div class="review">
-      ${v ? `<div class="pills"><span class="pill ${v[0]}">${esc(r.verdictLabel || v[1])}</span>${r.checked ? `<span class="meta">${esc(ago(r.checked))}</span>` : ''}</div>` : ''}
+    return `<details class="more"><summary>Reviews${v ? ` · <span class="pill ${v[0]}">${esc(r.verdictLabel || v[1])}</span>` : ''}</summary><div class="review" style="margin-top:8px">
+      ${r.checked ? `<span class="meta">Checked ${esc(ago(r.checked))}</span>` : ''}
       ${r.summary ? `<span>${esc(r.summary)}</span>` : ''}
       ${(r.pros || []).length || (r.cons || []).length ? `<ul>${(r.pros || []).slice(0, 3).map(p => `<li>${esc(p)}</li>`).join('')}${(r.cons || []).slice(0, 3).map(p => `<li class="meta">${esc(p)}</li>`).join('')}</ul>` : ''}
       ${src.length ? `<div class="sources">${src.map(s => `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title || new URL(s.url).hostname)}</a>`).join('')}</div>` : ''}
-    </div>`;
+    </div></details>`;
+  }
+  function altsBlock(col, x) {
+    const alts = (x.alternatives || []).filter(a => a && a.name);
+    if (!alts.length) return x.altResearch === 'queued' ? `<p class="meta" style="margin:0">Looking for similar and cheaper options…</p>` : '';
+    return `<details class="more" ${S.openAlts?.[x.id] ? 'open' : ''} data-alts="${esc(x.id)}"><summary>${alts.length} similar or cheaper option${alts.length === 1 ? '' : 's'}</summary><ul class="alerts" style="margin-top:10px">${alts.map((a, i) => {
+      const v = VERDICT[a.verdict];
+      return `<li>${thumb(a)}<span class="what"><b>${esc([a.brand, a.name].filter(Boolean).join(' '))}</b><span class="pills">${a.price != null ? `<span class="pill ${a.cheaper ? 'good' : ''}">${fmt(a.price)}${a.cheaper ? ' · cheaper' : ''}</span>` : ''}${v ? `<span class="pill ${v[0]}">${esc(v[1])}</span>` : ''}</span><span class="meta">${esc(a.why || '')}${a.shop ? ` · ${esc(a.shop)}` : ''}</span></span>
+        <span class="tools" style="flex-direction:column;align-items:stretch">${safeUrl(a.url) ? `<a class="btn small ghost" href="${esc(a.url)}" target="_blank" rel="noopener">Shop ↗</a>` : ''}${canWrite ? (a.added ? '<span class="meta">Added</span>' : `<button class="btn small" data-act="alt-want" data-col="${col}" data-id="${esc(x.id)}" data-i="${i}">Add to wants</button>`) : ''}</span></li>`;
+    }).join('')}</ul></details>`;
   }
 
   // ---------- rendering ----------
@@ -722,7 +738,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
 
     const wants = activeWants();
     const totalWant = wants.reduce((s, w) => s + (Number(priceInfo(w).last) || 0), 0);
-    const deals = wants.filter(w => { const p = priceInfo(w); return p.atTarget || p.drop; }).length;
+    const deals = wants.filter(w => priceInfo(w).drop).length;
     $('#stats').innerHTML = [
       [fmt(totalWant).replace(/\.00$/, ''), `on the want list (${wants.length})`],
       [deals, deals === 1 ? 'deal to look at' : 'deals to look at'],
@@ -739,7 +755,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       <li>${thumb(w)}
         <span class="what"><b>${esc(w.name)}</b><span class="pills"><span class="pill ${a.tone}">${esc(a.label)}</span><span class="meta">${esc(a.detail)}</span></span></span>
         ${w.url && safeUrl(w.url) ? `<a class="btn small ghost" href="${esc(w.url)}" target="_blank" rel="noopener">Shop ↗</a>` : '<span></span>'}</li>`).join('')
-      : `<li style="display:block"><span class="meta">${wants.length ? 'Nothing has dropped or is running low.' : 'Add things you want. Drops, target prices and low stock show up here.'}</span></li>`;
+      : `<li style="display:block"><span class="meta">${wants.length ? 'Nothing has dropped or is running low.' : 'Add things you want. Price drops and low stock show up here.'}</span></li>`;
 
     const nf = newFinds().sort((a, b) => String(b.foundOn || '').localeCompare(String(a.foundOn || ''))).slice(0, 4);
     $('#today-finds').innerHTML = nf.length ? nf.map(f => {
@@ -781,22 +797,24 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
           </div>
         </div>
         <div class="price-row">
-          <div class="price">${p.last == null && w.rrp ? `<span class="meta">about</span> ${fmt(w.rrp)}` : fmt(p.last)}<small>${p.best ? `Best at ${esc(p.best.shop)} · ` : ''}${w.target ? `Target ${fmt(w.target)}` : 'No target set'}${p.offPeak ? ` · ${fmt(p.offPeak)} off peak` : ''}</small></div>
+          <div class="price">${p.last == null && w.rrp ? `<span class="meta">about</span> ${fmt(w.rrp)}` : fmt(p.last)}<small>${[p.best ? `Best at ${esc(p.best.shop)}` : '', w.size ? esc(w.size) : '', p.offPeak ? `${fmt(p.offPeak)} off peak` : ''].filter(Boolean).join(' · ') || '&nbsp;'}</small></div>
           ${spark(p.h)}
         </div>
         ${al.length || w.research ? `<div class="pills">${researchPill(w)}${al.map(a => `<span class="pill ${a.tone}">${esc(a.label)}</span>`).join('')}</div>` : ''}
         ${variantsBlock('wishlist', w)}
         ${stackNoteBlock(w)}
         ${p.offers.length ? `<details class="more"><summary>${p.offers.length} ${p.offers.length === 1 ? 'shop' : 'shops'} checked${p.lastChecked ? ` · ${esc(ago(p.lastChecked))}` : ''}</summary><ul class="offers">${p.offers.map(o => `<li>${safeUrl(o.url) ? `<a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(o.shop)}</a>` : esc(o.shop)}<span class="meta">${esc(STOCK[o.stock] || '')}</span><span class="mono">${fmt(o.price)}</span></li>`).join('')}</ul></details>` : ''}
-        ${reviewBlock(w.reviews)}
         ${w.notes ? `<p class="notes">${esc(w.notes)}</p>` : ''}
+        ${reviewBlock(w.reviews)}
+        ${altsBlock('wishlist', w)}
         ${aiBox(w.id)}
         <div class="actions">
           ${safeUrl(w.url) ? `<a class="btn small" href="${esc(w.url)}" target="_blank" rel="noopener">Shop ↗</a>` : ''}
           ${canWrite && w.status !== 'bought' ? `<button class="btn small ghost" data-act="logprice" data-id="${esc(w.id)}">Log price</button>` : ''}
           ${sample && w.category === 'Clothes' && live('wardrobe').length ? `<button class="btn small ghost" data-act="ai-pairs" data-id="${esc(w.id)}">Goes with?</button>` : ''}
           ${sample && (w.variants || []).length ? `<button class="btn small ghost" data-act="ai-compare" data-col="wishlist" data-id="${esc(w.id)}">Compare with what I own</button>` : ''}
-          ${canResearch() && w.research !== 'queued' ? `<button class="btn small ghost" data-act="research" data-col="wishlist" data-id="${esc(w.id)}">${w.research === 'done' ? 'Research again' : 'Research it'}</button>` : ''}
+          ${canResearch() && w.altResearch !== 'queued' ? `<button class="btn small ghost" data-act="alts" data-col="wishlist" data-id="${esc(w.id)}">Similar or cheaper</button>` : ''}
+          ${canResearch() && w.research !== 'queued' && w.research !== 'done' ? `<button class="btn small ghost" data-act="research" data-col="wishlist" data-id="${esc(w.id)}">Research it</button>` : ''}
           ${canWrite ? `<button class="btn small ghost push" data-act="bought" data-id="${esc(w.id)}">${w.status === 'bought' ? 'Undo' : 'I have it'}</button>` : ''}
           ${canWrite ? `<button class="btn small ghost" data-act="edit" data-col="wishlist" data-id="${esc(w.id)}">Edit</button>` : ''}
           ${delBtn('wishlist', w.id)}
@@ -824,11 +842,13 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
         ${f.fitNote ? `<p class="notes"><b>Why you:</b> ${esc(f.fitNote)}</p>` : ''}
         ${swapTarget ? `<p class="notes"><b>Could replace:</b> ${esc(nameOf(swapTarget))}</p>` : ''}
         ${reviewBlock(f.review || f)}
+        ${altsBlock('finds', f)}
         <div class="actions">
           ${safeUrl(f.url) ? `<a class="btn small" href="${esc(f.url)}" target="_blank" rel="noopener">Shop ↗</a>` : ''}
           ${canWrite ? `<button class="btn small" data-act="find-own" data-id="${esc(f.id)}">I have it</button>` : ''}
           ${canWrite ? `<button class="btn small ghost" data-act="find-want" data-id="${esc(f.id)}">Add to wants</button>` : ''}
           ${canWrite && (f.kind === 'skincare' || f.kind === 'makeup') ? `<button class="btn small ghost" data-act="find-stack" data-id="${esc(f.id)}">${swapTarget ? 'Swap it in' : 'Add to my stack'}</button>` : ''}
+          ${canResearch() && f.altResearch !== 'queued' ? `<button class="btn small ghost" data-act="alts" data-col="finds" data-id="${esc(f.id)}">Similar or cheaper</button>` : ''}
           ${delBtn('finds', f.id, 'Not for me')}
         </div>
       </article>`;
@@ -849,13 +869,14 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
         <div class="pills">${x.example ? '<span class="pill ex">Example</span>' : ''}<span class="pill ${STACK_TONE[st]}">${esc(STACK[st])}</span>${researchPill(x)}${stars(x.rating)}</div>
         ${st === 'out' && (x.swapReason || x.swappedFor) ? `<p class="notes">${x.swappedFor ? `Swapped for ${esc(x.swappedFor)}. ` : ''}${esc(x.swapReason || '')}</p>` : ''}
         ${x.feedback ? `<p class="notes">“${esc(x.feedback)}”</p>` : ''}
-        ${variantsBlock(col, x)}
+        ${otherShades(col, x)}
         ${stackNoteBlock(x)}
         ${reviewBlock(x.reviews)}
+        ${altsBlock(col, x)}
         ${aiBox(x.id)}
       </div>
       <div class="actions">
-        ${sample && (x.variants || []).length && st !== 'out' ? `<button class="btn small ghost" data-act="ai-compare" data-col="${col}" data-id="${esc(x.id)}">Compare shades</button>` : ''}
+        ${canResearch() && st !== 'out' && x.altResearch !== 'queued' ? `<button class="btn small ghost" data-act="alts" data-col="${col}" data-id="${esc(x.id)}">Similar or cheaper</button>` : ''}
         ${canResearch() && x.research && x.research !== 'queued' && x.research !== 'done' ? `<button class="btn small ghost" data-act="research" data-col="${col}" data-id="${esc(x.id)}">Research it</button>` : ''}
         ${canWrite && st !== 'out' && st !== 'shelf' ? `<button class="btn small" data-act="swap" data-col="${col}" data-id="${esc(x.id)}">Swap out</button>` : ''}
         ${canWrite && (st === 'out' || st === 'shelf') ? `<button class="btn small" data-act="restack" data-col="${col}" data-id="${esc(x.id)}">Back in my stack</button>` : ''}
@@ -1086,7 +1107,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
         if (data.price != null) hist.push({ d: today, p: data.price });
         await db.collection('wishlist').doc(item.id).update({ priceHistory: hist, price: data.price, stock: data.stock, lastChecked: today });
         const p = priceInfo({ ...item, priceHistory: hist });
-        toast(p.atTarget ? 'At or under your target!' : p.drop ? `Down ${fmt(p.drop)}. Logged.` : 'Price logged');
+        toast(p.drop ? `Down ${fmt(p.drop)}. Logged.` : 'Price logged');
       } else if (col === 'profile') {
         await db.doc('meta/profile').set({ ...(S.meta.profile || {}), ...data, updatedAt: now() });
         toast('Saved');
@@ -1342,6 +1363,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
   // ---------- actions ----------
   async function act(fn, fail = 'Couldn’t save that. Try again.') { try { await fn(); } catch { toast(fail); } }
   function setTab(tab) { S.tab = tab; store.set('edit.tab', tab); history.replaceState(null, '', '#' + tab); render(); window.scrollTo({ top: 0 }); }
+  document.addEventListener('toggle', (e) => { const d = e.target; if (d.dataset?.alts) { S.openAlts = S.openAlts || {}; S.openAlts[d.dataset.alts] = d.open; } }, true);
   document.addEventListener('toggle', (e) => { const d = e.target; if (d.matches?.('details.shelf')) store.set('edit.open.' + d.dataset.key.replace('-', ''), d.open ? '1' : ''); }, true);
   document.addEventListener('click', (e) => {
     const t = e.target.closest('[data-tab],[data-add],[data-act]');
@@ -1435,8 +1457,41 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       }
       case 'pick-variant': {
         const x = find(col), v = x && (x.variants || [])[Number(t.dataset.i)]; if (!v) break;
-        const data = col === 'beauty' ? { shade: v.name, shadeHex: v.hex || x.shadeHex || '' } : { variant: v.name, shadeHex: v.hex || '' };
+        const data = col === 'beauty' ? { shade: v.name, shadeHex: v.hex || x.shadeHex || '' } : { variant: v.name, shadeHex: v.hex || '', ...(safeUrl(v.url) ? { url: v.url } : {}) };
         act(() => db.collection(col).doc(id).update(data));
+        break;
+      }
+      case 'want-shade': {
+        const x = find(col), v = x && (x.variants || [])[Number(t.dataset.i)]; if (!v) break;
+        t.disabled = true;
+        act(async () => {
+          await db.collection('wishlist').add({ name: nameOf(x), brand: x.brand || '', category: col === 'routine' ? 'Skincare' : 'Beauty', variant: v.name, shadeHex: v.hex || '', variants: x.variants, photoId: v.photoId || x.photoId || null, photoShared: true, url: safeUrl(v.url) || x.url || '', price: null, rrp: x.price || null, priceHistory: [], stock: 'unknown', priority: 'want', status: 'want', reviews: x.reviews || null, notes: `Another shade of the ${nameOf(x)} you own (${selName(x) || 'your shade'}).`, createdAt: now() });
+          toast(`${v.name} added to your wants`);
+        });
+        break;
+      }
+      case 'alts': {
+        const x = find(col); if (!x) break;
+        t.disabled = true;
+        (async () => {
+          try {
+            await mcp.callTool('Claude Code Remote', 'fire_trigger', { trigger_id: S.meta.research.triggerId, text: `Research request: mode=alternatives collection=${col} doc_id=${id} product=${JSON.stringify([x.brand, nameOf(x), selName(x)].filter(Boolean).join(' '))}` }, { cache: false });
+            await db.collection(col).doc(id).update({ altResearch: 'queued' });
+            toast('Looking for similar and cheaper options. They appear on this card in a few minutes.');
+          } catch { t.disabled = false; toast('Couldn’t start that. Allow the Claude Code connection and try again.'); }
+        })();
+        break;
+      }
+      case 'alt-want': {
+        const x = find(col), i = Number(t.dataset.i), a = x?.alternatives?.[i]; if (!a) break;
+        t.disabled = true;
+        act(async () => {
+          const today = dayKey();
+          await db.collection('wishlist').add({ name: a.name, brand: a.brand || '', category: x.category || ({ routine: 'Skincare', beauty: 'Beauty' }[col]) || ({ skincare: 'Skincare', makeup: 'Beauty', clothes: 'Clothes' }[x.kind]) || 'Other', url: a.url || '', photoId: a.photoId || null, photoShared: true, price: a.price ?? null, priceHistory: a.price != null ? [{ d: today, p: a.price }] : [], offers: a.price != null && a.shop ? [{ shop: a.shop, price: a.price, url: a.url || '', stock: 'unknown', checked: today }] : [], stock: 'unknown', priority: 'want', status: 'want', notes: `Alternative to ${nameOf(x)}. ${a.why || ''}`.trim(), createdAt: now() });
+          const alternatives = x.alternatives.map((aa, j) => j === i ? { ...aa, added: true } : aa);
+          await db.collection(col).doc(id).update({ alternatives });
+          toast('Added to your wants');
+        });
         break;
       }
       case 'research': {
