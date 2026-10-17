@@ -323,7 +323,13 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
   .dlg-b { grid-template-columns: 1fr; }
   .ask-row, .refresh { grid-template-columns: 1fr; }
   .cards, .stack-list { grid-template-columns: 1fr; }
-  .board { grid-template-columns: minmax(0, 130px) minmax(0, 1fr); }
+  .board { grid-template-columns: minmax(0, 1fr); }
+  .board .me { width: min(200px, 60%); justify-self: center; }
+  .board .me.empty { width: 100%; aspect-ratio: auto; padding: 14px; }
+  .frow { grid-template-columns: 34px minmax(0, 1fr) 34px; row-gap: 4px; }
+  .frow .lab { grid-column: 1 / -1; }
+  .frow .card-in { grid-template-columns: 72px minmax(0, 1fr); }
+  .frow .card-in .img { width: 72px; height: 86px; }
   .bin li { grid-template-columns: 48px 1fr; }
   .bin .tools { grid-column: 1 / -1; justify-content: flex-start; }
 }
@@ -1221,10 +1227,10 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
         <button class="arrow" data-act="flip" data-row="${row}" data-d="-1" aria-label="Previous ${row.toLowerCase()}">‹</button>
         <div class="card-in"><div class="img">${on ? (src ? `<img src="${esc(src)}" alt="" key="${esc(x.id)}">` : initial(x.name)) : '—'}</div>
           <div class="nm">${on ? `<b>${x._col === 'wishlist' ? 'Want · ' : ''}${esc(shortOf(x))}</b><span class="meta">${i + 1} of ${items.length}</span>` : `<span class="meta">${items.length} to flip through</span>`}
-          <button class="link" data-act="flip-toggle" data-row="${row}" style="justify-self:start">${on ? 'Take off' : 'Add a ' + row.toLowerCase()}</button></div></div>
+          <button class="link" data-act="flip-toggle" data-row="${row}" style="justify-self:start">${on ? 'Take off' : row === 'Active' ? 'Add activewear' : 'Add a ' + row.toLowerCase()}</button></div></div>
         <button class="arrow" data-act="flip" data-row="${row}" data-d="1" aria-label="Next ${row.toLowerCase()}">›</button></div>`;
     }).join('');
-    $('#board').innerHTML = `<div class="me">${mp.length ? `<img src="/_blob/${mp[0]}" alt="You">` : 'Add a full-length photo of you'}</div>
+    $('#board').innerHTML = `<div class="me${mp.length ? '' : ' empty'}">${mp.length ? `<img src="/_blob/${mp[0]}" alt="You">` : 'Add a full-length photo of you'}</div>
       <div class="flip">${rows || '<span class="meta">Add clothes to your wardrobe to start flipping.</span>'}</div>`;
     $('#board-save').hidden = !canWrite || !chosen.length;
     $('#board-ask').disabled = !chosen.length;
