@@ -225,7 +225,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
 .icon { border: 1px solid var(--line); background: var(--surface); width: 30px; height: 30px; border-radius: 8px; cursor: pointer; display: grid; place-items: center; color: var(--muted); font-size: 0.85rem; }
 
 /* Quick add */
-.quick { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 6px 6px 6px 18px; }
+.quick { display: grid; grid-template-columns: 1fr auto auto auto; gap: 8px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 6px 6px 6px 18px; }
 .quick input { border: 0; background: transparent; padding: 8px 0; font-size: 1rem; min-width: 0; width: 100%; }
 .quick input:focus { outline: none; }
 .quick:focus-within { border-color: var(--accent); }
@@ -266,7 +266,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
   .stats { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 520px) {
-  .quick { grid-template-columns: 1fr auto; border-radius: 14px; padding: 8px 8px 8px 14px; }
+  .quick { grid-template-columns: auto 1fr auto; border-radius: 14px; padding: 8px 8px 8px 14px; }
   .quick input { grid-column: 1 / -1; }
   .dlg-b { grid-template-columns: 1fr; }
   .ask-row, .refresh { grid-template-columns: 1fr; }
@@ -307,7 +307,9 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
 
 <main class="wrap">
   <form class="quick" id="quick" autocomplete="off" hidden>
-    <input type="text" id="quick-in" placeholder="Add anything, e.g. Jooycee aura blush or COS wool blazer" aria-label="Product to add">
+    <input type="text" id="quick-in" placeholder="Add anything, e.g. Jooycee aura blush, or paste a screenshot" aria-label="Product to add">
+    <label class="btn small ghost" id="quick-photo-label" for="quick-photo" title="Add a photo or screenshot">Photo</label>
+    <input type="file" id="quick-photo" accept="image/*" hidden>
     <select id="quick-own" aria-label="Want it or own it"><option value="want">I want it</option><option value="own">I own it</option></select>
     <button class="btn primary" type="submit" id="quick-go">Add</button>
   </form>
@@ -552,6 +554,8 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       { k: 'budget', label: 'Budget', type: 'text', ph: 'e.g. mid-range, splurge on SPF' },
       { k: 'style', label: 'Style', type: 'textarea', full: true, ph: 'e.g. minimal, neutral palette, oversized tailoring' },
       { k: 'shops', label: 'Shops to check', type: 'text', full: true, ph: 'e.g. Mecca, Sephora, Adore Beauty, Myer, The Iconic, COS' },
+      { k: 'location', label: 'Deliver to (suburb, state, postcode)', type: 'text', full: true, ph: 'e.g. Bermagui NSW 2546', hint: 'Prices are compared delivered to here.' },
+      { k: 'memberships', label: 'Memberships you already pay for', type: 'text', full: true, ph: 'e.g. Amazon Prime, OnePass', hint: 'Member-only prices count only for these. Otherwise the membership cost is added.' },
     ]},
   };
 
@@ -589,7 +593,9 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     if (!vs.length) return '';
     const cur = selName(x);
     const word = col === 'beauty' || ['Beauty', 'Skincare'].includes(x.category) ? 'shades' : 'colours';
-    return `<div><p class="eyebrow" style="margin-bottom:8px">${vs.length} ${word}${cur ? ` · <span style="color:var(--ink)">${esc(cur)}</span>` : ''}</p><div class="swatches">${vs.map((v, i) => `<button class="sw" data-act="pick-variant" data-col="${col}" data-id="${esc(x.id)}" data-i="${i}" aria-pressed="${v.name === cur}" title="${esc(v.note || v.name)}" ${canWrite ? '' : 'disabled'}><i style="background:${isHex(v.hex) ? v.hex : 'var(--sunk)'}"></i><span>${esc(v.name)}</span></button>`).join('')}</div></div>`;
+    const sw = (v, i) => `<button class="sw" data-act="pick-variant" data-col="${col}" data-id="${esc(x.id)}" data-i="${i}" aria-pressed="${v.name === cur}" title="${esc(v.note || v.name)}${v.price ? ' · ' + fmt(v.price) : ''}" ${canWrite ? '' : 'disabled'}><i style="background:${isHex(v.hex) ? v.hex : 'var(--sunk)'}"></i><span>${esc(v.name)}</span></button>`;
+    const ci = vs.findIndex(v => v.name === cur);
+    return `<details class="more" data-var="${esc(x.id)}" ${S.openVar?.[x.id] ? 'open' : ''}><summary style="display:flex;gap:10px;align-items:center">${ci >= 0 ? `<i style="width:20px;height:20px;border-radius:50%;border:1px solid var(--line);display:inline-block;background:${isHex(vs[ci].hex) ? vs[ci].hex : 'var(--sunk)'}"></i><span style="color:var(--ink)">${esc(cur)}</span>` : ''}<span>${vs.length} ${word}</span></summary><div class="swatches" style="margin-top:10px">${vs.map(sw).join('')}</div></details>`;
   }
   // In a stack you own one shade: show it, and tuck the rest away as "add this shade to wants"
   function otherShades(col, x) {
@@ -601,6 +607,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     }).join('')}</div></details>`;
   }
   const stackNoteBlock = (x) => x.stackNote ? `<div class="note-block"><b>Against what you own</b><span>${esc(x.stackNote)}</span></div>` : '';
+  const deliverTo = () => (S.meta.profile?.location || 'you').trim();
   const canResearch = () => !!(mcp && S.meta.research?.triggerId && canWrite);
   const initial = (s) => esc((s || '?').trim().charAt(0).toUpperCase());
   const thumb = (x, extra = '') => { const src = photoSrc(x); return src ? `<img class="thumb ${extra}" src="${esc(src)}" alt="" loading="lazy" data-fallback="${initial(nameOf(x))}">` : `<div class="thumb ${extra}">${initial(x.brand || nameOf(x))}</div>`; };
@@ -648,7 +655,9 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
     const offPeak = peak != null && last != null && peak > last ? peak - last : 0;
     const atTarget = it.target != null && it.target !== '' && last != null && Number(last) <= Number(it.target);
     const lastChecked = it.lastChecked || (h.length ? h[h.length - 1].d : null);
-    const offers = (it.offers || []).filter(o => o && o.price != null).slice().sort((a, b) => a.price - b.price);
+    // Rank shops by what it costs to land at the door: item + delivery + any membership needed
+    const totalOf = (o) => o.total != null ? Number(o.total) : Number(o.price) + Number(o.delivery || 0) + Number(o.membership || 0);
+    const offers = (it.offers || []).filter(o => o && o.price != null).map(o => ({ ...o, _total: totalOf(o) })).sort((a, b) => a._total - b._total);
     return { h, last, prev, peak, drop, rise, offPeak, atTarget, lastChecked, stale: daysSince(lastChecked), offers, best: offers[0] };
   }
   function wantAlerts(it) {
@@ -797,13 +806,15 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
           </div>
         </div>
         <div class="price-row">
-          <div class="price">${p.last == null && w.rrp ? `<span class="meta">about</span> ${fmt(w.rrp)}` : fmt(p.last)}<small>${[p.best ? `Best at ${esc(p.best.shop)}` : '', w.size ? esc(w.size) : '', p.offPeak ? `${fmt(p.offPeak)} off peak` : ''].filter(Boolean).join(' · ') || '&nbsp;'}</small></div>
+          <div class="price">${p.last == null && w.rrp ? `<span class="meta">about</span> ${fmt(w.rrp)}` : fmt(p.last)}<small>${[p.best ? `<b style="color:var(--ink)">${fmt(p.best._total)}${p.best.delivery == null ? '+' : ''}</b> delivered from ${esc(p.best.shop)}` : '', w.size ? esc(w.size) : '', p.offPeak ? `${fmt(p.offPeak)} off peak` : ''].filter(Boolean).join(' · ') || '&nbsp;'}</small></div>
           ${spark(p.h)}
         </div>
         ${al.length || w.research ? `<div class="pills">${researchPill(w)}${al.map(a => `<span class="pill ${a.tone}">${esc(a.label)}</span>`).join('')}</div>` : ''}
         ${variantsBlock('wishlist', w)}
         ${stackNoteBlock(w)}
-        ${p.offers.length ? `<details class="more"><summary>${p.offers.length} ${p.offers.length === 1 ? 'shop' : 'shops'} checked${p.lastChecked ? ` · ${esc(ago(p.lastChecked))}` : ''}</summary><ul class="offers">${p.offers.map(o => `<li>${safeUrl(o.url) ? `<a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(o.shop)}</a>` : esc(o.shop)}<span class="meta">${esc(STOCK[o.stock] || '')}</span><span class="mono">${fmt(o.price)}</span></li>`).join('')}</ul></details>` : ''}
+        ${p.offers.length ? `<details class="more"><summary>${p.offers.length} ${p.offers.length === 1 ? 'shop' : 'shops'} compared, delivered to ${esc(deliverTo())}${p.lastChecked ? ` · ${esc(ago(p.lastChecked))}` : ''}</summary><ul class="offers" style="gap:8px">${p.offers.map(o => `<li style="grid-template-columns:1fr auto">
+            <span style="min-width:0">${safeUrl(o.url) ? `<a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(o.shop)}</a>` : esc(o.shop)}<br><span class="meta">${fmt(o.price)} + ${o.delivery == null ? 'delivery not known' : Number(o.delivery) ? fmt(o.delivery) + ' delivery' : 'free delivery'}${Number(o.membership) ? ` + ${fmt(o.membership)} membership` : ''}${o.stock && o.stock !== 'unknown' ? ` · ${esc(STOCK[o.stock] || '')}` : ''}${o.note ? ` · ${esc(o.note)}` : ''}</span></span>
+            <span class="mono" style="text-align:right">${fmt(o._total)}${o.delivery == null ? '+' : ''}</span></li>`).join('')}</ul></details>` : ''}
         ${w.notes ? `<p class="notes">${esc(w.notes)}</p>` : ''}
         ${reviewBlock(w.reviews)}
         ${altsBlock('wishlist', w)}
@@ -1128,13 +1139,24 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
           hist.push({ d: today, p: data.price });
           data.priceHistory = hist; data.lastChecked = today;
         }
+        // A changed name, brand, colour or shade means a different product: clear what was found and research it again
+        const ID_KEYS = ['name', 'product', 'brand', 'variant', 'shade'];
+        const changed = ['wishlist', 'beauty', 'routine', 'wardrobe'].includes(col) && ID_KEYS.some(k => k in data && String(data[k] || '').trim().toLowerCase() !== String(item[k] || '').trim().toLowerCase());
+        const identityChanged = ID_KEYS.filter(k => k !== 'variant' && k !== 'shade').some(k => k in data && String(data[k] || '').trim().toLowerCase() !== String(item[k] || '').trim().toLowerCase());
+        if (identityChanged && canResearch()) {
+          Object.assign(data, { stackNote: null, alternatives: null, reviews: null, research: 'queued' });
+          if (col === 'wishlist') Object.assign(data, { offers: [], variants: [] });
+        }
         await db.collection(col).doc(item.id).update(data);
-        toast('Saved');
+        if (changed && canResearch()) { await fireResearch(col, item.id, [data.brand ?? item.brand, data.name || data.product || nameOf(item), data.variant || data.shade || ''].filter(Boolean).join(' ')); toast('Saved. Claude is updating the details, photo and prices.'); }
+        else toast('Saved');
       } else {
         data.createdAt = now();
         if (col === 'wishlist') { data.status = 'want'; data.priceHistory = data.price != null ? [{ d: today, p: data.price }] : []; data.lastChecked = data.price != null ? today : null; }
-        await db.collection(col).add(data);
-        toast('Added');
+        if (canResearch() && col !== 'logprice') data.research = 'queued';
+        const ref = await db.collection(col).add(data);
+        if (canResearch() && ['wishlist', 'beauty', 'routine', 'wardrobe'].includes(col)) { await fireResearch(col, ref.id, [data.brand, data.name || data.product, data.variant || data.shade || data.colour].filter(Boolean).join(' ') + (data.photoId ? ' (identify from the attached photo)' : '')); toast('Added. Claude is filling in the details, photo and prices.'); }
+        else toast('Added');
       }
       dlg.close();
     } catch (err) {
@@ -1244,26 +1266,28 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
   }
   const WANT_CAT_OF = { makeup: 'Beauty', skincare: 'Skincare', clothes: 'Clothes', home: 'Home', office: 'Office', tech: 'Tech' };
   function quickStatus(msg) { const el = $('#quick-status'); el.textContent = msg || ''; el.hidden = !msg; }
-  async function quickAdd(phrase, own) {
-    let info = {};
+  async function quickAdd(phrase, own, file) {
+    let info = {}, photoId = null;
+    if (file && assets) { quickStatus('Uploading the picture…'); try { photoId = (await assets.upload(file)).id; } catch {} }
     if (sample) {
-      quickStatus(`Looking up “${phrase}”…`);
+      quickStatus(phrase ? `Looking up “${phrase}”…` : 'Working out what’s in the picture…');
       try {
-        info = await sample.json(`Identify this product from a shopper's short description and fill in its details from what you know. Australian English, prices in AUD.\n\nDescription: "${phrase}"\n\nReply with only JSON:\n{"kind":"makeup|skincare|clothes|home|office|tech|other","name":"official product name","brand":"brand","type":"makeup only, one of: ${MAKEUP_TYPES.join(', ')}","step":"skincare only, one of: ${SKIN_STEPS.join(', ')}","category":"clothes only, one of: ${WARD_CATS.join(', ')}","rrp":typical Australian price as a number or null,"finish":"makeup finish or empty","actives":"skincare key actives or empty","colour":"clothes colour if named","variants":[{"name":"shade or colour name","hex":"#rrggbb approximate","note":"short descriptor e.g. warm peach, satin"}],"selected":"the shade or colour the shopper named, matching a variant name, or empty","summary":"one sentence on what it is","confidence":"high|medium|low"}\n\nList every shade or colourway you know (up to 24). If unsure, give your best guess and set confidence to low.`);
+        const withImg = file && S.canImages;
+        info = await sample.json(`Identify this product from a shopper's ${withImg ? 'photo or screenshot' : 'short description'} and fill in its details from what you know. Australian English, prices in AUD.\n\n${phrase ? `Description: "${phrase}"` : 'Description: (none, use the picture)'}\n\nReply with only JSON:\n{"kind":"makeup|skincare|clothes|home|office|tech|other","name":"official product name","brand":"brand","type":"makeup only, one of: ${MAKEUP_TYPES.join(', ')}","step":"skincare only, one of: ${SKIN_STEPS.join(', ')}","category":"clothes only, one of: ${WARD_CATS.join(', ')}","rrp":typical Australian price as a number or null,"finish":"makeup finish or empty","actives":"skincare key actives or empty","colour":"clothes colour if named","variants":[{"name":"shade or colour name","hex":"#rrggbb approximate","note":"short descriptor e.g. warm peach, satin"}],"selected":"the shade or colour the shopper named, matching a variant name, or empty","summary":"one sentence on what it is","confidence":"high|medium|low"}\n\nList every shade or colourway you know (up to 24). If unsure, give your best guess and set confidence to low.`, file && S.canImages ? { images: [file] } : undefined);
       } catch (e) { if (e?.code === 'not_granted' || e?.code === 'sampling_disabled') info = {}; else info = {}; }
     }
     const kind = String(info.kind || 'other');
     const variants = (Array.isArray(info.variants) ? info.variants : []).slice(0, 24).map(v => ({ name: String(v.name || '').slice(0, 60), hex: isHex(v.hex) ? v.hex : '', note: String(v.note || '').slice(0, 80) })).filter(v => v.name);
     const sel = variants.find(v => v.name.toLowerCase() === String(info.selected || '').toLowerCase());
-    const name = String(info.name || phrase).slice(0, 140), brand = String(info.brand || '').slice(0, 80);
-    const common = { variants, summary: String(info.summary || ''), confidence: info.confidence || 'low', quickPhrase: phrase, research: 'draft', createdAt: now() };
+    const name = String(info.name || phrase || 'New item').slice(0, 140), brand = String(info.brand || '').slice(0, 80);
+    const common = { variants, summary: String(info.summary || ''), confidence: info.confidence || 'low', quickPhrase: phrase || '(from a photo)', research: 'draft', createdAt: now(), ...(photoId ? { photoId, userPhotoId: photoId } : {}) };
     let col, doc;
     if (own && kind === 'makeup') { col = 'beauty'; doc = { name, brand, type: MAKEUP_TYPES.includes(info.type) ? info.type : 'Other', finish: info.finish || '', shade: sel?.name || '', shadeHex: sel?.hex || '', status: 'current', ...common }; }
     else if (own && kind === 'skincare') { col = 'routine'; doc = { product: name, brand, step: SKIN_STEPS.includes(info.step) ? info.step : 'Other', when: 'both', freq: 'daily', actives: info.actives || '', status: 'current', ...common, variants: [] }; }
     else if (own && kind === 'clothes') { col = 'wardrobe'; doc = { name, brand, category: WARD_CATS.includes(info.category) ? info.category : 'Top', colour: sel?.name || info.colour || '', vibes: [], season: 'all', ...common, variants: [] }; }
     else { col = 'wishlist'; doc = { name, brand, category: WANT_CAT_OF[kind] || 'Other', variant: sel?.name || info.colour || '', shadeHex: sel?.hex || '', rrp: Number(info.rrp) > 0 ? Number(info.rrp) : null, price: null, priceHistory: [], stock: 'unknown', priority: 'want', status: 'want', ...common }; }
     const ref = await db.collection(col).add(doc);
-    const queued = await fireResearch(col, ref.id, phrase);
+    const queued = await fireResearch(col, ref.id, (phrase || name) + (photoId ? ' (identify from the attached photo: the userPhotoId asset)' : ''));
     quickStatus('');
     const where = { beauty: 'makeup', routine: 'skin', wardrobe: 'wardrobe', wishlist: 'wants' }[col];
     toast(queued ? `Added to ${COL_LABEL[col]}. Claude is checking shops, shades and reviews.` : `Added to ${COL_LABEL[col]}${variants.length ? ` with ${variants.length} ${col === 'beauty' || kind === 'makeup' ? 'shades' : 'colours'}` : ''}.`);
@@ -1273,13 +1297,24 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
   $('#quick').addEventListener('submit', async (e) => {
     e.preventDefault();
     const inp = $('#quick-in'), phrase = inp.value.trim();
-    if (!phrase) { inp.focus(); return; }
+    if (!phrase && !quickFile) { inp.focus(); return; }
     const btn = $('#quick-go'); btn.disabled = true;
-    try { await quickAdd(phrase, $('#quick-own').value === 'own'); inp.value = ''; }
+    try { await quickAdd(phrase, $('#quick-own').value === 'own', quickFile); inp.value = ''; setQuickFile(null); }
     catch { quickStatus(''); toast('Couldn’t add that. Try again.'); }
     finally { btn.disabled = false; }
   });
   $('#quick-own').addEventListener('change', () => { S.quickTouched = true; });
+  let quickFile = null;
+  function setQuickFile(f) {
+    quickFile = f && /^image\//.test(f.type) ? f : null;
+    const b = $('#quick-photo-label');
+    b.innerHTML = quickFile ? `<img src="${URL.createObjectURL(quickFile)}" alt="" style="width:26px;height:26px;border-radius:6px;object-fit:cover">` : 'Photo';
+    $('#quick-in').placeholder = quickFile ? 'Optional: add a note, e.g. the brand' : 'Add anything, e.g. Jooycee aura blush, or paste a screenshot';
+  }
+  $('#quick-photo').addEventListener('change', (e) => setQuickFile(e.target.files[0]));
+  $('#quick-in').addEventListener('paste', (e) => { const f = [...(e.clipboardData?.files || [])].find(f => /^image\//.test(f.type)); if (f) { e.preventDefault(); setQuickFile(f); } });
+  $('#quick').addEventListener('dragover', (e) => e.preventDefault());
+  $('#quick').addEventListener('drop', (e) => { e.preventDefault(); setQuickFile(e.dataTransfer.files[0]); });
 
   // ---------- inspo ----------
   let inspoFile = null;
@@ -1363,6 +1398,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
   // ---------- actions ----------
   async function act(fn, fail = 'Couldn’t save that. Try again.') { try { await fn(); } catch { toast(fail); } }
   function setTab(tab) { S.tab = tab; store.set('edit.tab', tab); history.replaceState(null, '', '#' + tab); render(); window.scrollTo({ top: 0 }); }
+  document.addEventListener('toggle', (e) => { const d = e.target; if (d.dataset?.var) { S.openVar = S.openVar || {}; S.openVar[d.dataset.var] = d.open; } }, true);
   document.addEventListener('toggle', (e) => { const d = e.target; if (d.dataset?.alts) { S.openAlts = S.openAlts || {}; S.openAlts[d.dataset.alts] = d.open; } }, true);
   document.addEventListener('toggle', (e) => { const d = e.target; if (d.matches?.('details.shelf')) store.set('edit.open.' + d.dataset.key.replace('-', ''), d.open ? '1' : ''); }, true);
   document.addEventListener('click', (e) => {
@@ -1457,7 +1493,7 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
       }
       case 'pick-variant': {
         const x = find(col), v = x && (x.variants || [])[Number(t.dataset.i)]; if (!v) break;
-        const data = col === 'beauty' ? { shade: v.name, shadeHex: v.hex || x.shadeHex || '' } : { variant: v.name, shadeHex: v.hex || '', ...(safeUrl(v.url) ? { url: v.url } : {}) };
+        const data = col === 'beauty' ? { shade: v.name, shadeHex: v.hex || x.shadeHex || '' } : { variant: v.name, shadeHex: v.hex || '', ...(safeUrl(v.url) ? { url: v.url } : {}), ...(col === 'wishlist' && Number(v.price) > 0 && Number(v.price) !== Number(x.price) ? { price: Number(v.price), priceHistory: [...(x.priceHistory || []).filter(h => h.d !== dayKey()), { d: dayKey(), p: Number(v.price) }] } : {}) };
         act(() => db.collection(col).doc(id).update(data));
         break;
       }
