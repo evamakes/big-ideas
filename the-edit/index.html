@@ -112,8 +112,9 @@ main.wrap { padding-block: 24px 64px; display: grid; gap: 20px; }
 /* Controls */
 .btn { border: 1px solid var(--line); background: var(--surface); padding: 8px 14px; border-radius: 999px; cursor: pointer; font-weight: 600; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; text-decoration: none; color: var(--ink); }
 .btn:hover { border-color: var(--muted); }
-.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
-.btn.primary:hover { filter: brightness(1.08); }
+.btn.primary { background: transparent; color: var(--accent); border-color: var(--accent); }
+.btn.primary:hover { background: var(--accent-soft); }
+.btn:active, .btn.primary:active, .btn[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .btn.small { padding: 5px 10px; font-size: 0.8rem; }
 .btn.ghost { background: transparent; }
 .btn.danger { color: var(--bad); }
@@ -122,6 +123,7 @@ main.wrap { padding-block: 24px 64px; display: grid; gap: 20px; }
 .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
 .tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.subnav { margin: -4px 0 14px; }
 .chip { border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 5px 12px; font-size: 0.84rem; cursor: pointer; color: var(--muted); }
 .chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 select.plain { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 7px 12px; font-size: 0.86rem; }
@@ -450,14 +452,10 @@ details.dna[open] > summary { margin-bottom: 10px; }
     <nav class="tabs" role="tablist" aria-label="Sections" id="tabs-nav">
       <button class="tab" role="tab" data-tab="today">Today</button>
       <button class="tab" role="tab" data-tab="wants">Wants<span class="n" id="n-wants"></span></button>
-      <button class="tab" role="tab" data-tab="finds">Finds<span class="n" id="n-finds"></span></button>
-      <button class="tab" role="tab" data-tab="shops">Shops<span class="n" id="n-shops"></span></button>
-      <button class="tab" role="tab" data-tab="skin">Skin<span class="n" id="n-skin"></span></button>
-      <button class="tab" role="tab" data-tab="makeup">Makeup<span class="n" id="n-makeup"></span></button>
-      <button class="tab" role="tab" data-tab="hair">Hair<span class="n" id="n-hair"></span></button>
+      <button class="tab" role="tab" data-tab="finds" data-group="finds">Finds<span class="n" id="n-finds"></span></button>
+      <button class="tab" role="tab" data-tab="skin" data-group="beauty">Beauty<span class="n" id="n-beauty"></span></button>
       <button class="tab" role="tab" data-tab="wardrobe">Wardrobe<span class="n" id="n-wardrobe"></span></button>
-      <button class="tab" role="tab" data-tab="style">Style me</button>
-      <button class="tab" role="tab" data-tab="mystyle">My style</button>
+      <button class="tab" role="tab" data-tab="style" data-group="style">Style</button>
       <button class="tab" role="tab" data-tab="amazon">Amazon list<span class="n" id="n-amazon"></span></button>
       <button class="tab minor mob-only" data-act="profile" id="profile-btn">About me</button>
       <button class="tab minor mob-only" role="tab" data-tab="bin" id="bin-btn">Bin</button>
@@ -475,6 +473,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
   </form>
   <p class="quick-status" id="quick-status" hidden></p>
   <div id="banner"></div>
+  <div class="subnav chips" id="subnav" role="tablist" hidden></div>
 
   <!-- TODAY -->
   <section class="panel" data-panel="today">
@@ -571,7 +570,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
       <div class="ask-row">
         <textarea id="vibe-ask" rows="2" placeholder="Optional: a vibe or occasion, e.g. Friday in the office then drinks, 22° and windy"></textarea>
         <div class="ask-btns">
-          <button class="btn primary" id="vibe-go">Style me</button>
+          <button class="btn primary" id="vibe-go">Style this</button>
           <button class="btn" id="gaps-go">Missing basics?</button>
         </div>
       </div>
@@ -610,7 +609,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
         <div class="tools">
           <div class="chips" id="board-occ" role="group" aria-label="Occasion"></div>
           <div class="chips" id="board-weather" role="group" aria-label="Weather"></div>
-          <button class="btn small" id="board-shuffle">Style me</button>
+          <button class="btn small primary" id="board-shuffle">Let’s go</button>
           <button class="btn small primary needs-img" id="board-ask">Claude’s take</button>
           <button class="btn small" id="board-save">Save outfit</button>
           <button class="btn small ghost" id="board-clear">Clear</button>
@@ -1071,21 +1070,23 @@ details.dna[open] > summary { margin-bottom: 10px; }
     const sync = $('#sync');
     sync.className = 'sync' + (S.status === 'live' ? ' on' : '');
     sync.textContent = S.status === 'live' ? (canWrite ? 'Saved to your Edit' : 'View only') : S.status === 'off' ? 'Not connected' : 'Connecting…';
-    $$('.tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.tab === S.tab)));
-    const curTab = $(`.tab[data-tab="${S.tab}"]`);
+    const stackCount = (c) => live(c).filter(x => !INACTIVE.includes(statusOf(x))).length;
+    const nSkin = stackCount('routine') || 0, nMakeup = stackCount('beauty') || 0, nHair = stackCount('hair') || 0, nShops = live('shops').filter(x => !x.seen).length;
+    const grp = groupOf(S.tab);
+    $$('.tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.group ? t.dataset.group === grp : t.dataset.tab === S.tab)));
+    const curTab = grp ? $(`.tab[data-group="${grp}"]`) : $(`.tab[data-tab="${S.tab}"]`);
+    const subCount = { skin: nSkin, makeup: nMakeup, hair: nHair, shops: nShops };
+    $('#subnav').hidden = !grp;
+    $('#subnav').innerHTML = grp ? TAB_GROUPS[grp].map(([k, l]) => `<button class="chip" role="tab" aria-pressed="${k === S.tab}" data-tab="${k}">${l}${subCount[k] ? ` <span class="n">${subCount[k]}</span>` : ''}</button>`).join('') : '';
     $('#menu-label').textContent = curTab ? curTab.firstChild.textContent : S.tab === 'bin' ? 'Bin' : '';
     $$('[data-panel]').forEach(p => p.hidden = p.dataset.panel !== S.tab);
-    const stackCount = (c) => live(c).filter(x => !INACTIVE.includes(statusOf(x))).length;
     $('#n-wants').textContent = activeWants().length || '';
     $('#n-finds').textContent = (newFinds().length + live('briefs').length) || '';
-    $('#n-skin').textContent = stackCount('routine') || '';
-    $('#n-makeup').textContent = stackCount('beauty') || '';
+    $('#n-beauty').textContent = (nSkin + nMakeup + nHair) || '';
     $('#n-wardrobe').textContent = live('wardrobe').length || '';
     $('#n-amazon').textContent = live('basket').filter(b => !b.ordered).length || '';
-    $('#n-hair').textContent = stackCount('hair') || '';
     $$('.needs-img').forEach(el => el.hidden = !S.canImages);
     $('#quick').hidden = !db || !canWrite || ['bin', 'inspo', 'style', 'mystyle', 'amazon', 'shops'].includes(S.tab);
-    $('#n-shops').textContent = live('shops').filter(x => !x.seen).length || '';
     $('#shop-form').hidden = !db || !canWrite;
     if (!S.quickTouched) { $('#quick-own').value = ['skin', 'makeup', 'hair', 'wardrobe'].includes(S.tab) ? 'own' : 'want'; setQuickFile(quickFile); }
     $('#quick-own option[value="try"]').hidden = !['skin', 'makeup', 'hair', 'wants', 'today', 'finds'].includes(S.tab);
@@ -1943,7 +1944,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
       if (!S.suggestions.length) out.innerHTML = '<div class="ai-out err" style="grid-column:1/-1">Claude couldn’t build outfits from those pieces. Try a different vibe or add more pieces.</div>';
       else renderWardrobe();
     } catch (err) { out.innerHTML = `<div class="ai-out err" style="grid-column:1/-1">${esc(aiErr(err))}</div>`; }
-    finally { btn.disabled = false; btn.textContent = 'Style me'; }
+    finally { btn.disabled = false; btn.textContent = 'Style this'; }
   }
   async function autoTagOccasions() {
     const pieces = live('wardrobe').filter(p => p.category !== 'Active' && !(p.occasions || []).length);
@@ -2312,7 +2313,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
           const out = $('#board-out'); out.hidden = false; out.className = 'ai-out'; out.innerHTML = `<span class="by">Claude</span>${esc(res.why || '')}`;
           renderStyle(); return;
         }
-      } catch {} finally { btn.disabled = false; btn.textContent = 'Style me'; }
+      } catch {} finally { btn.disabled = false; btn.textContent = 'Let’s go'; }
     }
     const r = (n) => Math.floor(Math.random() * n), cur = flipState(), f = {};
     for (const row of S.locked) if (cur[row] != null && cur[row] >= 0) f[row] = cur[row];
@@ -2450,13 +2451,16 @@ details.dna[open] > summary { margin-bottom: 10px; }
 
   // ---------- actions ----------
   async function act(fn, fail = 'Couldn’t save that. Try again.') { try { await fn(); } catch { toast(fail); } }
+  // Fewer tabs: related pages sit under one tab with a small switch at the top
+  const TAB_GROUPS = { finds: [['finds', 'Finds'], ['shops', 'Shops to check out']], beauty: [['skin', 'Skin'], ['makeup', 'Makeup'], ['hair', 'Hair']], style: [['style', 'Get dressed'], ['mystyle', 'My style']] };
+  const groupOf = (tab) => Object.keys(TAB_GROUPS).find(g => TAB_GROUPS[g].some(([k]) => k === tab)) || '';
   function setMenu(open) { $('#tabs-wrap').classList.toggle('open', open); $('#menu-btn').setAttribute('aria-expanded', String(open)); }
   $('#menu-btn').addEventListener('click', () => setMenu(!$('#tabs-wrap').classList.contains('open')));
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setMenu(false); });
   document.addEventListener('click', (e) => { if (!e.target.closest('#tabs-wrap')) setMenu(false); });
   // Close any open ⋯ menu when tapping elsewhere
   document.addEventListener('click', (e) => { $$('details.more-menu[open]').forEach(d => { if (!d.contains(e.target)) d.open = false; }); });
-  function setTab(tab) { setMenu(false); S.tab = tab; store.set('edit.tab', tab); history.replaceState(null, '', '#' + tab); render(); window.scrollTo({ top: 0 }); }
+  function setTab(tab) { setMenu(false); const g = groupOf(tab); if (g) { S.lastSub = { ...(S.lastSub || {}), [g]: tab }; store.set('edit.sub.' + g, tab); } S.tab = tab; store.set('edit.tab', tab); history.replaceState(null, '', '#' + tab); render(); window.scrollTo({ top: 0 }); }
   document.addEventListener('toggle', (e) => { if (e.target.matches?.('details.bundles')) S.bundlesOpen = e.target.open; }, true);
   document.addEventListener('toggle', (e) => { const d = e.target; if (d.dataset?.var) { S.openVar = S.openVar || {}; S.openVar[d.dataset.var] = d.open; } }, true);
   document.addEventListener('toggle', (e) => { const d = e.target; if (d.dataset?.alts) { S.openAlts = S.openAlts || {}; S.openAlts[d.dataset.alts] = d.open; } }, true);
@@ -2464,7 +2468,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
   document.addEventListener('click', (e) => {
     const t = e.target.closest('[data-tab],[data-add],[data-act]');
     if (!t || t.tagName === 'INPUT') return;
-    if (t.dataset.tab) { setTab(t.dataset.tab); return; }
+    if (t.dataset.tab) { const g = t.dataset.group; setTab(g ? (S.lastSub?.[g] || store.get('edit.sub.' + g) || t.dataset.tab) : t.dataset.tab); return; }
     if (t.dataset.add) { openForm(t.dataset.add, null, t.dataset.preset ? { category: t.dataset.preset } : {}); return; }
     const a = t.dataset.act, id = t.dataset.id, col = t.dataset.col;
     if (!a) return;
