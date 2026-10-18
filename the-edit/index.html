@@ -9,12 +9,12 @@
   --bg: #F2EEE6;
   --surface: #FFFDF8;
   --sunk: #E9E3D8;
-  --ink: #1A1E1B;
-  --muted: #5D625D;
+  --ink: #1D171C;
+  --muted: #625A60;
   --line: #DED7CA;
-  --accent: #1F4536;
+  --accent: #5A2150;
   --accent-ink: #FFFFFF;
-  --accent-soft: #DCE7E0;
+  --accent-soft: #EEE1EB;
   --tan: #8B5A2B;
   --good: #2C7650;
   --good-soft: #E1F1E7;
@@ -31,14 +31,14 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #14120F; --surface: #1D1A16; --sunk: #27231E; --ink: #F0EADF; --muted: #A69C8E; --line: #363029;
-    --accent: #9DBFA6; --accent-ink: #10140F; --accent-soft: #25332A; --tan: #C47B4F;
+    --accent: #CDA6C6; --accent-ink: #1E0F1B; --accent-soft: #33212F; --tan: #C47B4F;
     --good: #74CF9C; --good-soft: #15301F; --warn: #EDB65A; --warn-soft: #33270F; --bad: #F2887D; --bad-soft: #3B1A17;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #14120F; --surface: #1D1A16; --sunk: #27231E; --ink: #F0EADF; --muted: #A69C8E; --line: #363029;
-  --accent: #9DBFA6; --accent-ink: #10140F; --accent-soft: #25332A; --tan: #C47B4F;
+  --accent: #CDA6C6; --accent-ink: #1E0F1B; --accent-soft: #33212F; --tan: #C47B4F;
   --good: #74CF9C; --good-soft: #15301F; --warn: #EDB65A; --warn-soft: #33270F; --bad: #F2887D; --bad-soft: #3B1A17;
   color-scheme: dark;
 }
@@ -78,15 +78,17 @@ a { color: var(--accent); }
 .menu-btn { display: none; }
 @media (max-width: 700px) {
   .top { position: relative; }
-  .tabs-scroll { overflow: visible; position: absolute; top: 18px; right: 16px; width: auto; padding: 0; z-index: 41; }
-  .menu-btn { display: flex; align-items: center; gap: 10px; max-width: 46vw; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 10px 16px; font: inherit; text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.78rem; font-weight: 600; color: var(--ink); cursor: pointer; }
+  .top-in { padding-right: 76px; }
+  .tabs-scroll { overflow: visible; position: static; padding: 0; }
+  .menu-btn { position: absolute; top: 26px; right: 16px; z-index: 41; }
+  .menu-btn { display: flex; align-items: center; gap: 10px; justify-content: center; width: 46px; height: 46px; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 0; font: inherit; text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.78rem; font-weight: 600; color: var(--ink); cursor: pointer; }
   .menu-btn .burger { display: grid; gap: 4px; width: 18px; }
   .menu-btn .burger i { display: block; height: 1.5px; background: currentColor; border-radius: 2px; transition: transform .2s, opacity .2s; }
   .menu-btn[aria-expanded="true"] .burger i:nth-child(1) { transform: translateY(5.5px) rotate(45deg); }
   .menu-btn[aria-expanded="true"] .burger i:nth-child(2) { opacity: 0; }
   .menu-btn[aria-expanded="true"] .burger i:nth-child(3) { transform: translateY(-5.5px) rotate(-45deg); }
-  .menu-btn #menu-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .tabs { display: none; position: absolute; right: 0; width: min(280px, calc(100vw - 32px)); top: calc(100% + 6px); z-index: 40; flex-direction: column; flex-wrap: nowrap; gap: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 6px; box-shadow: 0 12px 32px rgba(0,0,0,.12); }
+  .menu-btn #menu-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .tabs { display: none; position: absolute; left: 16px; right: 16px; top: calc(100% + 8px); z-index: 40; flex-direction: column; flex-wrap: nowrap; gap: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 6px; box-shadow: 0 12px 32px rgba(0,0,0,.12); }
   .tabs-scroll.open .tabs { display: flex; }
   .tab { text-align: left; border-bottom: 0; border-radius: 10px; padding: 12px 14px; }
   .tab[aria-selected="true"] { background: var(--sunk); }
