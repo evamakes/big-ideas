@@ -6,16 +6,16 @@
 <style>
 /* Layout: a personal beauty-counter ledger. Masthead + tabs, then one working panel per area. Stacks are grouped by step/area like a shelf. */
 :root {
-  --bg: #FBF8F3;
-  --surface: #FFFFFF;
-  --sunk: #F5EFF1;
-  --ink: #1E1520;
-  --muted: #6F6370;
-  --line: #ECE3E6;
-  --accent: #8A1E6E;
+  --bg: #F2EEE6;
+  --surface: #FFFDF8;
+  --sunk: #E9E3D8;
+  --ink: #1A1E1B;
+  --muted: #5D625D;
+  --line: #DED7CA;
+  --accent: #1F4536;
   --accent-ink: #FFFFFF;
-  --accent-soft: #F6E4F0;
-  --tan: #B48A2C;
+  --accent-soft: #DCE7E0;
+  --tan: #8B5A2B;
   --good: #2C7650;
   --good-soft: #E1F1E7;
   --warn: #9A5B05;
@@ -30,15 +30,15 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #161117; --surface: #1F1820; --sunk: #2A2129; --ink: #F6EEF3; --muted: #B3A4B0; --line: #3A2F38;
-    --accent: #E58BCF; --accent-ink: #2B0B24; --accent-soft: #3B1C34; --tan: #DDB45C;
+    --bg: #14120F; --surface: #1D1A16; --sunk: #27231E; --ink: #F0EADF; --muted: #A69C8E; --line: #363029;
+    --accent: #9DBFA6; --accent-ink: #10140F; --accent-soft: #25332A; --tan: #C47B4F;
     --good: #74CF9C; --good-soft: #15301F; --warn: #EDB65A; --warn-soft: #33270F; --bad: #F2887D; --bad-soft: #3B1A17;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #161117; --surface: #1F1820; --sunk: #2A2129; --ink: #F6EEF3; --muted: #B3A4B0; --line: #3A2F38;
-  --accent: #E58BCF; --accent-ink: #2B0B24; --accent-soft: #3B1C34; --tan: #DDB45C;
+  --bg: #14120F; --surface: #1D1A16; --sunk: #27231E; --ink: #F0EADF; --muted: #A69C8E; --line: #363029;
+  --accent: #9DBFA6; --accent-ink: #10140F; --accent-soft: #25332A; --tan: #C47B4F;
   --good: #74CF9C; --good-soft: #15301F; --warn: #EDB65A; --warn-soft: #33270F; --bad: #F2887D; --bad-soft: #3B1A17;
   color-scheme: dark;
 }
@@ -66,6 +66,9 @@ a { color: var(--accent); }
 .sync { margin: 0; font-size: 0.82rem; color: var(--muted); display: flex; align-items: center; gap: 6px; }
 .sync::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
 .sync.on::before { background: var(--good); }
+.sync.bad { color: var(--bad); }
+.sync.bad::before { background: var(--bad); }
+.sync[hidden] { display: none; }
 .tabs-scroll { overflow-x: auto; scrollbar-width: none; }
 .tabs { display: flex; gap: 4px; flex-wrap: wrap; }
 .tab { border: 0; background: none; padding: 10px 11px 12px; cursor: pointer; color: var(--muted); font-weight: 600; border-bottom: 2px solid transparent; white-space: nowrap; }
@@ -1068,8 +1071,9 @@ details.dna[open] > summary { margin-bottom: 10px; }
 
   function renderChrome() {
     const sync = $('#sync');
-    sync.className = 'sync' + (S.status === 'live' ? ' on' : '');
-    sync.textContent = S.status === 'live' ? (canWrite ? 'Saved to your Edit' : 'View only') : S.status === 'off' ? 'Not connected' : 'Connecting…';
+    sync.hidden = S.status !== 'off' && (S.status !== 'live' || canWrite);
+    sync.className = 'sync' + (S.status === 'live' ? ' on' : ' bad');
+    sync.textContent = S.status === 'live' ? (canWrite ? 'Saved to your Edit' : 'View only') : S.status === 'off' ? 'Not connected, changes won’t save' : 'Connecting…';
     const stackCount = (c) => live(c).filter(x => !INACTIVE.includes(statusOf(x))).length;
     const nSkin = stackCount('routine') || 0, nMakeup = stackCount('beauty') || 0, nHair = stackCount('hair') || 0, nShops = live('shops').filter(x => !x.seen).length;
     const grp = groupOf(S.tab);
