@@ -68,7 +68,7 @@ a { color: var(--accent); }
 .sync.on::before { background: var(--good); }
 .tabs-scroll { overflow-x: auto; scrollbar-width: none; }
 .tabs { display: flex; gap: 4px; flex-wrap: wrap; }
-.tab { border: 0; background: none; padding: 10px 14px 12px; cursor: pointer; color: var(--muted); font-weight: 600; border-bottom: 2px solid transparent; white-space: nowrap; }
+.tab { border: 0; background: none; padding: 10px 11px 12px; cursor: pointer; color: var(--muted); font-weight: 600; border-bottom: 2px solid transparent; white-space: nowrap; }
 .tab:hover { color: var(--ink); }
 .tab[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--tan); }
 .tab .n { font-family: var(--f-mono); font-size: 0.75rem; font-weight: 400; color: var(--muted); margin-left: 4px; }
@@ -93,6 +93,16 @@ a { color: var(--accent); }
 .link.quiet:hover { color: var(--accent); }
 @media (min-width: 701px) { .mob-only { display: none !important; } }
 @media (max-width: 700px) { .desk-only { display: none !important; } }
+.shop-note { border-left: 1px solid var(--line) !important; padding-left: 12px !important; }
+.shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; }
+.shop-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; display: grid; grid-template-rows: auto 1fr; transition: border-color .2s; }
+.shop-card:hover { border-color: color-mix(in srgb, var(--tan) 60%, var(--line)); }
+.shop-card .cover { aspect-ratio: 16 / 10; background: var(--sunk); display: grid; place-items: center; overflow: hidden; color: var(--accent); font-family: var(--f-name); font-size: 2.2rem; text-transform: uppercase; text-decoration: none; }
+.shop-card .cover img { width: 100%; height: 100%; object-fit: cover; }
+.shop-card .body { padding: 12px 14px 14px; display: grid; gap: 6px; align-content: start; }
+.shop-card .body h3 { font-size: 1.02rem; }
+.shop-card .row { display: flex; gap: 8px; align-items: center; margin-top: 4px; }
+.shop-card.seen { opacity: 0.7; }
 .tab .new { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-left: 5px; vertical-align: middle; }
 
 main.wrap { padding-block: 24px 64px; display: grid; gap: 20px; }
@@ -441,6 +451,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
       <button class="tab" role="tab" data-tab="today">Today</button>
       <button class="tab" role="tab" data-tab="wants">Wants<span class="n" id="n-wants"></span></button>
       <button class="tab" role="tab" data-tab="finds">Finds<span class="n" id="n-finds"></span></button>
+      <button class="tab" role="tab" data-tab="shops">Shops<span class="n" id="n-shops"></span></button>
       <button class="tab" role="tab" data-tab="skin">Skin<span class="n" id="n-skin"></span></button>
       <button class="tab" role="tab" data-tab="makeup">Makeup<span class="n" id="n-makeup"></span></button>
       <button class="tab" role="tab" data-tab="hair">Hair<span class="n" id="n-hair"></span></button>
@@ -459,7 +470,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     <input type="text" id="quick-in" placeholder="Add anything, e.g. Jooycee aura blush, or paste a screenshot" aria-label="Product to add">
     <label class="btn small ghost" id="quick-photo-label" for="quick-photo" title="Add a photo or screenshot">Photo</label>
     <input type="file" id="quick-photo" accept="image/*" multiple hidden>
-    <select id="quick-own" aria-label="Want it, own it, or find me options"><option value="want">I want it</option><option value="own">I own it</option><option value="try">Maybe, to try</option><option value="brief">Find me options</option></select>
+    <select id="quick-own" aria-label="Want it, own it, or find me options"><option value="want">I want it</option><option value="own">I own it</option><option value="try">Maybe, to try</option><option value="brief">Find me options</option><option value="shop">Shop to check out</option></select>
     <button class="btn primary" type="submit" id="quick-go">Add</button>
   </form>
   <p class="quick-status" id="quick-status" hidden></p>
@@ -512,6 +523,17 @@ details.dna[open] > summary { margin-bottom: 10px; }
       <div class="chips" id="finds-chips"></div>
     </div>
     <div class="cards" id="finds-list"></div>
+  </section>
+
+  <!-- SHOPS -->
+  <section class="panel" data-panel="shops" hidden>
+    <form class="quick" id="shop-form" autocomplete="off">
+      <input type="url" id="shop-url" placeholder="Paste a shop or brand link you want to check out" aria-label="Shop link" required>
+      <input type="text" id="shop-note" placeholder="Why? e.g. saw their boots in an ad" aria-label="Note" class="shop-note">
+      <button class="btn primary" type="submit">Save</button>
+    </form>
+    <div class="toolbar"><div class="chips" id="shops-chips"></div></div>
+    <div class="shop-grid" id="shops-list"></div>
   </section>
 
   <!-- SKIN -->
@@ -713,8 +735,8 @@ details.dna[open] > summary { margin-bottom: 10px; }
 <script>
 (() => {
   // ---------- config ----------
-  const COLS = ['wishlist', 'finds', 'routine', 'beauty', 'hair', 'wardrobe', 'outfits', 'inspo', 'basket', 'briefs'];
-  const COL_LABEL = { wishlist: 'Wants', finds: 'Finds', routine: 'Skin', beauty: 'Makeup', hair: 'Hair', wardrobe: 'Wardrobe', outfits: 'Outfits', inspo: 'Inspo', basket: 'Amazon list', briefs: 'Briefs' };
+  const COLS = ['wishlist', 'finds', 'shops', 'routine', 'beauty', 'hair', 'wardrobe', 'outfits', 'inspo', 'basket', 'briefs'];
+  const COL_LABEL = { wishlist: 'Wants', finds: 'Finds', shops: 'Shops', routine: 'Skin', beauty: 'Makeup', hair: 'Hair', wardrobe: 'Wardrobe', outfits: 'Outfits', inspo: 'Inspo', basket: 'Amazon list', briefs: 'Briefs' };
   const SUPPLY = { low: ['warn', 'Running low'], out: ['bad', 'Run out'] };
   const HAIR_STEPS = ['Shampoo', 'Conditioner', 'Mask', 'Leave-in', 'Oil / serum', 'Styling', 'Scalp', 'Tools', 'Other'];
   const RESEARCH = { queued: ['warn', 'Researching…'], draft: ['', 'Draft from Claude · not checked yet'], failed: ['bad', 'Couldn’t confirm this one'] };
@@ -800,6 +822,13 @@ details.dna[open] > summary { margin-bottom: 10px; }
       PHOTO,
       { k: 'feedback', label: 'How it’s going', type: 'textarea', full: true },
     ]},
+    shops: { title: 'shop', fields: [
+      { k: 'name', label: 'Shop or brand', type: 'text', req: true },
+      { k: 'url', label: 'Link', type: 'url', full: true },
+      { k: 'about', label: 'What they sell', type: 'text', full: true, ph: 'e.g. Australian-made western boots' },
+      { k: 'note', label: 'Why I saved it', type: 'text', full: true, ph: 'e.g. saw the burgundy boots in an ad' },
+      { k: 'tags', label: 'Tags', type: 'tags', full: true, ph: 'e.g. boots, western, splurge' },
+    ]},
     wardrobe: { title: 'piece', fields: [
       { k: 'name', label: 'Piece', type: 'text', req: true, full: true, ph: 'e.g. Cream cable knit' },
       { k: 'label', label: 'Short name', type: 'text', full: true, ph: 'e.g. Blue gym leggings', hint: 'What shows on the card. The full product name and brand sit underneath.' },
@@ -861,7 +890,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
 
   // ---------- state ----------
   const S = {
-    wishlist: [], finds: [], briefs: [], routine: [], beauty: [], hair: [], wardrobe: [], outfits: [], inspo: [], basket: [], meta: {}, canImages: false, inspoBusy: {},
+    wishlist: [], finds: [], shops: [], briefs: [], routine: [], beauty: [], hair: [], wardrobe: [], outfits: [], inspo: [], basket: [], meta: {}, canImages: false, inspoBusy: {},
     status: 'connecting',
     tab: 'today', weather: 'any', occasion: 'any', pickGroup: 'All', pickQ: '', pickAll: false, wardOcc: 'All', wantCat: 'All', wantSort: 'alert', showBought: false, findKind: 'All', wardCat: 'All',
     cardAi: {}, suggestions: [], gaps: [],
@@ -1055,7 +1084,9 @@ details.dna[open] > summary { margin-bottom: 10px; }
     $('#n-amazon').textContent = live('basket').filter(b => !b.ordered).length || '';
     $('#n-hair').textContent = stackCount('hair') || '';
     $$('.needs-img').forEach(el => el.hidden = !S.canImages);
-    $('#quick').hidden = !db || !canWrite || ['bin', 'inspo', 'style', 'mystyle', 'amazon'].includes(S.tab);
+    $('#quick').hidden = !db || !canWrite || ['bin', 'inspo', 'style', 'mystyle', 'amazon', 'shops'].includes(S.tab);
+    $('#n-shops').textContent = live('shops').filter(x => !x.seen).length || '';
+    $('#shop-form').hidden = !db || !canWrite;
     if (!S.quickTouched) { $('#quick-own').value = ['skin', 'makeup', 'hair', 'wardrobe'].includes(S.tab) ? 'own' : 'want'; setQuickFile(quickFile); }
     $('#quick-own option[value="try"]').hidden = !['skin', 'makeup', 'hair', 'wants', 'today', 'finds'].includes(S.tab);
     const nb = binItems().length;
@@ -1593,6 +1624,41 @@ details.dna[open] > summary { margin-bottom: 10px; }
     $('#amz-history').hidden = !done.length;
     $('#amz-done').innerHTML = done.slice(0, 40).map(b => `<li style="grid-template-columns:1fr auto"><span class="what"><b>${esc(b.name)}</b><span class="meta">Qty ${esc(b.qty || 1)} · ordered ${esc(ago(b.orderedAt) || '')}</span></span><span class="tools">${canWrite ? `<button class="btn small ghost" data-act="amz-again" data-id="${esc(b.id)}">Add again</button>` : ''}</span></li>`).join('');
   }
+  // Shops to check out later: a preview card each, filled in by a research run
+  const hostOf = (u) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return ''; } };
+  function renderShops() {
+    const all = live('shops').sort((a, b) => (!!a.seen - !!b.seen) || newestFirst(a, b));
+    const tags = [...new Set(all.flatMap(x => x.tags || []))].slice(0, 12);
+    if (S.shopTag && !tags.includes(S.shopTag)) S.shopTag = '';
+    $('#shops-chips').innerHTML = tags.length ? ['', ...tags].map(t => `<button class="chip" aria-pressed="${t === (S.shopTag || '')}" data-act="shop-tag" data-v="${esc(t)}">${esc(t || 'All')}</button>`).join('') : '';
+    const list = all.filter(x => !S.shopTag || (x.tags || []).includes(S.shopTag));
+    $('#shops-list').innerHTML = list.length ? list.map(x => {
+      const src = photoSrc(x), url = safeUrl(x.url), name = x.name || hostOf(x.url) || 'Shop';
+      return `<article class="shop-card${x.seen ? ' seen' : ''}">
+        <a class="cover" ${url ? `href="${esc(url)}" target="_blank" rel="noopener"` : ''}>${src ? `<img src="${esc(src)}" alt="" loading="lazy">` : esc(name.slice(0, 1))}</a>
+        <div class="body"><h3>${esc(name)}</h3>
+          ${x.about ? `<p class="meta clamp2" style="margin:0">${esc(x.about)}</p>` : x.research === 'queued' ? '<p class="meta" style="margin:0">Getting a preview…</p>' : ''}
+          ${x.note ? `<p class="notes clamp2" style="margin:0">${esc(x.note)}</p>` : ''}
+          ${(x.tags || []).length ? `<div class="pills">${x.tags.slice(0, 4).map(t => `<span class="pill">${esc(t)}</span>`).join('')}</div>` : ''}
+          <div class="row">${url ? `<a class="btn small" href="${esc(url)}" target="_blank" rel="noopener">Visit ↗</a>` : ''}${canWrite ? `<button class="btn small ghost" data-act="shop-seen" data-id="${esc(x.id)}">${x.seen ? 'Undo' : 'Checked it out'}</button>
+            <details class="more-menu push" style="margin-left:auto"><summary class="btn small ghost" aria-label="More options">⋯</summary><div class="menu"><button class="btn small ghost" data-act="edit" data-col="shops" data-id="${esc(x.id)}">Edit</button>${canResearch() ? `<button class="btn small ghost" data-act="shop-preview" data-id="${esc(x.id)}">Refresh preview</button>` : ''}${delBtn('shops', x.id)}</div></details>` : ''}</div>
+        </div></article>`;
+    }).join('') : `<div class="empty">Save shops and brands you spot in ads or on socials. Each one gets a preview card so you can check them out later.</div>`;
+  }
+  async function addShop(raw, note = '') {
+    let url = String(raw || '').trim(); if (!url) return;
+    if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+    const host = hostOf(url); if (!host) { toast('That doesn’t look like a link.'); return; }
+    if (live('shops').some(x => hostOf(x.url) === host && x.url === url)) { toast('Already saved.'); return; }
+    const ref = await db.collection('shops').add({ url, name: host.split('.')[0].replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()), note: note.slice(0, 200), tags: [], research: canResearch() ? 'queued' : 'draft', createdAt: now() });
+    queueShopPreview(ref.id, url);
+    toast('Saved. A preview card is on its way.');
+  }
+  async function queueShopPreview(id, url) {
+    if (!canResearch()) return;
+    try { await mcp.callTool('Claude Code Remote', 'fire_trigger', { trigger_id: S.meta.research.triggerId, text: `Shop preview request: collection=shops doc_id=${id} url=${JSON.stringify(url)}. This is a shop or brand the user wants to check out later, not a product. Open the link (follow redirects; if it is an Instagram or TikTok profile or a single product page, work out the brand and its main shop site). Update only that doc with: name (the brand's proper name), url (the shop's home page or the page the user saved if it is more useful), about (one short line on what they sell and their vibe, Australian English), tags (2-4 short lowercase tags such as boots, western, linen, sustainable, splurge, aus-made), priceRange ("$", "$$" or "$$$"), and photoId = a striking preview image: the site's og:image or hero/lookbook image, downloaded, checked, converted to JPG at most 1400px and uploaded with the Artifact tool (publish, url = the artifact url, file_paths, asset: true). Set research: "done". Use the ArtifactData tool, pin the write with if_version.` }, { cache: false }); } catch {}
+  }
+  $('#shop-form').addEventListener('submit', async (e) => { e.preventDefault(); const u = $('#shop-url'), n = $('#shop-note'); try { await addShop(u.value, n.value); u.value = ''; n.value = ''; } catch { toast('Couldn’t save that. Try again.'); } });
   function renderBin() {
     const items = binItems();
     $('#empty-bin').hidden = !items.length || !canWrite;
@@ -1654,7 +1720,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
 
   function render() {
     renderChrome();
-    renderToday(); renderWants(); renderFinds(); renderSkin(); renderMakeup(); renderHair(); renderWardrobe(); renderStyle(); renderSizes(); renderInspo(); renderShopList(); renderAmazon(); renderBin();
+    renderToday(); renderWants(); renderFinds(); renderSkin(); renderMakeup(); renderHair(); renderWardrobe(); renderStyle(); renderSizes(); renderShops(); renderInspo(); renderShopList(); renderAmazon(); renderBin();
   }
 
   // ---------- writes ----------
@@ -2080,7 +2146,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     const inp = $('#quick-in'), phrase = inp.value.trim();
     if (!phrase && !quickFile) { inp.focus(); return; }
     const btn = $('#quick-go'); btn.disabled = true;
-    try { if ($('#quick-own').value === 'brief') await addBrief(phrase, quickFile); else await quickAdd(phrase, { own: true, try: 'try' }[$('#quick-own').value] || false, quickFile); inp.value = ''; setQuickFile(null); }
+    try { if ($('#quick-own').value === 'shop') { await addShop(phrase); setTab('shops'); } else if ($('#quick-own').value === 'brief') await addBrief(phrase, quickFile); else await quickAdd(phrase, { own: true, try: 'try' }[$('#quick-own').value] || false, quickFile); inp.value = ''; setQuickFile(null); }
     catch { quickStatus(''); toast('Couldn’t add that. Try again.'); }
     finally { btn.disabled = false; }
   });
@@ -2476,6 +2542,9 @@ details.dna[open] > summary { margin-bottom: 10px; }
         })();
         break;
       }
+      case 'shop-tag': S.shopTag = t.dataset.v; renderShops(); break;
+      case 'shop-seen': { const x = find('shops'); if (x) act(() => db.collection('shops').doc(x.id).update({ seen: !x.seen, seenAt: now() })); break; }
+      case 'shop-preview': { const x = find('shops'); if (x) { queueShopPreview(x.id, x.url); db.collection('shops').doc(x.id).update({ research: 'queued' }).catch(() => {}); toast('Refreshing the preview.'); } break; }
       case 'refresh-more': S.refreshOpen = !S.refreshOpen; renderToday(); break;
       case 'lock': { flipState(); const row = t.dataset.row; S.locked.has(row) ? S.locked.delete(row) : S.locked.add(row); renderStyle(); break; }
       case 'pick-group': S.pickGroup = t.dataset.v; S.pickAll = false; renderStyle(); break;
@@ -2761,7 +2830,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
   // ---------- boot ----------
   const startTab = (location.hash || '').slice(1) || store.get('edit.tab');
   if (startTab === 'active') { S.tab = 'wardrobe'; S.wardCat = 'Active'; }
-  else if (['today', 'wants', 'finds', 'skin', 'makeup', 'hair', 'wardrobe', 'style', 'mystyle', 'amazon', 'bin'].includes(startTab)) S.tab = startTab;
+  else if (['today', 'wants', 'finds', 'skin', 'makeup', 'hair', 'wardrobe', 'style', 'mystyle', 'amazon', 'shops', 'bin'].includes(startTab)) S.tab = startTab;
   render();
 
   (async () => {
