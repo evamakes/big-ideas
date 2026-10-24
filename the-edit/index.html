@@ -198,6 +198,20 @@ select.plain { border: 1px solid var(--line); background: var(--surface); border
 .stat .k { font-size: 0.8rem; color: var(--muted); }
 
 /* Cards */
+.otw { margin-bottom: 22px; }
+.otw .eyebrow { margin-bottom: 10px; }
+.otw-line { margin: 0; font-size: 0.88rem; color: var(--muted); }
+img[data-zoom] { cursor: zoom-in; }
+.piece .img, .frow .card-in .img { position: relative; }
+.zoom-btn { position: absolute; right: 6px; bottom: 6px; width: 30px; height: 30px; display: grid; place-items: center; border-radius: 999px; background: rgba(255,255,255,.92); color: #1D171C; font-size: 0.95rem; font-style: normal; box-shadow: 0 1px 4px rgba(0,0,0,.2); cursor: zoom-in; }
+.zoom { width: min(96vw, 900px); max-height: 96vh; padding: 0; border: 0; border-radius: 14px; background: var(--surface); color: var(--ink); overflow: hidden; }
+.zoom::backdrop { background: rgba(0,0,0,.75); }
+.zoom-stage { max-height: calc(96vh - 56px); overflow: auto; display: grid; place-items: center; background: #fff; }
+.zoom-stage img { display: block; max-width: 100%; max-height: calc(96vh - 56px); object-fit: contain; cursor: zoom-in; }
+.zoom-stage.big { place-items: start; }
+.zoom-stage.big img { max-width: none; max-height: none; width: 220%; cursor: zoom-out; }
+.zoom-x { position: absolute; top: 8px; right: 8px; z-index: 2; background: var(--surface); border-radius: 999px; }
+.zoom-f { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 14px; min-height: 56px; box-sizing: border-box; }
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
 .card:hover { border-color: color-mix(in srgb, var(--tan) 60%, var(--line)); }
 .card { background: var(--surface); border: 1px solid var(--line); transition: border-color .2s; border-radius: var(--r); padding: 16px; display: grid; gap: 12px; align-content: start; min-width: 0; }
@@ -518,6 +532,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
         <button class="btn primary" data-add="wishlist">+ Add a want</button>
       </div>
     </div>
+    <div class="otw" id="wants-otw" hidden><p class="eyebrow">On the way</p><div class="cards" id="wants-otw-list"></div></div>
     <div class="cards" id="wants-list"></div>
   </section>
 
@@ -733,6 +748,12 @@ details.dna[open] > summary { margin-bottom: 10px; }
       <button type="submit" class="btn primary" id="dlg-save">Save</button>
     </div>
   </form>
+</dialog>
+
+<dialog id="zoom" class="zoom" aria-label="Photo">
+  <button type="button" class="icon zoom-x" aria-label="Close">✕</button>
+  <div class="zoom-stage" id="zoom-stage"><img id="zoom-img" alt=""></div>
+  <div class="zoom-f"><span id="zoom-cap"></span><span class="chips" id="zoom-tabs"></span></div>
 </dialog>
 
 <div class="toast" id="toast" hidden><span id="toast-msg"></span><button type="button" id="toast-undo" hidden>Undo</button></div>
@@ -951,7 +972,10 @@ details.dna[open] > summary { margin-bottom: 10px; }
   const deliverTo = () => (S.meta.profile?.location || 'you').trim();
   const canResearch = () => !!(mcp && S.meta.research?.triggerId && canWrite);
   const initial = (s) => esc((s || '?').trim().charAt(0).toUpperCase());
-  const thumb = (x, extra = '') => { const src = photoSrc(x); return src ? `<img class="thumb ${extra}" src="${esc(src)}" alt="" loading="lazy" data-fallback="${initial(nameOf(x))}">` : `<div class="thumb ${extra}">${initial(x.brand || nameOf(x))}</div>`; };
+  const zoomSrcs = (x) => [photoSrc(x), /^[0-9a-f]{32}$/.test(x.userPhotoId || '') ? '/_blob/' + x.userPhotoId : ''].filter((v, i, a) => v && a.indexOf(v) === i);
+  const zoomAttr = (x) => { const z = zoomSrcs(x); return z.length ? ` data-zoom="${esc(z.join('|'))}" data-cap="${esc(shortOf(x))}"` : ''; };
+  const zoomBtn = (x) => zoomSrcs(x).length ? `<span class="zoom-btn" role="button" tabindex="0" aria-label="Enlarge photo"${zoomAttr(x)}>⤢</span>` : '';
+  const thumb = (x, extra = '') => { const src = photoSrc(x); return src ? `<img class="thumb ${extra}" src="${esc(src)}" alt="" loading="lazy" data-fallback="${initial(nameOf(x))}"${zoomAttr(x)}>` : `<div class="thumb ${extra}">${initial(x.brand || nameOf(x))}</div>`; };
   const stars = (n) => { n = Number(n) || 0; if (!n) return ''; return `<span class="stars" aria-label="${n} out of 5">${'★'.repeat(n)}<span class="off">${'★'.repeat(5 - n)}</span></span>`; };
   const ago = (iso) => {
     if (!iso) return '';
@@ -1068,7 +1092,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
   }
 
   // ---------- rendering ----------
-  const activeWants = () => live('wishlist').filter(w => w.status !== 'bought');
+  const activeWants = () => live('wishlist').filter(w => w.status !== 'bought' && w.status !== 'ordered');
   const newFinds = () => live('finds').filter(f => f.status !== 'added' && !(f.snoozedUntil && f.snoozedUntil > dayKey()));
   const binItems = () => COLS.flatMap(c => S[c].filter(x => x.deleted).map(x => ({ col: c, x }))).sort((a, b) => String(b.x.deletedAt || '').localeCompare(String(a.x.deletedAt || '')));
 
@@ -1155,11 +1179,14 @@ details.dna[open] > summary { margin-bottom: 10px; }
 
   function renderWants() {
     const all = live('wishlist');
-    const counts = {}; all.filter(w => S.showBought || w.status !== 'bought').forEach(w => { const g = groupOfCat(w.category); counts[g] = (counts[g] || 0) + 1; });
+    const counts = {}; all.filter(w => w.status !== 'ordered' && (S.showBought || w.status !== 'bought')).forEach(w => { const g = groupOfCat(w.category); counts[g] = (counts[g] || 0) + 1; });
     chipRow($('#wants-chips'), WANT_GROUPS.map(g => g[0]).filter(g => counts[g]).map(g => [g, `${g} ${counts[g]}`]), S.wantCat, 'want-cat');
     $('#wants-sort').value = S.wantSort;
     $('#wants-bought').checked = S.showBought;
-    const list = all.filter(w => (S.showBought || w.status !== 'bought') && (S.wantCat === 'All' || groupOfCat(w.category) === S.wantCat));
+    const otw = all.filter(w => w.status === 'ordered').sort((a, b) => String(b.orderedOn || '').localeCompare(String(a.orderedOn || '')));
+    $('#wants-otw').hidden = !otw.length;
+    $('#wants-otw-list').innerHTML = otw.map(otwCard).join('');
+    const list = all.filter(w => w.status !== 'ordered' && (S.showBought || w.status !== 'bought') && (S.wantCat === 'All' || groupOfCat(w.category) === S.wantCat));
     const pr = { must: 0, want: 1, maybe: 2 };
     const sorters = {
       alert: (a, b) => (Math.min(9, ...wantAlerts(a).map(x => x.rank)) - Math.min(9, ...wantAlerts(b).map(x => x.rank))) || (pr[a.priority] ?? 1) - (pr[b.priority] ?? 1),
@@ -1174,6 +1201,26 @@ details.dna[open] > summary { margin-bottom: 10px; }
     el.innerHTML = list.map(wantCard).join('');
   }
   const sizePickHtml = (x) => x.sizePick?.size ? `<p class="notes" style="margin:0"><b>Your size: ${esc(x.sizePick.size)}</b>${x.sizePick.why ? ` · ${esc(x.sizePick.why)}` : ''}</p>` : '';
+  function otwCard(w) {
+    const when = w.orderedOn ? new Date(w.orderedOn + 'T00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : '';
+    const eta = w.eta ? new Date(w.eta + 'T00:00').toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' }) : '';
+    return `<article class="card">
+        <div class="card-top">${thumb(w)}
+          <div class="card-title">
+            <h3>${esc(shortOf(w))}</h3>
+            <span class="meta clamp1">${esc([w.brand, fullOf(w), w.variant].filter(Boolean).join(' · '))}</span>
+            <div class="pills"><span class="pill accent">On the way</span></div>
+          </div>
+        </div>
+        <p class="otw-line">${esc(['Ordered' + (w.orderedFrom ? ' from ' + w.orderedFrom : ''), when, w.orderedPrice ? fmt(w.orderedPrice) + ' delivered' : '', eta ? 'arrives by ' + eta : ''].filter(Boolean).join(' · '))}</p>
+        <div class="actions">
+          ${canWrite ? `<button class="btn small" data-act="bought" data-id="${esc(w.id)}">Arrived</button>` : ''}
+          ${canWrite ? `<details class="more-menu push"><summary class="btn small ghost" aria-label="More options">⋯</summary><div class="menu">
+          <button class="btn small ghost" data-act="edit" data-col="wishlist" data-id="${esc(w.id)}">Edit</button>
+          <button class="btn small ghost" data-act="unorder" data-id="${esc(w.id)}">Not bought after all</button></div></details>` : ''}
+        </div>
+      </article>`;
+  }
   function wantCard(w) {
       const p = priceInfo(w), al = wantAlerts(w);
       return `<article class="card ${w.status === 'bought' ? 'faded' : ''}">
@@ -1204,6 +1251,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
         ${aiBox(w.id)}
         <div class="actions">
           ${safeUrl(w.url) ? `<a class="btn small" href="${esc(w.url)}" target="_blank" rel="noopener">Shop ↗</a>` : ''}
+          ${canWrite && w.status !== 'bought' ? `<button class="btn small ghost" data-act="ordered" data-id="${esc(w.id)}" title="Bought it, waiting for it to arrive">Bought</button>` : ''}
           ${canWrite ? `<button class="btn small ghost" data-act="bought" data-id="${esc(w.id)}">${w.status === 'bought' ? 'Undo' : 'I have it'}</button>` : ''}
           <details class="more-menu push"><summary class="btn small ghost" aria-label="More options">⋯</summary><div class="menu">
           ${canWrite && w.status !== 'bought' ? `<button class="btn small ghost" data-act="logprice" data-id="${esc(w.id)}">Log price</button>` : ''}
@@ -1389,7 +1437,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     const src = photoSrc(p);
     const occ = Array.isArray(p.occasions) ? p.occasions : [];
     return `<div class="piece${p.fit === 'no' ? ' nofit' : ''}"><button class="piece-open" data-act="${canWrite ? 'edit' : ''}" data-col="wardrobe" data-id="${esc(p.id)}">
-        <div class="img">${src ? `<img src="${esc(src)}" alt="" loading="lazy">` : `<span>${esc(shortOf(p))}</span>`}</div>
+        <div class="img">${src ? `<img src="${esc(src)}" alt="" loading="lazy">${zoomBtn(p)}` : `<span>${esc(shortOf(p))}</span>`}</div>
         <div class="cap" title="${esc(fullOf(p) || nameOf(p))}"><b>${esc(shortOf(p))}</b><span class="meta">${esc([p.brand, p.colour, p.size ? `Size ${p.size}` : ''].filter(Boolean).join(' · '))}</span>
         ${p.example || RESEARCH[p.research] || MATCH[p.match] ? `<div class="pills">${p.example ? '<span class="pill ex">Example</span>' : ''}${researchPill(p)}${matchPill(p)}</div>` : ''}</div>
       </button><div class="occ">${p.category === 'Active' ? '' : Object.entries(OCCASIONS).map(([k, l]) => `<button class="occ-t" data-act="${canWrite ? 'occ' : ''}" data-id="${esc(p.id)}" data-v="${k}" aria-pressed="${occ.includes(k)}">${l}</button>`).join('')}<button class="occ-t fit" data-act="${canWrite ? 'fit' : ''}" data-id="${esc(p.id)}" aria-pressed="${p.fit === 'no'}" title="Left out of outfits while it doesn't fit">Doesn't fit</button></div>${p.fit === 'no' || p.category === 'Swim' ? '' : `<button class="today-add" data-act="today-add" data-id="${esc(p.id)}" aria-pressed="${flipChosen().some(x => x.id === p.id)}">${flipChosen().some(x => x.id === p.id) ? '✓ In today’s look' : '+ Add to today’s look'}</button>`}</div>`;
@@ -1534,7 +1582,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
       const lk = on && S.locked.has(row);
       return `<div class="frow ${on ? '' : 'off'} ${lk ? 'locked' : ''}"><span class="lab">${esc(ROW_LABEL[row] || row)}${on ? `<button class="lock" data-act="lock" data-row="${row}" aria-pressed="${lk}" title="${lk ? 'Unlock' : 'Keep this piece when shuffling'}">${lk ? '🔒 Locked' : '🔓 Lock'}</button>` : ''}</span>
         <button class="arrow" data-act="flip" data-row="${row}" data-d="-1" aria-label="Previous ${row.toLowerCase()}"${lk ? ' disabled' : ''}>‹</button>
-        <div class="card-in"><div class="img">${on ? (src ? `<img src="${esc(src)}" alt="" key="${esc(x.id)}">` : initial(x.name)) : '—'}</div>
+        <div class="card-in"><div class="img">${on ? (src ? `<img src="${esc(src)}" alt="" key="${esc(x.id)}">${zoomBtn(x)}` : initial(x.name)) : '—'}</div>
           <div class="nm">${on ? `<b>${x._col === 'wishlist' ? 'Want · ' : ''}${esc(shortOf(x))}</b><span class="meta">${i + 1} of ${items.length}</span>` : `<span class="meta">${items.length} to flip through</span>`}
           <button class="link" data-act="flip-toggle" data-row="${row}" style="justify-self:start">${on ? 'Take off' : row === 'Active' ? 'Add activewear' : row === 'Extras' ? 'Add a belt or extra' : 'Add a ' + row.toLowerCase()}</button></div></div>
         <button class="arrow" data-act="flip" data-row="${row}" data-d="1" aria-label="Next ${row.toLowerCase()}"${lk ? ' disabled' : ''}>›</button></div>`;
@@ -2465,6 +2513,25 @@ details.dna[open] > summary { margin-bottom: 10px; }
   $('#menu-btn').addEventListener('click', () => setMenu(!$('#tabs-wrap').classList.contains('open')));
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setMenu(false); });
   document.addEventListener('click', (e) => { if (!e.target.closest('#tabs-wrap')) setMenu(false); });
+  // Tap a photo (or the ⤢ button) to see it large; a second tap zooms in further
+  function openZoom(srcs, cap, i = 0) {
+    const dlg = $('#zoom');
+    $('#zoom-stage').classList.remove('big');
+    $('#zoom-img').src = srcs[i];
+    $('#zoom-cap').textContent = cap || '';
+    $('#zoom-tabs').innerHTML = srcs.length > 1 ? srcs.map((s, j) => `<button type="button" class="chip" aria-pressed="${j === i}" data-zi="${j}">${j ? 'Your photo' : 'Shop photo'}</button>`).join('') : '';
+    $('#zoom-tabs').onclick = (e) => { const b = e.target.closest('[data-zi]'); if (b) openZoom(srcs, cap, Number(b.dataset.zi)); };
+    if (!dlg.open) dlg.showModal();
+  }
+  document.addEventListener('click', (e) => {
+    const z = e.target.closest('[data-zoom]');
+    if (!z) return;
+    e.preventDefault(); e.stopPropagation();
+    openZoom(z.dataset.zoom.split('|'), z.dataset.cap);
+  }, true);
+  document.addEventListener('keydown', (e) => { const z = e.target.closest?.('.zoom-btn'); if (z && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openZoom(z.dataset.zoom.split('|'), z.dataset.cap); } });
+  $('#zoom-img').addEventListener('click', () => $('#zoom-stage').classList.toggle('big'));
+  $('#zoom').addEventListener('click', (e) => { if (e.target.id === 'zoom' || e.target.closest('.zoom-x')) $('#zoom').close(); });
   // Close any open ⋯ menu when tapping elsewhere
   document.addEventListener('click', (e) => { $$('details.more-menu[open]').forEach(d => { if (!d.contains(e.target)) d.open = false; }); });
   function setTab(tab) { setMenu(false); const g = groupOf(tab); if (g) { S.lastSub = { ...(S.lastSub || {}), [g]: tab }; store.set('edit.sub.' + g, tab); } S.tab = tab; store.set('edit.tab', tab); history.replaceState(null, '', '#' + tab); render(); window.scrollTo({ top: 0 }); }
@@ -2594,6 +2661,14 @@ details.dna[open] > summary { margin-bottom: 10px; }
         else { t.disabled = true; act(() => ownIt(it, 'wishlist')); }
         break;
       }
+      case 'ordered': {
+        const it = find('wishlist'); if (!it) break;
+        const best = priceInfo(it).best;
+        t.disabled = true;
+        act(async () => { await db.collection('wishlist').doc(id).update({ status: 'ordered', orderedOn: dayKey(), orderedFrom: best ? best.shop : '', orderedPrice: best ? best._total : (it.price ?? null) }); toast('Moved to On the way. Tap Arrived when it lands.'); });
+        break;
+      }
+      case 'unorder': act(() => db.collection('wishlist').doc(id).update({ status: 'want', orderedOn: null, orderedFrom: null, orderedPrice: null, eta: null })); break;
       case 'find-own': { const f = find('finds'); if (f) { t.disabled = true; act(() => ownIt(f, 'finds')); } break; }
       case 'del': act(() => softDelete(col, id), 'Couldn’t delete that. Try again.'); break;
       case 'restore': restore(col, id); break;
