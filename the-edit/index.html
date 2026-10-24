@@ -370,6 +370,11 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
 .palette i { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--line); display: block; }
 .picks { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); grid-auto-rows: max-content; align-items: start; gap: 8px; }
 .fb { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.fb .reasons { display: flex; flex-wrap: wrap; gap: 6px; flex-basis: 100%; }
+.fb .chip.sm { font-size: 0.78rem; padding: 3px 10px; }
+.refine { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.refine input { flex: 1 1 240px; min-width: 0; border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 8px 14px; font: inherit; font-size: 0.9rem; }
+.refine-log { margin: 0; font-size: 0.85rem; color: var(--muted); }
 .fb-note { display: flex; gap: 6px; flex: 1 1 220px; min-width: 0; }
 .fb-note input { flex: 1; min-width: 0; border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 5px 12px; font: inherit; font-size: 0.85rem; }
 @media (max-width: 600px) { .gaps li { grid-template-columns: 1fr; gap: 8px; } .gaps li > .pill { justify-self: start; } .gaps li .tools { justify-content: flex-start; flex-wrap: wrap; } }
@@ -1284,12 +1289,15 @@ details.dna[open] > summary { margin-bottom: 10px; }
             ${o.reviewSummary ? `<p class="meta" style="margin:0">${esc(o.reviewSummary)}</p>` : ''}
             ${sizePickHtml(o)}
             ${ongoingBlock(o, total)}
+            ${itemFb('briefs', b.id, i, o.feedback)}
             <div class="actions">
               ${safeUrl(o.url) ? `<a class="btn small" href="${esc(o.url)}" target="_blank" rel="noopener">Shop ↗</a>` : ''}
               ${canWrite ? (o.added ? '<span class="pill good">In your wants</span>' : `<button class="btn small ghost" data-act="brief-want" data-id="${esc(b.id)}" data-i="${i}">Add to wants</button>`) : ''}
             </div>
           </article>`;
         }).join('')}</div>` : ''}
+        ${(b.refinements || []).length ? `<p class="refine-log">You said: ${b.refinements.slice(-3).map(r => `“${esc(r.text)}”`).join(' · ')}</p>` : ''}
+        ${canResearch() && opts.length && b.status !== 'queued' ? `<div class="refine"><input type="text" data-refine="${esc(b.id)}" placeholder="Refine it: e.g. under $150, more western, longer, no polyester" aria-label="Refine this search"><button class="btn small" data-act="brief-refine" data-id="${esc(b.id)}">Refine</button></div>` : ''}
         ${canWrite ? `<div class="actions">${canResearch() && b.status !== 'queued' ? `<button class="btn small ghost" data-act="brief-again" data-id="${esc(b.id)}">${opts.length ? 'Find more like this' : 'Search again'}</button>` : ''}${delBtn('briefs', b.id, 'Done with this')}</div>` : ''}
       </section>`;
     }).join('');
@@ -1320,6 +1328,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
         ${swapTarget ? `<p class="notes"><b>Could replace:</b> ${esc(nameOf(swapTarget))}</p>` : ''}
         ${reviewBlock(f.review || f)}
         ${altsBlock('finds', f)}
+        ${itemFb('finds', f.id, null, f.feedback)}
         <div class="actions">
           ${safeUrl(f.url) ? `<a class="btn small" href="${esc(f.url)}" target="_blank" rel="noopener">Shop ↗</a>` : ''}
           ${canWrite ? `<button class="btn small" data-act="find-own" data-id="${esc(f.id)}">I have it</button>` : ''}
@@ -1413,6 +1422,25 @@ details.dna[open] > summary { margin-bottom: 10px; }
     return `<div class="fb"><span class="meta">How's this?</span><button class="chip" data-act="fb" data-ids="${idAttr}" data-v="love" aria-pressed="${cur?.verdict === 'love'}">Love it</button><button class="chip" data-act="fb" data-ids="${idAttr}" data-v="nope" aria-pressed="${cur?.verdict === 'nope'}">Not me</button>
       ${cur?.verdict === 'love' && !live('outfits').some(o => fbKey(o.itemIds || []) === key) ? `<button class="btn small" data-act="fb-save" data-ids="${idAttr}">Save to my looks</button>` : ''}
       ${cur ? `<div class="fb-note"><input type="text" placeholder="${cur.verdict === 'love' ? 'What works? (optional)' : 'What’s off? e.g. too busy, wrong shoes'}" value="${esc(cur.note || '')}" aria-label="Why"><button class="btn small ghost" data-act="fb-note" data-ids="${idAttr}">Save</button></div>` : ''}</div>`;
+  }
+  // Feedback on a find or a brief option, so the next search can refine
+  const FIND_REASONS = ['Too pricey', 'Not my style', 'Wrong colour', 'Wrong cut or fit', 'Wrong fabric', 'Have something similar'];
+  function itemFb(col, id, i, fb) {
+    if (!canWrite) return '';
+    const at = `data-col="${col}" data-id="${esc(id)}"${i != null ? ` data-i="${i}"` : ''}`, v = fb?.verdict, rs = fb?.reasons || [];
+    return `<div class="fb"><span class="meta">How's this?</span><button class="chip" data-act="ifb" ${at} data-v="love" aria-pressed="${v === 'love'}">Love it</button><button class="chip" data-act="ifb" ${at} data-v="nope" aria-pressed="${v === 'nope'}">Not for me</button>
+      ${v === 'nope' ? `<div class="reasons">${FIND_REASONS.map(r => `<button class="chip sm" data-act="ifb-reason" ${at} data-v="${esc(r)}" aria-pressed="${rs.includes(r)}">${esc(r)}</button>`).join('')}</div>` : ''}
+      ${v ? `<div class="fb-note"><input type="text" placeholder="${v === 'love' ? 'What do you love about it? (optional)' : 'Anything else? e.g. want it longer, no polyester'}" value="${esc(fb.note || '')}" aria-label="Why"><button class="btn small ghost" data-act="ifb-note" ${at}>Save</button></div>` : ''}</div>`;
+  }
+  async function setItemFb(col, id, i, patch) {
+    if (col === 'finds') {
+      const f = S.finds.find(x => x.id === id); if (!f) return;
+      await db.collection('finds').doc(id).update({ feedback: { ...(f.feedback || {}), ...patch, at: now() } });
+    } else {
+      const b = S.briefs.find(x => x.id === id); if (!b) return;
+      const options = (b.options || []).map((o, j) => j === i ? { ...o, feedback: { ...(o.feedback || {}), ...patch, at: now() } } : o);
+      await db.collection('briefs').doc(id).update({ options });
+    }
   }
   async function rateOutfit(ids, patch) {
     const key = fbKey(ids), names = ids.map(id => { const x = [...live('wardrobe'), ...live('wishlist')].find(p => p.id === id); return x ? shortOf(x) : ''; }).filter(Boolean);
@@ -2831,6 +2859,31 @@ details.dna[open] > summary { margin-bottom: 10px; }
       }
       case 'outfit-close': { S.suggestions.splice(Number(t.dataset.i), 1); renderWardrobe(); break; }
       case 'outfit-roll': rollOutfit(Number(t.dataset.i)); break;
+      case 'ifb': case 'ifb-reason': case 'ifb-note': {
+        const c = t.dataset.col, i = t.dataset.i != null ? Number(t.dataset.i) : null;
+        const it = c === 'finds' ? find('finds') : find('briefs'); if (!it) break;
+        const cur = (c === 'finds' ? it.feedback : (it.options || [])[i]?.feedback) || {};
+        let patch;
+        if (a === 'ifb') patch = cur.verdict === t.dataset.v ? { verdict: null, reasons: [] } : { verdict: t.dataset.v, reasons: t.dataset.v === 'love' ? [] : (cur.reasons || []) };
+        else if (a === 'ifb-reason') { const rs = new Set(cur.reasons || []); rs.has(t.dataset.v) ? rs.delete(t.dataset.v) : rs.add(t.dataset.v); patch = { reasons: [...rs] }; }
+        else patch = { note: t.parentElement.querySelector('input').value.trim().slice(0, 240) };
+        act(async () => { await setItemFb(c, id, i, patch); if (a === 'ifb-note') toast(c === 'finds' ? 'Thanks. Future finds will take that into account.' : 'Saved. Tap Refine to search again with it.'); });
+        break;
+      }
+      case 'brief-refine': {
+        const b = find('briefs'); if (!b) break;
+        const text = ($(`[data-refine="${CSS.escape(b.id)}"]`)?.value || '').trim().slice(0, 300);
+        const rated = (b.options || []).some(o => o.feedback?.verdict);
+        if (!text && !rated) { toast('Say what to change, or rate a few options first.'); break; }
+        t.disabled = true;
+        act(async () => {
+          const refinements = text ? [...(b.refinements || []), { text, at: now() }] : (b.refinements || []);
+          await db.collection('briefs').doc(b.id).update({ refinements, status: 'queued', requestedAt: now() });
+          await mcp.callTool('Claude Code Remote', 'fire_trigger', { trigger_id: S.meta.research.triggerId, text: `Brief request: collection=briefs doc_id=${b.id} refine=true. Read the brief's refinements and each option's feedback (verdict, reasons, note). Keep the options marked "love" and any added to wants, drop the ones marked "nope", and add 3-5 new options that follow the refinements and feedback.` }, { cache: false });
+          toast('Claude is refining the search.');
+        });
+        break;
+      }
       case 'brief-again': {
         const b = find('briefs'); if (!b) break;
         t.disabled = true;
