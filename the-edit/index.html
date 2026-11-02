@@ -375,6 +375,9 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
 .refine { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .refine input { flex: 1 1 240px; min-width: 0; border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 8px 14px; font: inherit; font-size: 0.9rem; }
 .refine-log { margin: 0; font-size: 0.85rem; color: var(--muted); }
+.price-fb { display: grid; gap: 6px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
+.link.wrong { font-size: 0.78rem; color: var(--muted); text-decoration: underline; padding: 0 2px; }
+.link.wrong:hover { color: var(--bad); }
 .fb-note { display: flex; gap: 6px; flex: 1 1 220px; min-width: 0; }
 .fb-note input { flex: 1; min-width: 0; border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 5px 12px; font: inherit; font-size: 0.85rem; }
 @media (max-width: 600px) { .gaps li { grid-template-columns: 1fr; gap: 8px; } .gaps li > .pill { justify-self: start; } .gaps li .tools { justify-content: flex-start; flex-wrap: wrap; } }
@@ -1031,7 +1034,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     const totalOf = (o) => o.total != null ? Number(o.total) : Number(o.price) + Number(o.delivery || 0) + Number(o.membership || 0);
     // Offers tagged with a colour only count for that colour; cheaper offers in other colours are kept aside as a tip
     const sel = String(it.variant || '').toLowerCase();
-    const every = (it.offers || []).filter(o => o && o.price != null).map(o => ({ ...o, _total: totalOf(o) })).sort((a, b) => a._total - b._total);
+    const every = (it.offers || []).filter(o => o && o.price != null).map(o => ({ ...o, _total: totalOf(o) })).sort((a, b) => (!!a.unverified - !!b.unverified) || a._total - b._total);
     const isUsed = (o) => o.condition && o.condition !== 'new';
     const all = every.filter(o => !isUsed(o)), usedAll = every.filter(isUsed);
     const newBest = all.find(o => !o.colour || !String(it.variant || '') || String(o.colour).toLowerCase() === String(it.variant).toLowerCase());
@@ -1208,6 +1211,15 @@ details.dna[open] > summary { margin-bottom: 10px; }
     el.innerHTML = list.map(wantCard).join('');
   }
   const sizePickHtml = (x) => x.sizePick?.size ? `<p class="notes" style="margin:0"><b>Your size: ${esc(x.sizePick.size)}</b>${x.sizePick.why ? ` · ${esc(x.sizePick.why)}` : ''}</p>` : '';
+  // "These prices aren't right": the note goes on the want and a price-only recheck is queued
+  function priceFbBox(w) {
+    if (!canResearch()) return '';
+    const last = (w.priceFeedback || []).slice(-1)[0];
+    return `<div class="price-fb">
+      ${last ? `<p class="refine-log">You said: “${esc(last.text)}”${w.priceRecheck === 'queued' ? ' · rechecking now' : w.recheckNote ? ` · ${esc(w.recheckNote)}` : ''}</p>` : ''}
+      ${w.priceRecheck === 'queued' ? '' : `<div class="refine"><input type="text" data-pfb="${esc(w.id)}" placeholder="Prices look off? e.g. Catwalk is $176 at checkout" aria-label="What's wrong with these prices"><button class="btn small" data-act="price-recheck" data-id="${esc(w.id)}">Recheck</button></div>`}
+    </div>`;
+  }
   function otwCard(w) {
     const when = w.orderedOn ? new Date(w.orderedOn + 'T00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : '';
     const eta = w.eta ? new Date(w.eta + 'T00:00').toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' }) : '';
@@ -1244,14 +1256,14 @@ details.dna[open] > summary { margin-bottom: 10px; }
         </div>
         ${sizePickHtml(w)}
         ${p.otherDeal ? `<p class="notes" style="margin:0"><span class="pill good">Cheaper in ${esc(p.otherDeal.colour)}</span> ${fmt(p.otherDeal._total)}${p.otherDeal.delivery == null ? '+' : ''} delivered from ${esc(p.otherDeal.shop)}${p.otherDeal.note ? ` · ${esc(p.otherDeal.note)}` : ''}</p>` : ''}
-        ${al.length || w.research ? `<div class="pills">${researchPill(w)}${al.map(a => `<span class="pill ${a.tone}">${esc(a.label)}</span>`).join('')}</div>` : ''}
+        ${al.length || w.research || w.priceRecheck === 'queued' ? `<div class="pills">${w.priceRecheck === 'queued' ? '<span class="pill warn">Rechecking prices</span>' : ''}${researchPill(w)}${al.map(a => `<span class="pill ${a.tone}">${esc(a.label)}</span>`).join('')}</div>` : ''}
         ${p.preloved.length ? `<p class="notes" style="margin:0"><span class="pill pay" style="margin:0">${esc(CONDITION[p.preloved[0].condition] || 'Pre-loved')}</span> ${fmt(p.preloved[0]._total)}${p.preloved[0].delivery == null ? '+' : ''} delivered from ${esc(p.preloved[0].shop)}${p.preloved[0].similar ? ' · similar, not the exact one' : ''}${p.preloved.length > 1 ? ` · ${p.preloved.length - 1} more below` : ''}</p>` : ''}
         ${ongoingBlock(w, p.best ? p.best._total : p.last)}
         ${variantsBlock('wishlist', w)}
         ${stackNoteBlock(w)}
         ${p.offers.length || p.preloved.length ? `<details class="more"><summary title="Delivered to ${esc(deliverTo())}">${p.offers.length + p.preloved.length} ${p.offers.length + p.preloved.length === 1 ? 'shop' : 'shops'}${p.lastChecked ? ` · ${esc(ago(p.lastChecked))}` : ''}</summary><ul class="offers" style="gap:8px">${p.offers.map(o => `<li style="grid-template-columns:1fr auto">
-            <span style="min-width:0">${safeUrl(o.url) ? `<a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(o.shop)}</a>` : esc(o.shop)}${payPills(o)}<br><span class="meta">${fmt(o.price)} + ${o.delivery == null ? 'delivery not known' : Number(o.delivery) ? fmt(o.delivery) + ' delivery' : 'free delivery'}${Number(o.membership) ? ` + ${fmt(o.membership)} membership` : ''}${o.stock && o.stock !== 'unknown' ? ` · ${esc(STOCK[o.stock] || '')}` : ''}${o.note ? ` · ${esc(o.note)}` : ''}</span></span>
-            <span class="mono" style="text-align:right">${fmt(o._total)}${o.delivery == null ? '+' : ''}</span></li>`).join('')}</ul>${p.preloved.length ? `<p class="eyebrow" style="margin:10px 0 4px">Pre-loved & refurbished</p><ul class="offers">${p.preloved.map(o => `<li style="grid-template-columns:1fr auto"><span style="min-width:0">${safeUrl(o.url) ? `<a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(o.shop)}</a>` : esc(o.shop)} · ${esc(CONDITION[o.condition] || o.condition)}${o.similar ? ' · similar' : ''}${payPills(o)}<br><span class="meta">${fmt(o.price)} + ${o.delivery == null ? 'delivery not known' : Number(o.delivery) ? fmt(o.delivery) + ' delivery' : 'free delivery'}${o.note ? ` · ${esc(o.note)}` : ''}</span></span><span class="mono" style="text-align:right">${fmt(o._total)}${o.delivery == null ? '+' : ''}</span></li>`).join('')}</ul>` : ''}${p.others.length ? `<p class="eyebrow" style="margin:10px 0 4px">Other colours</p><ul class="offers">${p.others.map(o => `<li style="grid-template-columns:1fr auto"><span style="min-width:0">${safeUrl(o.url) ? `<a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(o.shop)}</a>` : esc(o.shop)} · ${esc(o.colour)}<br><span class="meta">${fmt(o.price)} + ${o.delivery == null ? 'delivery not known' : Number(o.delivery) ? fmt(o.delivery) + ' delivery' : 'free delivery'}${o.note ? ` · ${esc(o.note)}` : ''}</span></span><span class="mono" style="text-align:right">${fmt(o._total)}${o.delivery == null ? '+' : ''}</span></li>`).join('')}</ul>` : ''}</details>` : ''}
+            <span style="min-width:0">${safeUrl(o.url) ? `<a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(o.shop)}</a>` : esc(o.shop)}${o.unverified ? ' <span class="pill warn">Unconfirmed</span>' : ''}${payPills(o)}<br><span class="meta">${fmt(o.price)} + ${o.delivery == null ? 'delivery not known' : Number(o.delivery) ? fmt(o.delivery) + ' delivery' : 'free delivery'}${Number(o.membership) ? ` + ${fmt(o.membership)} membership` : ''}${o.stock && o.stock !== 'unknown' ? ` · ${esc(STOCK[o.stock] || '')}` : ''}${o.note ? ` · ${esc(o.note)}` : ''}${canResearch() ? ` <button class="link wrong" data-act="price-wrong" data-id="${esc(w.id)}" data-shop="${esc(o.shop)}">Wrong?</button>` : ''}</span></span>
+            <span class="mono" style="text-align:right">${fmt(o._total)}${o.delivery == null ? '+' : ''}</span></li>`).join('')}</ul>${p.preloved.length ? `<p class="eyebrow" style="margin:10px 0 4px">Pre-loved & refurbished</p><ul class="offers">${p.preloved.map(o => `<li style="grid-template-columns:1fr auto"><span style="min-width:0">${safeUrl(o.url) ? `<a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(o.shop)}</a>` : esc(o.shop)} · ${esc(CONDITION[o.condition] || o.condition)}${o.similar ? ' · similar' : ''}${payPills(o)}<br><span class="meta">${fmt(o.price)} + ${o.delivery == null ? 'delivery not known' : Number(o.delivery) ? fmt(o.delivery) + ' delivery' : 'free delivery'}${o.note ? ` · ${esc(o.note)}` : ''}</span></span><span class="mono" style="text-align:right">${fmt(o._total)}${o.delivery == null ? '+' : ''}</span></li>`).join('')}</ul>` : ''}${p.others.length ? `<p class="eyebrow" style="margin:10px 0 4px">Other colours</p><ul class="offers">${p.others.map(o => `<li style="grid-template-columns:1fr auto"><span style="min-width:0">${safeUrl(o.url) ? `<a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(o.shop)}</a>` : esc(o.shop)} · ${esc(o.colour)}<br><span class="meta">${fmt(o.price)} + ${o.delivery == null ? 'delivery not known' : Number(o.delivery) ? fmt(o.delivery) + ' delivery' : 'free delivery'}${o.note ? ` · ${esc(o.note)}` : ''}</span></span><span class="mono" style="text-align:right">${fmt(o._total)}${o.delivery == null ? '+' : ''}</span></li>`).join('')}</ul>` : ''}${priceFbBox(w)}</details>` : ''}
         ${w.notes ? `<p class="notes clamp2" title="${esc(w.notes)}">${esc(w.notes)}</p>` : ''}
         ${reviewBlock(w.reviews)}
         ${altsBlock('wishlist', w)}
@@ -2870,6 +2882,25 @@ details.dna[open] > summary { margin-bottom: 10px; }
         else if (a === 'ifb-reason') { const rs = new Set(cur.reasons || []); rs.has(t.dataset.v) ? rs.delete(t.dataset.v) : rs.add(t.dataset.v); patch = { reasons: [...rs] }; }
         else patch = { note: t.parentElement.querySelector('input').value.trim().slice(0, 240) };
         act(async () => { await setItemFb(c, id, i, patch); if (a === 'ifb-note') toast(c === 'finds' ? 'Thanks. Future finds will take that into account.' : 'Saved. Tap Refine to search again with it.'); });
+        break;
+      }
+      case 'price-wrong': {
+        const inp = $(`[data-pfb="${CSS.escape(id)}"]`); if (!inp) break;
+        const shop = t.dataset.shop || '';
+        if (!inp.value.includes(shop)) inp.value = (inp.value ? inp.value.replace(/\s*$/, '; ') : '') + shop + ' ';
+        inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length);
+        break;
+      }
+      case 'price-recheck': {
+        const w = find('wishlist'); if (!w) break;
+        const text = ($(`[data-pfb="${CSS.escape(id)}"]`)?.value || '').trim().slice(0, 400);
+        if (!text) { toast('Say what looks wrong, e.g. which shop and the real price.'); break; }
+        t.disabled = true;
+        act(async () => {
+          await db.collection('wishlist').doc(id).update({ priceFeedback: [...(w.priceFeedback || []), { text, at: now() }].slice(-10), priceRecheck: 'queued', priceRecheckAt: now() });
+          await mcp.callTool('Claude Code Remote', 'fire_trigger', { trigger_id: S.meta.research.triggerId, text: `Price recheck: collection=wishlist doc_id=${id}` }, { cache: false });
+          toast('Thanks. Claude is rechecking these prices.');
+        });
         break;
       }
       case 'brief-refine': {
