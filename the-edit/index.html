@@ -375,6 +375,8 @@ dialog::backdrop { background: rgb(20 16 26 / 0.45); }
 .refine { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .refine input { flex: 1 1 240px; min-width: 0; border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 8px 14px; font: inherit; font-size: 0.9rem; }
 .refine-log { margin: 0; font-size: 0.85rem; color: var(--muted); }
+.tips { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 6px; font-size: 0.88rem; }
+.tips code { font-family: var(--f-mono); font-weight: 700; background: var(--accent-soft); color: var(--accent); padding: 1px 6px; border-radius: 4px; }
 .price-fb { display: grid; gap: 6px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
 .link.wrong { font-size: 0.78rem; color: var(--muted); text-decoration: underline; padding: 0 2px; }
 .link.wrong:hover { color: var(--bad); }
@@ -539,6 +541,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
           <option value="high">Price: high to low</option>
         </select>
         <label class="check"><input type="checkbox" id="wants-bought"> Show bought</label>
+        <button class="btn ghost" id="deals-all" hidden data-act="deal-all" title="One dedicated deal search per want: every shop, sales and discount codes">Find deals on all</button>
         <button class="btn primary" data-add="wishlist">+ Add a want</button>
       </div>
     </div>
@@ -1129,6 +1132,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     $$('.needs-img').forEach(el => el.hidden = !S.canImages);
     $('#quick').hidden = !db || !canWrite || ['bin', 'inspo', 'style', 'mystyle', 'amazon', 'shops'].includes(S.tab);
     $('#shop-form').hidden = !db || !canWrite;
+    $('#deals-all').hidden = !canResearch() || !activeWants().length;
     if (!S.quickTouched) { $('#quick-own').value = ['skin', 'makeup', 'hair', 'wardrobe'].includes(S.tab) ? 'own' : 'want'; setQuickFile(quickFile); }
     $('#quick-own option[value="try"]').hidden = !['skin', 'makeup', 'hair', 'wants', 'today', 'finds'].includes(S.tab);
     const nb = binItems().length;
@@ -1212,6 +1216,12 @@ details.dna[open] > summary { margin-bottom: 10px; }
   }
   const sizePickHtml = (x) => x.sizePick?.size ? `<p class="notes" style="margin:0"><b>Your size: ${esc(x.sizePick.size)}</b>${x.sizePick.why ? ` · ${esc(x.sizePick.why)}` : ''}</p>` : '';
   // "These prices aren't right": the note goes on the want and a price-only recheck is queued
+  async function queueDealHunt(w, text) {
+    const patch = { priceRecheck: 'queued', priceRecheckAt: now() };
+    if (text) patch.priceFeedback = [...(w.priceFeedback || []), { text, at: now() }].slice(-10);
+    await db.collection('wishlist').doc(w.id).update(patch);
+    await mcp.callTool('Claude Code Remote', 'fire_trigger', { trigger_id: S.meta.research.triggerId, text: `Deal hunt: collection=wishlist doc_id=${w.id}${text ? ' (the user flagged wrong prices: see priceFeedback)' : ''}` }, { cache: false });
+  }
   function priceFbBox(w) {
     if (!canResearch()) return '';
     const last = (w.priceFeedback || []).slice(-1)[0];
@@ -1255,8 +1265,9 @@ details.dna[open] > summary { margin-bottom: 10px; }
           ${spark(p.h)}
         </div>
         ${sizePickHtml(w)}
+        ${(w.dealTips || []).length ? `<details class="more" open><summary>Ways to save${w.dealsCheckedAt ? ` · ${esc(ago(w.dealsCheckedAt))}` : ''}</summary><ul class="tips">${w.dealTips.slice(0, 8).map(d => `<li>${d.code ? `<code>${esc(d.code)}</code> ` : ''}${esc(d.text || '')}${d.save ? ` <b>${esc(d.save)}</b>` : ''}${d.verified === false ? ' <span class="meta">(unconfirmed)</span>' : ''}${safeUrl(d.url) ? ` <a href="${esc(d.url)}" target="_blank" rel="noopener">↗</a>` : ''}</li>`).join('')}</ul></details>` : ''}
         ${p.otherDeal ? `<p class="notes" style="margin:0"><span class="pill good">Cheaper in ${esc(p.otherDeal.colour)}</span> ${fmt(p.otherDeal._total)}${p.otherDeal.delivery == null ? '+' : ''} delivered from ${esc(p.otherDeal.shop)}${p.otherDeal.note ? ` · ${esc(p.otherDeal.note)}` : ''}</p>` : ''}
-        ${al.length || w.research || w.priceRecheck === 'queued' ? `<div class="pills">${w.priceRecheck === 'queued' ? '<span class="pill warn">Rechecking prices</span>' : ''}${researchPill(w)}${al.map(a => `<span class="pill ${a.tone}">${esc(a.label)}</span>`).join('')}</div>` : ''}
+        ${al.length || w.research || w.priceRecheck === 'queued' ? `<div class="pills">${w.priceRecheck === 'queued' ? '<span class="pill warn">Finding deals…</span>' : ''}${researchPill(w)}${al.map(a => `<span class="pill ${a.tone}">${esc(a.label)}</span>`).join('')}</div>` : ''}
         ${p.preloved.length ? `<p class="notes" style="margin:0"><span class="pill pay" style="margin:0">${esc(CONDITION[p.preloved[0].condition] || 'Pre-loved')}</span> ${fmt(p.preloved[0]._total)}${p.preloved[0].delivery == null ? '+' : ''} delivered from ${esc(p.preloved[0].shop)}${p.preloved[0].similar ? ' · similar, not the exact one' : ''}${p.preloved.length > 1 ? ` · ${p.preloved.length - 1} more below` : ''}</p>` : ''}
         ${ongoingBlock(w, p.best ? p.best._total : p.last)}
         ${variantsBlock('wishlist', w)}
@@ -1270,6 +1281,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
         ${aiBox(w.id)}
         <div class="actions">
           ${safeUrl(w.url) ? `<a class="btn small" href="${esc(w.url)}" target="_blank" rel="noopener">Shop ↗</a>` : ''}
+          ${canResearch() && w.status !== 'bought' && w.priceRecheck !== 'queued' ? `<button class="btn small ghost" data-act="deal-hunt" data-id="${esc(w.id)}" title="Search every shop for sales and discount codes now">Find deals</button>` : ''}
           ${canWrite && w.status !== 'bought' ? `<button class="btn small ghost" data-act="ordered" data-id="${esc(w.id)}" title="Bought it, waiting for it to arrive">Bought</button>` : ''}
           ${canWrite ? `<button class="btn small ghost" data-act="bought" data-id="${esc(w.id)}">${w.status === 'bought' ? 'Undo' : 'I have it'}</button>` : ''}
           <details class="more-menu push"><summary class="btn small ghost" aria-label="More options">⋯</summary><div class="menu">
@@ -2891,16 +2903,26 @@ details.dna[open] > summary { margin-bottom: 10px; }
         inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length);
         break;
       }
+      case 'deal-hunt': {
+        const w = find('wishlist'); if (!w) break;
+        t.disabled = true;
+        act(async () => { await queueDealHunt(w); toast('Claude is searching every shop for deals and codes. Give it 10–20 minutes.'); });
+        break;
+      }
+      case 'deal-all': {
+        const list = activeWants().filter(w => !w.example && w.priceRecheck !== 'queued');
+        if (!list.length) { toast('Nothing to search right now.'); break; }
+        if (!confirm(`Run a dedicated deal search for each of your ${list.length} wants? It uses more of your Claude usage than the daily check.`)) break;
+        t.disabled = true;
+        act(async () => { for (const w of list) await queueDealHunt(w); toast(`Searching deals for ${list.length} wants. Results appear on each card as they finish.`); });
+        break;
+      }
       case 'price-recheck': {
         const w = find('wishlist'); if (!w) break;
         const text = ($(`[data-pfb="${CSS.escape(id)}"]`)?.value || '').trim().slice(0, 400);
         if (!text) { toast('Say what looks wrong, e.g. which shop and the real price.'); break; }
         t.disabled = true;
-        act(async () => {
-          await db.collection('wishlist').doc(id).update({ priceFeedback: [...(w.priceFeedback || []), { text, at: now() }].slice(-10), priceRecheck: 'queued', priceRecheckAt: now() });
-          await mcp.callTool('Claude Code Remote', 'fire_trigger', { trigger_id: S.meta.research.triggerId, text: `Price recheck: collection=wishlist doc_id=${id}` }, { cache: false });
-          toast('Thanks. Claude is rechecking these prices.');
-        });
+        act(async () => { await queueDealHunt(w, text); toast('Thanks. Claude is rechecking these prices.'); });
         break;
       }
       case 'brief-refine': {
