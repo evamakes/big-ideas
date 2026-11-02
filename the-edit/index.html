@@ -1323,7 +1323,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     chipRow($('#finds-chips'), Object.entries(FIND_KINDS).filter(([k]) => all.some(f => f.kind === k)), S.findKind, 'find-kind');
     const list = all.filter(f => S.findKind === 'All' || f.kind === S.findKind).sort((a, b) => String(b.foundOn || '').localeCompare(String(a.foundOn || '')));
     const el = $('#finds-list');
-    if (!list.length) { el.innerHTML = `<div class="empty" style="grid-column:1/-1"><span>${all.length ? 'Nothing in this category.' : 'No finds yet. The daily refresh adds new products here with genuine reviews, skincare first.'}</span></div>`; return; }
+    if (!list.length) { el.innerHTML = `<div class="empty" style="grid-column:1/-1"><span>${all.length ? 'Nothing in this category.' : 'Nothing here right now. Every so often Claude adds an idea for a real gap in your wardrobe. To research anything else, ask with “Find me…”.'}</span></div>`; return; }
     el.innerHTML = list.map(f => {
       const swapTarget = f.swapFor && [...live('routine'), ...live('beauty')].find(x => x.id === f.swapFor);
       return `<article class="card">
