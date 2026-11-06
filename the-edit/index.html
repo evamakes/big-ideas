@@ -161,6 +161,7 @@ body.compact .card:not(.open) > :is(.hl, .gap),
 body.compact .card:not(.open) .spark,
 body.compact .card:not(.open) .price small,
 body.compact .shop-card:not(.open) .sale :is(.picks, .meta, p, .eyebrow) { display: none; }
+a.plain { color: inherit; text-decoration: none; }
 .ck { margin: 0; font-size: 0.78rem; color: var(--muted); }
 body.compact .card:not(.open) > .ck { margin-top: -6px; }
 .chip { border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 5px 12px; font-size: 0.84rem; cursor: pointer; color: var(--muted); }
@@ -1217,9 +1218,9 @@ details.dna[open] > summary { margin-bottom: 10px; }
     const seen = new Set();
     const uniq = rows.filter(({ w }) => !seen.has(w.id) && seen.add(w.id));
     $('#alerts').innerHTML = uniq.length ? uniq.slice(0, 7).map(({ w, a }) => `
-      <li>${thumb(w)}
-        <span class="what"><b>${esc(shortOf(w))}</b><span class="pills"><span class="pill ${a.tone}">${esc(a.label)}</span><span class="meta">${esc(a.detail)}</span></span></span>
-        <span class="tools">${w.url && safeUrl(w.url) ? `<a class="btn small ghost" href="${esc(w.url)}" target="_blank" rel="noopener">Shop ↗</a>` : ''}${canWrite ? `<button class="btn small ghost" data-act="alert-dismiss" data-id="${esc(w.id)}" data-v="${esc(a.label)}">Dismiss</button>` : ''}</span></li>`).join('')
+      <li>${dealUrl(w) ? `<a href="${esc(dealUrl(w))}" target="_blank" rel="noopener">${thumb(w)}</a>` : thumb(w)}
+        <span class="what">${dealUrl(w) ? `<a class="plain" href="${esc(dealUrl(w))}" target="_blank" rel="noopener"><b>${esc(shortOf(w))}</b></a>` : `<b>${esc(shortOf(w))}</b>`}<span class="pills"><span class="pill ${a.tone}">${esc(a.label)}</span><span class="meta">${esc(a.detail)}</span></span></span>
+        <span class="tools">${dealUrl(w) ? `<a class="btn small ghost" href="${esc(dealUrl(w))}" target="_blank" rel="noopener">${priceInfo(w).best?.shop ? `Shop at ${esc(String(priceInfo(w).best.shop).split(' (')[0])} ↗` : 'Shop ↗'}</a>` : ''}${canWrite ? `<button class="btn small ghost" data-act="alert-dismiss" data-id="${esc(w.id)}" data-v="${esc(a.label)}">Dismiss</button>` : ''}</span></li>`).join('')
       : `<li style="display:block"><span class="meta">${wants.length ? 'No price or stock changes on your wants.' : 'Add things you want. Price drops, sales and low stock show up here.'}</span></li>`;
 
     // Sales at the shops you watch, and new arrivals from them
@@ -1335,6 +1336,8 @@ details.dna[open] > summary { margin-bottom: 10px; }
         </div>
       </article>`;
   }
+  // Where Shop should go: the cheapest in-stock offer the card is showing, else the product page
+  const dealUrl = (w) => { const b = priceInfo(w).best; return (b && b.stock !== 'out' && safeUrl(b.url)) || safeUrl(w.url) || ''; };
   function wantCard(w) {
       const p = priceInfo(w), al = wantAlerts(w);
       return `<article class="card ${w.status === 'bought' ? 'faded' : ''}">
@@ -1368,7 +1371,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
         ${wpBox('wishlist', w)}
         ${p.lastChecked ? `<p class="ck">Checked ${esc(ago(p.lastChecked))}</p>` : ''}
         <div class="actions">
-          ${safeUrl(w.url) ? `<a class="btn small" href="${esc(w.url)}" target="_blank" rel="noopener">Shop ↗</a>` : ''}
+          ${dealUrl(w) ? `<a class="btn small" href="${esc(dealUrl(w))}" target="_blank" rel="noopener" title="${esc(priceInfo(w).best?.shop || '')}">Shop ↗</a>` : ''}
           ${canResearch() && w.status !== 'bought' && w.priceRecheck !== 'queued' ? `<button class="btn small ghost" data-act="deal-hunt" data-id="${esc(w.id)}" title="Search every shop for sales and discount codes now">Find deals</button>` : ''}
           ${canWrite && w.status !== 'bought' ? `<button class="btn small ghost" data-act="ordered" data-id="${esc(w.id)}" title="Bought it, waiting for it to arrive">Bought</button>` : ''}
           ${canWrite ? `<button class="btn small ghost" data-act="bought" data-id="${esc(w.id)}">${w.status === 'bought' ? 'Undo' : 'I have it'}</button>` : ''}
