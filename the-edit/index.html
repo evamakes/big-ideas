@@ -551,7 +551,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
       <button class="tab" role="tab" data-tab="today" data-label="Home"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 4l8.5 6.5V20h-5.5v-5.5h-6V20H3.5z"/></svg><span class="tl">Home</span><span class="n" id="n-home"></span></button>
       <button class="tab" role="tab" data-tab="wants" data-group="shop" data-label="Shopping"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8.5h14l-1.2 11.5H6.2z"/><path d="M9 8.5V7a3 3 0 0 1 6 0v1.5"/></svg><span class="tl">Shopping</span><span class="n" id="n-shop"></span></button>
       <button class="tab" role="tab" data-tab="style" data-group="style" data-label="Style me"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 6.2a2 2 0 1 1 2.6 1.9c-.4.1-.6.5-.6.9v1L3.6 15.6a1 1 0 0 0 .6 1.9h15.6a1 1 0 0 0 .6-1.9L12 10"/></svg><span class="tl">Style me</span></button>
-      <button class="tab" role="tab" data-tab="wardrobe" data-group="mine" data-label="My stuff"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="4" width="15" height="16" rx="2"/><path d="M4.5 12h15M10 8h4M10 16h4"/></svg><span class="tl">My stuff</span><span class="n" id="n-mine"></span></button>
+      <button class="tab" role="tab" data-tab="wardrobe" data-group="mine" data-label="My world"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="4" width="15" height="16" rx="2"/><path d="M4.5 12h15M10 8h4M10 16h4"/></svg><span class="tl">My world</span><span class="n" id="n-mine"></span></button>
       <button class="tab minor mob-only" data-act="profile" id="profile-btn">About me</button>
       <button class="tab minor mob-only" role="tab" data-tab="bin" id="bin-btn">Bin</button>
     </nav>
@@ -696,6 +696,11 @@ details.dna[open] > summary { margin-bottom: 10px; }
   <section class="panel" data-panel="hair" hidden>
     <div id="hair-stack" style="display:grid;gap:22px"></div>
   </section>
+
+  <!-- MY WORLD: home, tech, wellness (things you own, from bought wants or added as "I own it") -->
+  <section class="panel" data-panel="home" hidden><div class="cards" id="things-home"></div></section>
+  <section class="panel" data-panel="tech" hidden><div class="cards" id="things-tech"></div></section>
+  <section class="panel" data-panel="wellness" hidden><div class="cards" id="things-wellness"></div></section>
 
 
   <!-- STYLE ME -->
@@ -1194,6 +1199,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     const subCount = { wants: nWantAlert, finds: newFinds().length, amazon: nAmazon, shops: live('shops').filter(x => x.watch && x.sale?.status === 'on').length, skin: needs('routine'), makeup: needs('beauty'), hair: needs('hair') };
     $('#subnav').hidden = !grp;
     $('#subnav').innerHTML = grp ? TAB_GROUPS[grp].map(([k, l]) => `<button class="chip" role="tab" aria-pressed="${k === S.tab}" data-tab="${k}">${l}${subCount[k] ? ` <span class="n">${subCount[k]}</span>` : ''}</button>`).join('') : '';
+    { const on = $('#subnav [aria-pressed="true"]'), sn = $('#subnav'); if (on && sn.scrollWidth > sn.clientWidth) sn.scrollLeft = Math.max(0, on.offsetLeft - sn.offsetLeft - 16); }
     const subLabel = grp ? (TAB_GROUPS[grp].find(([k]) => k === S.tab) || [])[1] : '';
     $('#menu-label').textContent = curTab ? (curTab.dataset.label || curTab.textContent) + (subLabel ? ' · ' + subLabel : '') : S.tab === 'bin' ? 'Bin' : '';
     $$('[data-panel]').forEach(p => p.hidden = p.dataset.panel !== S.tab);
@@ -1214,7 +1220,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     renderGlance();
     if (!S.quickTouched || S.quickTab !== S.tab) {
       // The bar starts on the section you're in; change either menu to send it somewhere else
-      const [c, o] = ({ wardrobe: [S.wardCat === 'Active' ? 'activewear' : 'clothes', 'own'], skin: ['skincare', 'own'], makeup: ['makeup', 'own'], hair: ['hair', 'own'], amazon: ['amazon', 'want'], shops: ['shop', 'want'], finds: ['auto', 'brief'] })[S.tab] || ['auto', 'want'];
+      const [c, o] = ({ wardrobe: [S.wardCat === 'Active' ? 'activewear' : 'clothes', 'own'], skin: ['skincare', 'own'], makeup: ['makeup', 'own'], hair: ['hair', 'own'], amazon: ['amazon', 'want'], shops: ['shop', 'want'], finds: ['auto', 'brief'], home: ['home', 'own'], tech: ['tech', 'own'], wellness: ['health', 'own'] })[S.tab] || ['auto', 'want'];
       $('#quick-cat').value = c; $('#quick-own').value = o; S.quickTouched = false; S.quickTab = S.tab; setQuickFile(quickFile);
     }
     const nb = binItems().length;
@@ -1870,6 +1876,37 @@ details.dna[open] > summary { margin-bottom: 10px; }
         ${safeUrl(b.url) ? `<a class="btn small ghost" href="${esc(b.url)}" target="_blank" rel="noopener">Shop ↗</a>` : '<span></span>'}</li>`).join('')}</ul>${checkedLine(rs)}</details>` : items.length >= 2 ? `<p class="meta" style="margin:6px 0 0">One-order options (a shop that has everything on this list) appear after the next price check.</p>` : '';
   }
   const checkedLine = (rs) => rs.checked ? `<p class="meta" style="margin:6px 0 0;font-size:0.78rem">Checked ${esc(ago(rs.checked))}</p>` : '';
+  // My world: what you own beyond clothes and beauty. Bought wants land here by category.
+  const THING_TABS = { home: ['Home', 'Office', 'Other'], tech: ['Tech'], wellness: ['Health'] };
+  const thingTab = (cat) => Object.keys(THING_TABS).find(k => THING_TABS[k].includes(cat)) || 'home';
+  const THING_EMPTY = { home: 'Furniture, homewares and office bits you own live here.', tech: 'Your gadgets live here: watches, phones, tablets, headphones.', wellness: 'Wellness things you own live here: rings, massagers, supplements, gym gear.' };
+  function thingCard(w) {
+    const paid = w.orderedPrice ?? w.price, yr = yearlyOf(w), src = safeUrl(w.url) ? w.url : '';
+    return `<article class="card">
+        <div class="card-top">${thumb(w)}
+          <div class="card-title">
+            <h3>${esc(shortOf(w))}</h3>
+            <span class="meta clamp1">${esc([w.brand, fullOf(w), w.variant].filter(Boolean).join(' · '))}</span>
+          </div>
+        </div>
+        <p class="ck">${esc([paid != null ? `Paid ${fmt(paid)}${w.orderedFrom ? ` at ${w.orderedFrom}` : ''}` : '', w.boughtOn ? `since ${new Date(String(w.boughtOn).slice(0, 10) + 'T00:00').toLocaleDateString('en-AU', { month: 'short', year: 'numeric' })}` : ''].filter(Boolean).join(' · ') || 'Yours')}${yr ? ` · ${esc(fmt(yr))} a year to run` : ''}</p>
+        ${w.notes ? `<p class="notes clamp2">${esc(w.notes)}</p>` : ''}
+        ${(w.ongoing || []).length ? `<p class="meta" style="margin:0">${esc(w.ongoing.map(o => `${o.what}: ${fmt(o.amount)}/${o.per}${o.required ? '' : ' (optional)'}`).join(' · '))}</p>` : ''}
+        <div class="actions">
+          ${src ? `<a class="btn small ghost" href="${esc(src)}" target="_blank" rel="noopener">Product page ↗</a>` : ''}
+          ${canWrite ? `<button class="btn small ghost" data-act="bought" data-col="wishlist" data-id="${esc(w.id)}">Back to wants</button>` : ''}
+          ${canWrite ? `<button class="btn small ghost push" data-act="edit" data-col="wishlist" data-id="${esc(w.id)}">Edit</button>` : ''}
+          ${delBtn('wishlist', w.id)}
+        </div>
+      </article>`;
+  }
+  function renderThings() {
+    const owned = live('wishlist').filter(w => w.status === 'bought' && !['Clothes', 'Activewear', 'Beauty', 'Skincare', 'Hair'].includes(w.category));
+    for (const k of Object.keys(THING_TABS)) {
+      const list = owned.filter(w => thingTab(w.category) === k).sort((a, b) => String(b.boughtOn || '').localeCompare(String(a.boughtOn || '')));
+      $('#things-' + k).innerHTML = list.length ? list.map(thingCard).join('') : `<div class="empty" style="grid-column:1/-1"><span>${esc(THING_EMPTY[k])} Add one with the bar above (pick “I own it”), or tap Bought on a want.</span></div>`;
+    }
+  }
   function renderAmazon() {
     const all = live('basket'), open = all.filter(b => !b.ordered).sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)));
     const done = all.filter(b => b.ordered).sort((a, b) => String(b.orderedAt || '').localeCompare(String(a.orderedAt || '')));
@@ -2013,7 +2050,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
 
   function render() {
     renderChrome();
-    renderToday(); renderWants(); renderFinds(); renderSkin(); renderMakeup(); renderHair(); renderWardrobe(); renderStyle(); renderSizes(); renderShops(); renderInspo(); renderShopList(); renderAmazon(); renderBin();
+    renderToday(); renderWants(); renderFinds(); renderSkin(); renderMakeup(); renderHair(); renderWardrobe(); renderStyle(); renderSizes(); renderShops(); renderInspo(); renderShopList(); renderAmazon(); renderThings(); renderBin();
     decorateCards();
     $('#today-quiet').hidden = !['#alerts-block', '#shop-block', '#sales-block', '#new-block'].every(q => $(q).hidden);
   }
@@ -2480,9 +2517,10 @@ details.dna[open] > summary { margin-bottom: 10px; }
     const ref = await db.collection(col).add(doc);
     const queued = await fireResearch(col, ref.id, (phrase || name) + (photoId ? ' (identify from the attached photo: the userPhotoId asset)' : ''));
     quickStatus('');
-    const where = { beauty: 'makeup', routine: 'skin', hair: 'hair', wardrobe: 'wardrobe', wishlist: 'wants' }[col];
+    const where = col === 'wishlist' && doc.status === 'bought' ? thingTab(doc.category) : { beauty: 'makeup', routine: 'skin', hair: 'hair', wardrobe: 'wardrobe', wishlist: 'wants' }[col];
     if (col === 'wardrobe') S.wardCat = doc.category === 'Active' ? 'Active' : S.wardCat;
-    toast(queued ? `Added to ${COL_LABEL[col]}. Claude is checking shops, shades and reviews.` : `Added to ${COL_LABEL[col]}${variants.length ? ` with ${variants.length} ${col === 'beauty' || kind === 'makeup' ? 'shades' : 'colours'}` : ''}.`);
+    if (col === 'wishlist' && doc.status === 'bought') toast(`Added to My world · ${({ home: 'Home', tech: 'Tech', wellness: 'Wellness' })[where]}`);
+    else toast(queued ? `Added to ${COL_LABEL[col]}. Claude is checking shops, shades and reviews.` : `Added to ${COL_LABEL[col]}${variants.length ? ` with ${variants.length} ${col === 'beauty' || kind === 'makeup' ? 'shades' : 'colours'}` : ''}.`);
     if (S.tab !== where) setTab(where);
     return ref.id;
   }
@@ -2813,17 +2851,17 @@ details.dna[open] > summary { margin-bottom: 10px; }
       else await db.collection('wishlist').doc(src.id).update({ status: src.status || 'want', boughtOn: src.boughtOn || null });
       toast('Undone');
     });
-    toast(where ? `Added to your ${where}${col === 'wardrobe' ? '. Edit it to set the category.' : ''}` : 'Marked as yours', col === 'routine-placeholder' ? null : undo);
+    toast(where ? `Added to your ${where}${col === 'wardrobe' ? '. Edit it to set the category.' : ''}` : srcCol === 'finds' ? 'Marked as yours' : `Added to My world · ${({ home: 'Home', tech: 'Tech', wellness: 'Wellness' })[thingTab(src.category)]}`, col === 'routine-placeholder' ? null : undo);
   }
 
   // ---------- actions ----------
   async function act(fn, fail = 'Couldn’t save that. Try again.') { try { await fn(); } catch { toast(fail); } }
   // Fewer tabs: related pages sit under one tab with a small switch at the top
-  // Four places: Home (what changed), Shopping (things to buy), Style me (getting dressed), My stuff (what you own)
+  // Four places: Home (what changed), Shopping (things to buy), Style me (getting dressed), My world (everything you own and love)
   const TAB_GROUPS = {
     shop: [['wants', 'Wants'], ['finds', 'Finds'], ['amazon', 'Amazon list'], ['shops', 'Shops']],
     style: [['style', 'Get dressed'], ['mystyle', 'My style'], ['inspo', 'Inspo']],
-    mine: [['wardrobe', 'Wardrobe'], ['skin', 'Skin'], ['makeup', 'Makeup'], ['hair', 'Hair']],
+    mine: [['wardrobe', 'Wardrobe'], ['skin', 'Skin'], ['makeup', 'Makeup'], ['hair', 'Hair'], ['home', 'Home'], ['tech', 'Tech'], ['wellness', 'Wellness']],
   };
   const groupOf = (tab) => Object.keys(TAB_GROUPS).find(g => TAB_GROUPS[g].some(([k]) => k === tab)) || '';
   function setMenu(open) { $('#tabs-wrap').classList.toggle('open', open); $('#menu-btn').setAttribute('aria-expanded', String(open)); }
