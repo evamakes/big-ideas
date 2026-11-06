@@ -1146,7 +1146,9 @@ details.dna[open] > summary { margin-bottom: 10px; }
     const totalOf = (o) => o.total != null ? Number(o.total) : Number(o.price) + Number(o.delivery || 0) + Number(o.membership || 0);
     // Offers tagged with a colour only count for that colour; cheaper offers in other colours are kept aside as a tip
     const sel = String(it.variant || '').toLowerCase();
-    const every = (it.offers || []).filter(o => o && o.price != null).map(o => ({ ...o, _total: totalOf(o) })).sort((a, b) => ((a.stock === 'out') - (b.stock === 'out')) || (!!a.unverified - !!b.unverified) || a._total - b._total);
+    // Unconfirmed listings from open marketplaces (eBay, Gumtree, Depop...) rank below unconfirmed listings from proper shops
+    const shaky = (o) => !!o.unverified && /ebay|gumtree|depop|facebook|marketplace|u-buy|ubuy|wish\b|temu/i.test(o.shop || '');
+    const every = (it.offers || []).filter(o => o && o.price != null).map(o => ({ ...o, _total: totalOf(o) })).sort((a, b) => ((a.stock === 'out') - (b.stock === 'out')) || (!!a.unverified - !!b.unverified) || (shaky(a) - shaky(b)) || a._total - b._total);
     const isUsed = (o) => o.condition && o.condition !== 'new';
     // "Refurb OK": genuine refurbished/pre-loved listings of the exact item compete with new on price
     const condOk = it.conditionOk === 'any', counts = (o) => !isUsed(o) || (condOk && !o.similar);
