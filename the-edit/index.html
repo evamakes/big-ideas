@@ -198,6 +198,7 @@ body.compact .shop-card:not(.open) .sale :is(.picks, .meta, p, .eyebrow) { displ
 a.plain { color: inherit; text-decoration: none; }
 .prefs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .prefs .meta { font-size: 0.78rem; margin-left: 4px; }
+.tips .pill { font-size: 0.7rem; padding: 1px 7px; vertical-align: 1px; }
 .pref-var { font-size: 0.82rem; padding: 4px 10px; border-radius: 999px; background: var(--sunk); border: 0; max-width: 100%; }
 .chip.sm { font-size: 0.78rem; padding: 3px 10px; }
 .ck { margin: 0; font-size: 0.78rem; color: var(--muted); }
@@ -1293,6 +1294,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
       const p = priceInfo(w), b = p.best;
       const extra = [];
       if (b && b.wasPrice && !b.unverified && w.stock !== 'out' && b.stock !== 'out') extra.push({ tone: 'good', label: 'On sale', detail: `${fmt(b._total)} at ${b.shop}${w.colourMode === 'any' && b.colour ? ` in ${b.colour}` : ''} (was ${fmt(b.wasPrice)})`, rank: 1 });
+      { const fp = freshPromo(w); if (fp && w.stock !== 'out') extra.push({ tone: 'accent', label: promoLabel(fp), detail: `${fp.code ? fp.code + ': ' : ''}${fp.text || ''}${fp.shop && !String(fp.text || '').includes(fp.shop) ? ` at ${fp.shop}` : ''}${fp.ends ? ` · ends ${endDate(fp.ends)}` : ''}`, rank: 1.5 }); }
       if (w.recheckNote && w.dealsCheckedAt && Date.now() - Date.parse(w.dealsCheckedAt) < 3 * 864e5) extra.push({ tone: 'accent', label: 'Deal found', detail: w.recheckNote, rank: 2 });
       [...wantAlerts(w).filter(a => a.rank < 4), ...extra].filter(a => w.dismissedAlert !== a.label).forEach(a => rows.push({ w, a }));
     });
@@ -1302,7 +1304,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     $('#alerts-block').hidden = !uniq.length && wants.length > 0;
     $('#alerts').innerHTML = uniq.length ? uniq.slice(0, 7).map(({ w, a }) => `
       <li>${dealUrl(w) ? `<a href="${esc(dealUrl(w))}" target="_blank" rel="noopener">${thumb(w)}</a>` : thumb(w)}
-        <span class="what">${dealUrl(w) ? `<a class="plain" href="${esc(dealUrl(w))}" target="_blank" rel="noopener"><b>${esc(shortOf(w))}</b></a>` : `<b>${esc(shortOf(w))}</b>`}<span class="pills"><span class="pill ${a.tone}">${esc(a.label)}</span><span class="meta">${esc(a.detail)}</span></span></span>
+        <span class="what">${dealUrl(w) ? `<a class="plain" href="${esc(dealUrl(w))}" target="_blank" rel="noopener"><b>${esc(shortOf(w))}</b></a>` : `<b>${esc(shortOf(w))}</b>`}<span class="pills"><span class="pill ${a.tone}">${esc(a.label)}</span><span class="meta">${esc(a.detail)}</span>${(() => { const fp = freshPromo(w); return fp && promoLabel(fp) !== a.label ? `<span class="pill accent">${esc(promoLabel(fp))}</span>${fp.code ? `<code>${esc(fp.code)}</code>` : ''}<span class="meta">${esc(fp.text || '')}${fp.ends ? ` · ends ${esc(endDate(fp.ends))}` : ''}</span>` : ''; })()}</span></span>
         <span class="tools">${dealUrl(w) ? `<a class="btn small ghost" href="${esc(dealUrl(w))}" target="_blank" rel="noopener">${priceInfo(w).best?.shop ? `Shop at ${esc(String(priceInfo(w).best.shop).split(' (')[0])} ↗` : 'Shop ↗'}</a>` : ''}${canWrite ? `<button class="btn small ghost" data-act="alert-dismiss" data-id="${esc(w.id)}" data-v="${esc(a.label)}">Dismiss</button>` : ''}</span></li>`).join('')
       : `<li style="display:block"><span class="meta">${wants.length ? 'No price or stock changes on your wants.' : 'Add things you want. Price drops, sales and low stock show up here.'}</span></li>`;
 
@@ -1376,12 +1378,13 @@ details.dna[open] > summary { margin-bottom: 10px; }
     try { localStorage.setItem('edit.autoHunt', String(Date.now())); } catch {}
     for (const { x, col } of stale) await queueDealHunt(x, '', col).catch(() => {});
   }
+  const PROMO_ASK = ' PROMOS CHECKLIST: at every shop that sells it, check for and record what is live in `dealTips`, each with `kind` ("code"|"multibuy"|"gwp"|"spend"|"bundle"|"pricematch"|"cashback"|"giftcard"|"sale"), `shop`, `ends` (YYYY-MM-DD if known) and `found` (today, or the earlier date if it was already listed): live coupon and discount codes (site banners, pop-ups, first-order, newsletter and app codes, OzBargain, eBay codes); multi-buys (2 for 1, buy one get one, 3 for 2, buy 2 save %); gift with purchase; spend-and-save tiers and free-delivery thresholds; value sets or bundles cheaper than buying separately; price-match and price-beat; cashback; discounted gift cards. Apply any the item alone qualifies for to that offer\'s `total` and say so in its `note`. If a live promo lowers the delivered price by at least 5% or $5, lead `recheckNote` with it (e.g. "2 for 1 at Priceline until 12 Nov: $27 each").';
   async function queueDealHunt(w, text, col = 'wishlist') {
     const patch = { priceRecheck: 'queued', priceRecheckAt: now() };
     if (text) patch.priceFeedback = [...(w.priceFeedback || []), { text, at: now() }].slice(-10);
     await db.collection(col).doc(w.id).update(patch);
     const season = saleSeason();
-    await mcp.callTool('Claude Code Remote', 'fire_trigger', { trigger_id: S.meta.research.triggerId, text: `Deal hunt: collection=${col} doc_id=${w.id}${text ? ' (the user flagged wrong prices: see priceFeedback)' : ''}${season ? ` Sale season: ${season.label} (until ${season.until}). Look hard for ${season.label} prices and codes.` : ''}${w.colourMode === 'any' ? ' The user is happy with ANY colour: price every colour and record each with `colour` set; the cheapest colour counts.' : w.variant ? ` The user wants ${JSON.stringify(w.variant)} only: don't let other colours set the price.` : ''}${w.conditionOk === 'any' ? ' Refurbished or pre-loved in good condition is fine: search certified refurbished, Reebelo, Phonebot, Amazon Renewed, eBay and ex-demo, and record them with `condition`; they count towards the best price (not `similar` items).' : ''}` }, { cache: false });
+    await mcp.callTool('Claude Code Remote', 'fire_trigger', { trigger_id: S.meta.research.triggerId, text: `Deal hunt: collection=${col} doc_id=${w.id}${text ? ' (the user flagged wrong prices: see priceFeedback)' : ''}${season ? ` Sale season: ${season.label} (until ${season.until}). Look hard for ${season.label} prices and codes.` : ''}${PROMO_ASK}${w.colourMode === 'any' ? ' The user is happy with ANY colour: price every colour and record each with `colour` set; the cheapest colour counts.' : w.variant ? ` The user wants ${JSON.stringify(w.variant)} only: don't let other colours set the price.` : ''}${w.conditionOk === 'any' ? ' Refurbished or pre-loved in good condition is fine: search certified refurbished, Reebelo, Phonebot, Amazon Renewed, eBay and ex-demo, and record them with `condition`; they count towards the best price (not `similar` items).' : ''}` }, { cache: false });
   }
   // Sale season (e.g. Black Friday): wants, restock items and finds get a deal search every day
   const saleSeason = () => { const m = S.meta.salemode; return m && m.on && (!m.until || m.until >= dayKey()) ? m : null; };
@@ -1438,6 +1441,24 @@ details.dna[open] > summary { margin-bottom: 10px; }
       : `<span class="meta">Colour</span>${chip('pref-colour', 'exact', !anyC, w.variant ? `${w.variant} only` : 'This colour only')}${chip('pref-colour', 'any', anyC, 'Any colour')}`;
     return `<div class="prefs">${hasColours ? colourCtl : ''}${refurbable ? `<span class="meta">Condition</span>${chip('pref-cond', 'new', !anyN, 'New only')}${chip('pref-cond', 'any', anyN, 'Refurb OK')}` : ''}</div>`;
   }
+  const PROMO_KIND = { code: 'Code', multibuy: 'Multi-buy', gwp: 'Gift with purchase', spend: 'Spend & save', bundle: 'Bundle', pricematch: 'Price match', cashback: 'Cashback', giftcard: 'Gift cards', sale: 'Sale' };
+  const promoLabel = (d) => d.kind === 'multibuy' && /2\s*for\s*1|buy one get one|bogo/i.test(d.text || '') ? '2 for 1' : PROMO_KIND[d.kind] || (d.code ? 'Code' : 'Deal');
+  const endDate = (d) => d ? new Date(String(d).slice(0, 10) + 'T00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : '';
+  function savingsOf(x) {
+    const seen = new Set(), out = [];
+    for (const d of [...(x.dealTips || []), ...(x.promos || [])]) {
+      if (!d || !(d.text || d.code)) continue;
+      if (d.ends && String(d.ends).slice(0, 10) < dayKey()) continue; // expired
+      const k = (d.code || d.text).toLowerCase(); if (seen.has(k)) continue; seen.add(k); out.push(d);
+    }
+    return out;
+  }
+  // a promo worth flagging: a real code, multi-buy, gift or spend-and-save first seen in the last 3 days
+  const freshPromo = (x) => savingsOf(x).find(d => ['code', 'multibuy', 'gwp', 'spend', 'bundle'].includes(d.kind || (d.code ? 'code' : '')) && d.verified !== false && (!d.found || Date.now() - Date.parse(d.found) < 3 * 864e5) && (d.found || (x.dealsCheckedAt && Date.now() - Date.parse(x.dealsCheckedAt) < 3 * 864e5)));
+  function tipsBlock(x) {
+    const list = savingsOf(x); if (!list.length) return '';
+    return `<details class="more" open><summary>Ways to save${x.dealsCheckedAt ? ` · ${esc(ago(x.dealsCheckedAt))}` : ''}</summary><ul class="tips">${list.slice(0, 8).map(d => `<li><span class="pill accent">${esc(promoLabel(d))}</span> ${d.code ? `<code>${esc(d.code)}</code> ` : ''}${esc(d.text || '')}${d.save ? ` <b>${esc(d.save)}</b>` : ''}${d.ends ? ` <span class="meta">· ends ${esc(endDate(d.ends))}</span>` : ''}${d.verified === false ? ' <span class="meta">(unconfirmed)</span>' : ''}${safeUrl(d.url) ? ` <a href="${esc(d.url)}" target="_blank" rel="noopener">↗</a>` : ''}</li>`).join('')}</ul></details>`;
+  }
   function wantCard(w) {
       const p = priceInfo(w), al = wantAlerts(w);
       return `<article class="card ${w.status === 'bought' ? 'faded' : ''}">
@@ -1454,7 +1475,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
         </div>
         ${w.recheckNote && w.priceRecheck !== 'queued' ? `<p class="hl" title="${esc(w.recheckNote)}">${esc(w.recheckNote)}</p>` : ''}
         ${sizePickHtml(w)}
-        ${(w.dealTips || []).length ? `<details class="more" open><summary>Ways to save${w.dealsCheckedAt ? ` · ${esc(ago(w.dealsCheckedAt))}` : ''}</summary><ul class="tips">${w.dealTips.slice(0, 8).map(d => `<li>${d.code ? `<code>${esc(d.code)}</code> ` : ''}${esc(d.text || '')}${d.save ? ` <b>${esc(d.save)}</b>` : ''}${d.verified === false ? ' <span class="meta">(unconfirmed)</span>' : ''}${safeUrl(d.url) ? ` <a href="${esc(d.url)}" target="_blank" rel="noopener">↗</a>` : ''}</li>`).join('')}</ul></details>` : ''}
+        ${tipsBlock(w)}
         ${p.otherDeal ? `<p class="notes" style="margin:0"><span class="pill good">Cheaper in ${esc(p.otherDeal.colour)}</span> ${fmt(p.otherDeal._total)}${p.otherDeal.delivery == null ? '+' : ''} delivered from ${esc(p.otherDeal.shop)}${p.otherDeal.note ? ` · ${esc(p.otherDeal.note)}` : ''}</p>` : ''}
         ${al.some(a => a.rank < 4) || RESEARCH[w.research] || w.priceRecheck === 'queued' ? `<div class="pills">${w.priceRecheck === 'queued' ? '<span class="pill warn">Finding deals…</span>' : ''}${researchPill(w)}${al.filter(a => a.rank < 4).map(a => `<span class="pill ${a.tone}">${esc(a.label)}</span>`).join('')}</div>` : ''}
         ${p.preloved.length ? `<p class="notes" style="margin:0"><span class="pill pay" style="margin:0">${esc(CONDITION[p.preloved[0].condition] || 'Pre-loved')}</span> ${fmt(p.preloved[0]._total)}${p.preloved[0].delivery == null ? '+' : ''} delivered from ${esc(p.preloved[0].shop)}${p.preloved[0].similar ? ' · similar, not the exact one' : ''}${p.preloved.length > 1 ? ` · ${p.preloved.length - 1} more below` : ''}</p>` : ''}
@@ -1896,7 +1917,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
       return `<li>${thumb(x)}
         <span class="what"><b>${esc(shortOf(x))}</b><span class="pills"><span class="pill ${SUPPLY[x.supply][0]}">${SUPPLY[x.supply][1]}</span><span class="meta">${esc([x.brand, x.shade, COL_LABEL[x._col]].filter(Boolean).join(' · '))}</span></span>
         ${total ? `<span class="meta">${fmt(total)}${best ? `${best.delivery == null ? '+' : ''} delivered from ${esc(best.shop)}` : ' (last known price)'}</span>` : '<span class="meta">Price not checked yet</span>'}
-        ${x.priceRecheck === 'queued' ? '<span class="meta">Finding deals…</span>' : x.recheckNote ? `<span class="meta clamp2" title="${esc(x.recheckNote)}">${esc(x.recheckNote)}</span>` : ''}</span>
+        ${x.priceRecheck === 'queued' ? '<span class="meta">Finding deals…</span>' : (() => { const fp = savingsOf(x).find(d => d.kind !== 'sale' && d.verified !== false); return `${fp ? `<span class="pills"><span class="pill accent">${esc(promoLabel(fp))}</span>${fp.code ? `<code>${esc(fp.code)}</code>` : ''}<span class="meta clamp1">${esc(fp.text || '')}${fp.ends ? ` · ends ${esc(endDate(fp.ends))}` : ''}</span></span>` : ''}${x.recheckNote ? `<span class="meta clamp2" title="${esc(x.recheckNote)}">${esc(x.recheckNote)}</span>` : ''}`; })()}</span>
         <span class="tools restock-tools">${canResearch() && x.priceRecheck !== 'queued' ? `<button class="btn small ghost" data-act="deal-hunt" data-col="${x._col}" data-id="${esc(x.id)}">Find deals</button>` : ''}${url ? `<a class="btn small ghost" href="${esc(url)}" target="_blank" rel="noopener">Shop ↗</a>` : ''}${canWrite ? `<button class="btn small" data-act="supply" data-v="ok" data-col="${x._col}" data-id="${esc(x.id)}">Bought</button><details class="more-menu"><summary class="btn small ghost" aria-label="More options">⋯</summary><div class="menu"><button class="btn small ghost" data-act="supply" data-v="dismiss" data-col="${x._col}" data-id="${esc(x.id)}" title="Take it off the list">Dismiss for now</button><button class="btn small ghost danger" data-act="no-rebuy" data-col="${x._col}" data-id="${esc(x.id)}" title="Moves it to Swapped out">Won't buy again</button></div></details>` : ''}</span></li>`;
     });
     const amz = live('basket').filter(b => !b.ordered);
