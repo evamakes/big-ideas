@@ -157,7 +157,12 @@ body.compact .card:not(.open) > :is(.notes, details.more, p.meta, .fb, .price-fb
 body.compact .card:not(.open) > div:has(> .sw),
 body.compact .sitem:not(.open) .body > :is(.notes, details, .review),
 body.compact .shop-card:not(.open) .body > :is(.notes, .pills) { display: none; }
-body.compact .card:not(.open) > .gap { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+body.compact .card:not(.open) > :is(.hl, .gap),
+body.compact .card:not(.open) .spark,
+body.compact .card:not(.open) .price small,
+body.compact .shop-card:not(.open) .sale :is(.picks, .meta, p, .eyebrow) { display: none; }
+.ck { margin: 0; font-size: 0.78rem; color: var(--muted); }
+body.compact .card:not(.open) > .ck { margin-top: -6px; }
 .chip { border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 5px 12px; font-size: 0.84rem; cursor: pointer; color: var(--muted); }
 .chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 select.plain { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 7px 12px; font-size: 0.86rem; }
@@ -1348,7 +1353,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
         ${sizePickHtml(w)}
         ${(w.dealTips || []).length ? `<details class="more" open><summary>Ways to save${w.dealsCheckedAt ? ` · ${esc(ago(w.dealsCheckedAt))}` : ''}</summary><ul class="tips">${w.dealTips.slice(0, 8).map(d => `<li>${d.code ? `<code>${esc(d.code)}</code> ` : ''}${esc(d.text || '')}${d.save ? ` <b>${esc(d.save)}</b>` : ''}${d.verified === false ? ' <span class="meta">(unconfirmed)</span>' : ''}${safeUrl(d.url) ? ` <a href="${esc(d.url)}" target="_blank" rel="noopener">↗</a>` : ''}</li>`).join('')}</ul></details>` : ''}
         ${p.otherDeal ? `<p class="notes" style="margin:0"><span class="pill good">Cheaper in ${esc(p.otherDeal.colour)}</span> ${fmt(p.otherDeal._total)}${p.otherDeal.delivery == null ? '+' : ''} delivered from ${esc(p.otherDeal.shop)}${p.otherDeal.note ? ` · ${esc(p.otherDeal.note)}` : ''}</p>` : ''}
-        ${al.length || w.research || w.priceRecheck === 'queued' ? `<div class="pills">${w.priceRecheck === 'queued' ? '<span class="pill warn">Finding deals…</span>' : ''}${researchPill(w)}${al.map(a => `<span class="pill ${a.tone}">${esc(a.label)}</span>`).join('')}</div>` : ''}
+        ${al.some(a => a.rank < 4) || RESEARCH[w.research] || w.priceRecheck === 'queued' ? `<div class="pills">${w.priceRecheck === 'queued' ? '<span class="pill warn">Finding deals…</span>' : ''}${researchPill(w)}${al.filter(a => a.rank < 4).map(a => `<span class="pill ${a.tone}">${esc(a.label)}</span>`).join('')}</div>` : ''}
         ${p.preloved.length ? `<p class="notes" style="margin:0"><span class="pill pay" style="margin:0">${esc(CONDITION[p.preloved[0].condition] || 'Pre-loved')}</span> ${fmt(p.preloved[0]._total)}${p.preloved[0].delivery == null ? '+' : ''} delivered from ${esc(p.preloved[0].shop)}${p.preloved[0].similar ? ' · similar, not the exact one' : ''}${p.preloved.length > 1 ? ` · ${p.preloved.length - 1} more below` : ''}</p>` : ''}
         ${ongoingBlock(w, p.best ? p.best._total : p.last)}
         ${variantsBlock('wishlist', w)}
@@ -1361,6 +1366,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
         ${altsBlock('wishlist', w)}
         ${aiBox(w.id)}
         ${wpBox('wishlist', w)}
+        ${p.lastChecked ? `<p class="ck">Checked ${esc(ago(p.lastChecked))}</p>` : ''}
         <div class="actions">
           ${safeUrl(w.url) ? `<a class="btn small" href="${esc(w.url)}" target="_blank" rel="noopener">Shop ↗</a>` : ''}
           ${canResearch() && w.status !== 'bought' && w.priceRecheck !== 'queued' ? `<button class="btn small ghost" data-act="deal-hunt" data-id="${esc(w.id)}" title="Search every shop for sales and discount codes now">Find deals</button>` : ''}
@@ -1985,7 +1991,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     $('#details-all').checked = !!S.detailsAll;
   }
   // Compact view: cards show the essentials; "Details" opens the rest (remembered per card until reload)
-  const HIDDEN_SEL = ':scope > :is(.notes, details.more, p.meta, .fb, .price-fb), :scope > div:has(> .sw), :scope .body > :is(.notes, details, .review)';
+  const HIDDEN_SEL = ':scope > :is(.notes, details.more, p.meta, .fb, .price-fb, .hl, .gap), :scope > div:has(> .sw), :scope .body > :is(.notes, details, .review)';
   function decorateCards() {
     document.body.classList.toggle('compact', !S.detailsAll);
     S.openCards = S.openCards || new Set();
