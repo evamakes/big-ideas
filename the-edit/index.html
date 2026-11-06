@@ -144,6 +144,20 @@ main.wrap { padding-block: 24px 64px; display: grid; gap: 20px; }
 .tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .chips { display: flex; gap: 6px; flex-wrap: wrap; }
 .subnav { margin: -4px 0 14px; }
+.glance { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 14px; }
+.glance .chips { gap: 6px; }
+.glance .pill { font-size: 0.8rem; }
+.det-all { font-size: 0.82rem; color: var(--muted); margin-left: auto; }
+.hl { margin: 0; font-size: 0.88rem; color: var(--ink); background: var(--accent-soft); border-radius: 8px; padding: 6px 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.refresh-line { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 0.82rem; color: var(--muted); margin: 4px 0 0; }
+.alerts code { font-family: var(--f-mono); font-weight: 700; background: var(--accent-soft); color: var(--accent); padding: 1px 6px; border-radius: 4px; font-size: 0.8rem; }
+#today-new.picks { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; }
+.det-toggle { justify-self: start; font-size: 0.82rem; color: var(--muted); }
+body.compact .card:not(.open) > :is(.notes, details.more, p.meta, .fb, .price-fb),
+body.compact .card:not(.open) > div:has(> .sw),
+body.compact .sitem:not(.open) .body > :is(.notes, details, .review),
+body.compact .shop-card:not(.open) .body > :is(.notes, .pills) { display: none; }
+body.compact .card:not(.open) > .gap { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .chip { border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 5px 12px; font-size: 0.84rem; cursor: pointer; color: var(--muted); }
 .chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 select.plain { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 7px 12px; font-size: 0.86rem; }
@@ -200,7 +214,7 @@ select.plain { border: 1px solid var(--line); background: var(--surface); border
 .bundles summary::after { content: '▾'; color: var(--muted); margin-left: auto; transition: transform .2s; }
 .bundles[open] summary::after { transform: rotate(180deg); }
 @media (max-width: 600px) {
-  [data-panel="today"] > #stats { order: 5; }
+  [data-panel="today"] > #stats { display: none; }
   [data-panel="today"]:not([hidden]) { display: flex; flex-direction: column; }
   .alerts li { grid-template-columns: 40px minmax(0, 1fr); }
   .alerts li > .tools { grid-column: 2; justify-content: flex-start; flex-wrap: wrap; }
@@ -520,26 +534,29 @@ details.dna[open] > summary { margin-bottom: 10px; }
   <p class="quick-status" id="quick-status" hidden></p>
   <div id="banner"></div>
   <div class="subnav chips" id="subnav" role="tablist" hidden></div>
+  <div class="glance" id="glance"><div class="chips" id="glance-chips"></div><label class="check det-all"><input type="checkbox" id="details-all"> Show all details</label></div>
 
   <!-- TODAY -->
   <section class="panel" data-panel="today">
-    <div class="refresh" id="refresh"></div>
-    <div class="stats" id="stats"></div>
+    <section class="block">
+      <div class="block-h"><h2>Price &amp; stock</h2><button class="link" data-tab="wants">Wants →</button></div>
+      <ul class="alerts" id="alerts"></ul>
+    </section>
     <section class="block" id="shop-block">
-      <div class="block-h"><h2>To restock</h2><span class="tools"><span class="meta" id="shop-total"></span><button class="btn small ghost" data-act="restock-prices" id="restock-btn">Check prices now</button></span></div>
+      <div class="block-h"><h2>Restock &amp; Amazon</h2><span class="tools"><span class="meta" id="shop-total"></span><button class="btn small ghost" data-act="restock-prices" id="restock-btn">Check prices now</button></span></div>
       <ul class="alerts" id="shop-list"></ul>
       <div id="shop-bundles"></div>
     </section>
-    <div class="today">
-      <section class="block">
-        <div class="block-h"><h2>Heads up</h2><button class="link" data-tab="wants">All wants →</button></div>
-        <ul class="alerts" id="alerts"></ul>
-      </section>
-      <section class="block">
-        <div class="block-h"><h2>Fresh finds</h2><button class="link" data-tab="finds">All finds →</button></div>
-        <ul class="alerts" id="today-finds"></ul>
-      </section>
-    </div>
+    <section class="block">
+      <div class="block-h"><h2>Sales</h2><button class="link" data-tab="shops">Shops →</button></div>
+      <ul class="alerts" id="today-sales"></ul>
+    </section>
+    <section class="block" id="new-block" hidden>
+      <div class="block-h"><h2>New from brands you like</h2></div>
+      <div class="picks" id="today-new"></div>
+    </section>
+    <div class="refresh-line" id="refresh"></div>
+    <div id="stats" hidden></div><ul id="today-finds" hidden></ul>
   </section>
 
   <!-- WANTS -->
@@ -1055,7 +1072,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     const totalOf = (o) => o.total != null ? Number(o.total) : Number(o.price) + Number(o.delivery || 0) + Number(o.membership || 0);
     // Offers tagged with a colour only count for that colour; cheaper offers in other colours are kept aside as a tip
     const sel = String(it.variant || '').toLowerCase();
-    const every = (it.offers || []).filter(o => o && o.price != null).map(o => ({ ...o, _total: totalOf(o) })).sort((a, b) => (!!a.unverified - !!b.unverified) || a._total - b._total);
+    const every = (it.offers || []).filter(o => o && o.price != null).map(o => ({ ...o, _total: totalOf(o) })).sort((a, b) => ((a.stock === 'out') - (b.stock === 'out')) || (!!a.unverified - !!b.unverified) || a._total - b._total);
     const isUsed = (o) => o.condition && o.condition !== 'new';
     const all = every.filter(o => !isUsed(o)), usedAll = every.filter(isUsed);
     const newBest = all.find(o => !o.colour || !String(it.variant || '') || String(o.colour).toLowerCase() === String(it.variant).toLowerCase());
@@ -1082,9 +1099,10 @@ details.dna[open] > summary { margin-bottom: 10px; }
   const payPills = (o) => payOf(o).map(v => `<span class="pill pay">${esc(v)}</span>`).join('');
 
   function wantAlerts(it) {
-    const p = priceInfo(it), out = [];
-    if (p.drop) out.push({ tone: 'good', label: `Down ${fmt(p.drop)}`, detail: `${Math.round(p.drop / p.prev * 100)}% since last check`, rank: 1 });
-    if (it.stock === 'out') out.push({ tone: 'bad', label: 'Out of stock', detail: 'Check for restocks or a similar piece', rank: 2 });
+    const p = priceInfo(it), out = [], mine = it.sizePick?.size ? ` in your size (${it.sizePick.size})` : '';
+    // A price drop only counts if you can actually buy it in your size
+    if (it.stock === 'out') out.push({ tone: 'bad', label: mine ? 'Out in your size' : 'Out of stock', detail: p.drop ? `Price dropped ${fmt(p.drop)}, but it's sold out${mine}` : `Sold out${mine}. Watching for restocks`, rank: 2 });
+    else if (p.drop) out.push({ tone: 'good', label: `Down ${fmt(p.drop)}`, detail: `${Math.round(p.drop / p.prev * 100)}% since last check`, rank: 1 });
     if (it.stock === 'low' || it.stock === 'selling') out.push({ tone: 'warn', label: STOCK[it.stock], detail: 'Might go soon', rank: 2 });
     if (p.rise) out.push({ tone: 'bad', label: `Up ${fmt(p.rise)}`, detail: 'Price went up since last check', rank: 3 });
     if (p.stale != null && p.stale >= 7) out.push({ tone: '', label: `Checked ${p.stale} days ago`, detail: 'The next refresh will check it', rank: 4 });
@@ -1151,6 +1169,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     $('#quick').hidden = !db || !canWrite || ['bin', 'inspo', 'style', 'mystyle', 'amazon', 'shops'].includes(S.tab);
     $('#shop-form').hidden = !db || !canWrite;
     $('#deals-all').hidden = !canResearch() || !activeWants().length;
+    renderGlance();
     if (!S.quickTouched) { $('#quick-own').value = ['skin', 'makeup', 'hair', 'wardrobe'].includes(S.tab) ? 'own' : 'want'; setQuickFile(quickFile); }
     $('#quick-own option[value="try"]').hidden = !['skin', 'makeup', 'hair', 'wants', 'today', 'finds'].includes(S.tab);
     const nb = binItems().length;
@@ -1169,12 +1188,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
   function renderToday() {
     const r = S.meta.refresh || {};
     const canRefresh = !!(mcp && r.triggerId && canWrite);
-    $('#refresh').innerHTML = `<div style="display:grid;gap:4px;min-width:0">
-        <p class="eyebrow">Daily refresh</p>
-        <p class="when">${r.lastRun ? `Last checked ${esc(ago(r.lastRun))}` : 'Hasn’t run yet'}${r.requestedAt && (!r.lastRun || r.requestedAt > r.lastRun) ? ' · a refresh is running' : ''}</p>
-        ${r.summary ? `<p class="meta ${S.refreshOpen ? '' : 'clamp1'}">${esc(r.summary)}</p>${r.summary.length > 60 ? `<button class="link" data-act="refresh-more" style="justify-self:start;font-size:0.82rem">${S.refreshOpen ? 'Less' : 'More'}</button>` : ''}` : `<p class="meta">Each morning Claude checks your wants across shops, reads Reddit and independent reviews, and adds new finds here.</p>`}
-      </div>
-      ${canRefresh ? `<button class="btn" data-act="refresh-now">Refresh now</button>` : ''}`;
+    $('#refresh').innerHTML = `<span>${r.lastRun ? `Prices checked ${esc(ago(r.lastRun))}` : 'Prices haven’t been checked yet'}${r.requestedAt && (!r.lastRun || r.requestedAt > r.lastRun) ? ' · checking now' : ''}</span>${canRefresh ? `<button class="link" data-act="refresh-now">Check now</button>` : ''}`;
 
     const wants = activeWants();
     const totalWant = wants.reduce((s, w) => s + (Number(priceInfo(w).last) || 0), 0);
@@ -1187,7 +1201,13 @@ details.dna[open] > summary { margin-bottom: 10px; }
     ].map(([v, k]) => `<div class="stat"><span class="v">${esc(v)}</span><span class="k">${esc(k)}</span></div>`).join('');
 
     const rows = [];
-    wants.forEach(w => wantAlerts(w).filter(a => w.dismissedAlert !== a.label).forEach(a => rows.push({ w, a })));
+    wants.forEach(w => {
+      const p = priceInfo(w), b = p.best;
+      const extra = [];
+      if (b && b.wasPrice && !b.unverified && w.stock !== 'out' && b.stock !== 'out') extra.push({ tone: 'good', label: 'On sale', detail: `${fmt(b._total)} at ${b.shop} (was ${fmt(b.wasPrice)})`, rank: 1 });
+      if (w.recheckNote && w.dealsCheckedAt && Date.now() - Date.parse(w.dealsCheckedAt) < 3 * 864e5) extra.push({ tone: 'accent', label: 'Deal found', detail: w.recheckNote, rank: 2 });
+      [...wantAlerts(w).filter(a => a.rank < 4), ...extra].filter(a => w.dismissedAlert !== a.label).forEach(a => rows.push({ w, a }));
+    });
     rows.sort((x, y) => x.a.rank - y.a.rank);
     const seen = new Set();
     const uniq = rows.filter(({ w }) => !seen.has(w.id) && seen.add(w.id));
@@ -1195,7 +1215,20 @@ details.dna[open] > summary { margin-bottom: 10px; }
       <li>${thumb(w)}
         <span class="what"><b>${esc(shortOf(w))}</b><span class="pills"><span class="pill ${a.tone}">${esc(a.label)}</span><span class="meta">${esc(a.detail)}</span></span></span>
         <span class="tools">${w.url && safeUrl(w.url) ? `<a class="btn small ghost" href="${esc(w.url)}" target="_blank" rel="noopener">Shop ↗</a>` : ''}${canWrite ? `<button class="btn small ghost" data-act="alert-dismiss" data-id="${esc(w.id)}" data-v="${esc(a.label)}">Dismiss</button>` : ''}</span></li>`).join('')
-      : `<li style="display:block"><span class="meta">${wants.length ? 'Nothing new has dropped or is running low.' : 'Add things you want. Price drops and low stock show up here.'}</span></li>`;
+      : `<li style="display:block"><span class="meta">${wants.length ? 'No price or stock changes on your wants.' : 'Add things you want. Price drops, sales and low stock show up here.'}</span></li>`;
+
+    // Sales at the shops you watch, and new arrivals from them
+    const watched = live('shops').filter(x => x.watch);
+    const sales = watched.filter(x => ['on', 'soon'].includes(x.sale?.status)).sort((a, b) => (a.sale.status === 'on' ? 0 : 1) - (b.sale.status === 'on' ? 0 : 1));
+    const dd = (d) => d ? new Date(String(d).slice(0, 10) + 'T00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : '';
+    const sw = S.meta.salewatch || {};
+    $('#today-sales').innerHTML = sales.length ? sales.map(x => { const sl = x.sale, c = (sl.codes || [])[0]; return `<li>${thumb(x)}
+        <span class="what"><b>${esc(x.name || 'Shop')}</b><span class="pills"><span class="pill ${sl.status === 'on' ? 'good' : 'warn'}">${sl.status === 'on' ? 'On sale' : 'Coming'}</span>${c ? `<code>${esc(c.code)}</code>` : ''}<span class="meta">${esc(sl.status === 'on' ? (sl.endsAt ? 'ends ' + dd(sl.endsAt) : '') : (sl.startsAt ? 'starts ' + dd(sl.startsAt) : ''))}</span></span>${sl.headline ? `<span class="meta clamp1">${esc(sl.headline)}</span>` : ''}</span>
+        <span class="tools">${safeUrl(sl.url || x.url) ? `<a class="btn small ghost" href="${esc(sl.url || x.url)}" target="_blank" rel="noopener">See sale ↗</a>` : ''}</span></li>`; }).join('')
+      : `<li style="display:block"><span class="meta">${watched.length ? `No sales yet at the ${watched.length} shops you watch${sw.lastRun ? ` · checked ${esc(ago(sw.lastRun))}` : ''}.` : 'Tap Watch sales on a shop to see its sales here.'}</span></li>`;
+    const fresh = watched.flatMap(x => ((x.newIn || {}).items || []).map(it => ({ ...it, _shop: x.name }))).slice(0, 8);
+    $('#new-block').hidden = !fresh.length;
+    $('#today-new').innerHTML = fresh.map(pk => { const src = photoSrc(pk); return `<a ${safeUrl(pk.url) ? `href="${esc(pk.url)}" target="_blank" rel="noopener"` : ''} title="${esc(pk.why || '')}"><span class="im">${src ? `<img src="${esc(src)}" alt="" loading="lazy"${zoomAttr(pk)}>` : esc((pk.name || '?').slice(0, 1))}</span><span class="meta">${esc(pk._shop || '')}</span><span>${esc(pk.name || '')}</span><span><b>${fmt(pk.price)}</b></span></a>`; }).join('');
 
     const nf = newFinds().sort((a, b) => String(b.foundOn || '').localeCompare(String(a.foundOn || ''))).slice(0, 3);
     $('#today-finds').innerHTML = nf.length ? nf.map(f => {
@@ -1240,18 +1273,27 @@ details.dna[open] > summary { margin-bottom: 10px; }
     let last = 0; try { last = Number(localStorage.getItem('edit.autoHunt')) || 0; } catch {}
     if (Date.now() - last < 6 * 36e5) return;
     const busy = (w) => w.priceRecheck === 'queued' && Date.now() - Date.parse(w.priceRecheckAt || 0) < 6 * 36e5;
-    const stale = activeWants().filter(w => !w.example && (daysSince(w.lastChecked) ?? 99) >= 3 && !busy(w))
-      .sort((a, b) => String(a.lastChecked || '').localeCompare(String(b.lastChecked || ''))).slice(0, 3);
+    const season = saleSeason(), minDays = season ? 1 : 3;
+    const pool = [
+      ...activeWants().filter(w => !w.example).map(x => ({ x, col: 'wishlist', k: x.lastChecked })),
+      ...(season ? restockItems().map(x => ({ x, col: x._col, k: x.priceCheckedAt })) : []),
+      ...(season ? newFinds().filter(f => !f.example).map(x => ({ x, col: 'finds', k: x.dealsCheckedAt })) : []),
+    ];
+    const stale = pool.filter(({ x, k }) => (daysSince(k) ?? 99) >= minDays && !busy(x))
+      .sort((a, b) => String(a.k || '').localeCompare(String(b.k || ''))).slice(0, season ? 5 : 3);
     if (!stale.length) return;
     try { localStorage.setItem('edit.autoHunt', String(Date.now())); } catch {}
-    for (const w of stale) await queueDealHunt(w).catch(() => {});
+    for (const { x, col } of stale) await queueDealHunt(x, '', col).catch(() => {});
   }
-  async function queueDealHunt(w, text) {
+  async function queueDealHunt(w, text, col = 'wishlist') {
     const patch = { priceRecheck: 'queued', priceRecheckAt: now() };
     if (text) patch.priceFeedback = [...(w.priceFeedback || []), { text, at: now() }].slice(-10);
-    await db.collection('wishlist').doc(w.id).update(patch);
-    await mcp.callTool('Claude Code Remote', 'fire_trigger', { trigger_id: S.meta.research.triggerId, text: `Deal hunt: collection=wishlist doc_id=${w.id}${text ? ' (the user flagged wrong prices: see priceFeedback)' : ''}` }, { cache: false });
+    await db.collection(col).doc(w.id).update(patch);
+    const season = saleSeason();
+    await mcp.callTool('Claude Code Remote', 'fire_trigger', { trigger_id: S.meta.research.triggerId, text: `Deal hunt: collection=${col} doc_id=${w.id}${text ? ' (the user flagged wrong prices: see priceFeedback)' : ''}${season ? ` Sale season: ${season.label} (until ${season.until}). Look hard for ${season.label} prices and codes.` : ''}` }, { cache: false });
   }
+  // Sale season (e.g. Black Friday): wants, restock items and finds get a deal search every day
+  const saleSeason = () => { const m = S.meta.salemode; return m && m.on && (!m.until || m.until >= dayKey()) ? m : null; };
   function priceFbBox(w) {
     if (!canResearch()) return '';
     const last = (w.priceFeedback || []).slice(-1)[0];
@@ -1294,6 +1336,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
           <div class="price">${p.last == null && w.rrp ? `<span class="meta">about</span> ${fmt(w.rrp)}` : fmt(p.last)}<small>${[p.best ? `<b style="color:var(--ink)">${fmt(p.best._total)}${p.best.delivery == null ? '+' : ''}</b> delivered from ${esc(p.best.shop)}${payOf(p.best).length ? ` · ${esc(payOf(p.best).join(', '))}` : ''}` : '', w.size ? esc(w.size) : '', p.offPeak ? `${fmt(p.offPeak)} off peak` : ''].filter(Boolean).join(' · ') || '&nbsp;'}</small></div>
           ${spark(p.h)}
         </div>
+        ${w.recheckNote && w.priceRecheck !== 'queued' ? `<p class="hl" title="${esc(w.recheckNote)}">${esc(w.recheckNote)}</p>` : ''}
         ${sizePickHtml(w)}
         ${(w.dealTips || []).length ? `<details class="more" open><summary>Ways to save${w.dealsCheckedAt ? ` · ${esc(ago(w.dealsCheckedAt))}` : ''}</summary><ul class="tips">${w.dealTips.slice(0, 8).map(d => `<li>${d.code ? `<code>${esc(d.code)}</code> ` : ''}${esc(d.text || '')}${d.save ? ` <b>${esc(d.save)}</b>` : ''}${d.verified === false ? ' <span class="meta">(unconfirmed)</span>' : ''}${safeUrl(d.url) ? ` <a href="${esc(d.url)}" target="_blank" rel="noopener">↗</a>` : ''}</li>`).join('')}</ul></details>` : ''}
         ${p.otherDeal ? `<p class="notes" style="margin:0"><span class="pill good">Cheaper in ${esc(p.otherDeal.colour)}</span> ${fmt(p.otherDeal._total)}${p.otherDeal.delivery == null ? '+' : ''} delivered from ${esc(p.otherDeal.shop)}${p.otherDeal.note ? ` · ${esc(p.otherDeal.note)}` : ''}</p>` : ''}
@@ -1377,6 +1420,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
           </div>
         </div>
         ${payOf(f).length ? `<div class="pills">${payPills(f)}</div>` : ''}
+        ${f.priceRecheck === 'queued' ? '<div class="pills"><span class="pill warn">Finding deals…</span></div>' : f.recheckNote ? `<p class="hl" title="${esc(f.recheckNote)}">${esc(f.recheckNote)}</p>` : ''}
         ${f.gap ? `<p class="gap"><span class="eyebrow">The gap</span>${esc(f.gap)}</p>` : ''}
         ${f.fitNote ? `<p class="notes"><b>Why you:</b> ${esc(f.fitNote)}</p>` : ''}
         ${sizePickHtml(f)}
@@ -1391,6 +1435,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
           ${canWrite ? `<button class="btn small ghost" data-act="find-want" data-id="${esc(f.id)}">Add to wants</button>` : ''}
           ${canWrite && (f.kind === 'skincare' || f.kind === 'makeup') ? `<button class="btn small ghost" data-act="find-stack" data-id="${esc(f.id)}">${swapTarget ? 'Swap it in' : 'Add to my stack'}</button>` : ''}
           ${canResearch() && f.altResearch !== 'queued' ? `<button class="btn small ghost" data-act="alts" data-col="finds" data-id="${esc(f.id)}">Similar or cheaper</button>` : ''}
+          ${canResearch() && f.priceRecheck !== 'queued' ? `<button class="btn small ghost" data-act="deal-hunt" data-col="finds" data-id="${esc(f.id)}">Find deals</button>` : ''}
           ${canWrite ? `<button class="btn small ghost" data-act="find-snooze" data-id="${esc(f.id)}" title="Hide for a month">Not now</button>` : ''}
           ${canWrite ? `<button class="btn small ghost danger" data-act="find-nope" data-id="${esc(f.id)}" title="Never show me this, or things like it">Never</button>` : ''}
         </div>
@@ -1726,8 +1771,9 @@ details.dna[open] > summary { margin-bottom: 10px; }
       const url = (best && safeUrl(best.url)) || safeUrl(x.url);
       return `<li>${thumb(x)}
         <span class="what"><b>${esc(shortOf(x))}</b><span class="pills"><span class="pill ${SUPPLY[x.supply][0]}">${SUPPLY[x.supply][1]}</span><span class="meta">${esc([x.brand, x.shade, COL_LABEL[x._col]].filter(Boolean).join(' · '))}</span></span>
-        ${total ? `<span class="meta">${fmt(total)}${best ? `${best.delivery == null ? '+' : ''} delivered from ${esc(best.shop)}` : ' (last known price)'}</span>` : '<span class="meta">Price not checked yet</span>'}</span>
-        <span class="tools restock-tools">${url ? `<a class="btn small ghost" href="${esc(url)}" target="_blank" rel="noopener">Shop ↗</a>` : ''}${canWrite ? `<button class="btn small" data-act="supply" data-v="ok" data-col="${x._col}" data-id="${esc(x.id)}">Bought</button><details class="more-menu"><summary class="btn small ghost" aria-label="More options">⋯</summary><div class="menu"><button class="btn small ghost" data-act="supply" data-v="dismiss" data-col="${x._col}" data-id="${esc(x.id)}" title="Take it off the list">Dismiss for now</button><button class="btn small ghost danger" data-act="no-rebuy" data-col="${x._col}" data-id="${esc(x.id)}" title="Moves it to Swapped out">Won't buy again</button></div></details>` : ''}</span></li>`;
+        ${total ? `<span class="meta">${fmt(total)}${best ? `${best.delivery == null ? '+' : ''} delivered from ${esc(best.shop)}` : ' (last known price)'}</span>` : '<span class="meta">Price not checked yet</span>'}
+        ${x.priceRecheck === 'queued' ? '<span class="meta">Finding deals…</span>' : x.recheckNote ? `<span class="meta clamp2" title="${esc(x.recheckNote)}">${esc(x.recheckNote)}</span>` : ''}</span>
+        <span class="tools restock-tools">${canResearch() && x.priceRecheck !== 'queued' ? `<button class="btn small ghost" data-act="deal-hunt" data-col="${x._col}" data-id="${esc(x.id)}">Find deals</button>` : ''}${url ? `<a class="btn small ghost" href="${esc(url)}" target="_blank" rel="noopener">Shop ↗</a>` : ''}${canWrite ? `<button class="btn small" data-act="supply" data-v="ok" data-col="${x._col}" data-id="${esc(x.id)}">Bought</button><details class="more-menu"><summary class="btn small ghost" aria-label="More options">⋯</summary><div class="menu"><button class="btn small ghost" data-act="supply" data-v="dismiss" data-col="${x._col}" data-id="${esc(x.id)}" title="Take it off the list">Dismiss for now</button><button class="btn small ghost danger" data-act="no-rebuy" data-col="${x._col}" data-id="${esc(x.id)}" title="Moves it to Swapped out">Won't buy again</button></div></details>` : ''}</span></li>`;
     });
     const amz = live('basket').filter(b => !b.ordered);
     if (amz.length) rows.push(`<li><div class="thumb">a</div><span class="what"><b>Amazon list</b><span class="meta">${amz.length} ${amz.length === 1 ? 'thing' : 'things'} waiting for the next order</span></span><button class="btn small ghost" data-tab="amazon">Open</button></li>`);
@@ -1891,6 +1937,56 @@ details.dna[open] > summary { margin-bottom: 10px; }
   function render() {
     renderChrome();
     renderToday(); renderWants(); renderFinds(); renderSkin(); renderMakeup(); renderHair(); renderWardrobe(); renderStyle(); renderSizes(); renderShops(); renderInspo(); renderShopList(); renderAmazon(); renderBin();
+    decorateCards();
+  }
+  // At-a-glance strip under the tabs: just what changed or needs you on this page
+  function renderGlance() {
+    const g = [], add = (n, label, tone = '') => { if (n) g.push(`<span class="pill ${tone}">${esc(String(n))} ${esc(label)}</span>`); };
+    const tab = S.tab, recent = (iso, days = 2) => iso && Date.now() - Date.parse(iso) < days * 864e5;
+    if (tab === 'wants') {
+      const ws = activeWants().filter(w => !w.example);
+      add(ws.filter(w => wantAlerts(w).some(a => a.tone === 'good')).length, 'price drops', 'good');
+      add(ws.filter(w => w.stock !== 'out' && (w.offers || []).some(o => o.wasPrice && !o.unverified && o.stock !== 'out')).length, 'on sale', 'good');
+      add(ws.filter(w => recent(w.dealsCheckedAt) && w.recheckNote).length, 'new deal notes', 'accent');
+      add(ws.filter(w => ['low', 'selling', 'out'].includes(w.stock)).length, 'low or out of stock', 'warn');
+      add(ws.filter(w => w.priceRecheck === 'queued').length, 'finding deals');
+      add(live('wishlist').filter(w => w.status === 'ordered').length, 'on the way');
+    } else if (tab === 'finds') {
+      add(newFinds().length, 'new finds', 'accent');
+      add(live('briefs').filter(b => b.status === 'done').length, 'searches ready', 'good');
+      add(live('briefs').filter(b => b.status === 'queued').length, 'searching');
+    } else if (tab === 'shops') {
+      add(live('shops').filter(x => x.watch && x.sale?.status === 'on').length, 'on sale', 'good');
+      add(live('shops').filter(x => x.watch && x.sale?.status === 'soon').length, 'sales coming', 'warn');
+    } else if (['skin', 'makeup', 'hair'].includes(tab)) {
+      const col = { skin: 'routine', makeup: 'beauty', hair: 'hair' }[tab], xs = live(col).filter(x => !INACTIVE.includes(statusOf(x)));
+      add(xs.filter(x => x.supply === 'out').length, 'run out', 'bad');
+      add(xs.filter(x => x.supply === 'low').length, 'running low', 'warn');
+    } else if (tab === 'amazon') add(live('basket').filter(b => !b.ordered).length, 'to order');
+    else if (tab === 'today' && canResearch()) {
+      const ss = saleSeason();
+      g.push(`<button class="chip" data-act="salemode" aria-pressed="${!!ss}" title="During a big sale, check your wants, restock items and finds for deals every day">${ss ? `${esc(ss.label)} mode on · until ${esc(new Date(ss.until + 'T00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }))}` : 'Black Friday mode'}</button>`);
+    }
+    $('#glance-chips').innerHTML = g.length ? g.join('') : (['wants', 'finds', 'shops', 'skin', 'makeup', 'hair'].includes(tab) ? '<span class="meta">Nothing new here</span>' : '');
+    $('#details-all').checked = !!S.detailsAll;
+  }
+  // Compact view: cards show the essentials; "Details" opens the rest (remembered per card until reload)
+  const HIDDEN_SEL = ':scope > :is(.notes, details.more, p.meta, .fb, .price-fb), :scope > div:has(> .sw), :scope .body > :is(.notes, details, .review)';
+  function decorateCards() {
+    document.body.classList.toggle('compact', !S.detailsAll);
+    S.openCards = S.openCards || new Set();
+    $$('main .card, main .sitem, main .shop-card').forEach(c => {
+      if (S.detailsAll || c.querySelector(':scope > .det-toggle, :scope .body > .det-toggle')) return;
+      let hidden = false; try { hidden = !!c.querySelector(HIDDEN_SEL); } catch { hidden = false; }
+      if (!hidden) return;
+      const idEl = c.querySelector('[data-id]'); const key = idEl ? idEl.dataset.id + ':' + (idEl.dataset.i || '') : '';
+      if (key && S.openCards.has(key)) c.classList.add('open');
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'link det-toggle'; b.dataset.act = 'det'; b.dataset.key = key;
+      b.textContent = c.classList.contains('open') ? 'Less' : 'Details';
+      const host = c.classList.contains('card') ? c : (c.querySelector('.body') || c);
+      const before = host.querySelector(':scope > .actions, :scope > .row');
+      if (before) host.insertBefore(b, before); else host.appendChild(b);
+    });
   }
 
   // ---------- writes ----------
@@ -2627,6 +2723,8 @@ details.dna[open] > summary { margin-bottom: 10px; }
   $('#menu-btn').addEventListener('click', () => setMenu(!$('#tabs-wrap').classList.contains('open')));
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setMenu(false); });
   document.addEventListener('click', (e) => { if (!e.target.closest('#tabs-wrap')) setMenu(false); });
+  try { S.detailsAll = localStorage.getItem('edit.details') === '1'; } catch {}
+  $('#details-all').addEventListener('change', (e) => { S.detailsAll = e.target.checked; try { localStorage.setItem('edit.details', S.detailsAll ? '1' : '0'); } catch {} render(); });
   // Tap a photo (or the ⤢ button) to see it large; a second tap zooms in further
   function openZoom(srcs, cap, i = 0) {
     const dlg = $('#zoom');
@@ -2974,10 +3072,27 @@ details.dna[open] > summary { margin-bottom: 10px; }
         inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length);
         break;
       }
+      case 'salemode': {
+        const ss = saleSeason();
+        act(async () => {
+          if (ss) { await db.doc('meta/salemode').set({ ...(S.meta.salemode || {}), on: false, offAt: now() }); toast('Sale mode off. Back to the usual checks.'); return; }
+          await db.doc('meta/salemode').set({ on: true, label: 'Black Friday', until: '2026-12-01', startedAt: now() });
+          try { localStorage.removeItem('edit.autoHunt'); } catch {}
+          toast('Black Friday mode on until 1 Dec: your wants, restock items and finds get a deal search every day.');
+          setTimeout(() => autoHuntStale().catch(() => {}), 1500);
+        });
+        break;
+      }
+      case 'det': {
+        const c = t.closest('.card, .sitem, .shop-card'); if (!c) break;
+        const open = c.classList.toggle('open'); t.textContent = open ? 'Less' : 'Details';
+        const k = t.dataset.key; if (k) { if (open) S.openCards.add(k); else S.openCards.delete(k); }
+        break;
+      }
       case 'deal-hunt': {
-        const w = find('wishlist'); if (!w) break;
+        const dc = col || 'wishlist', w = find(dc); if (!w) break;
         t.disabled = true;
-        act(async () => { await queueDealHunt(w); toast('Claude is searching every shop for deals and codes. Give it 10–20 minutes.'); });
+        act(async () => { await queueDealHunt(w, '', dc); toast('Claude is searching every shop for deals and codes. Give it 10–20 minutes.'); });
         break;
       }
       case 'deal-all': {
