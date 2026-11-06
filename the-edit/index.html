@@ -1198,7 +1198,13 @@ details.dna[open] > summary { margin-bottom: 10px; }
     $('#menu-label').textContent = curTab ? (curTab.dataset.label || curTab.textContent) + (subLabel ? ' · ' + subLabel : '') : S.tab === 'bin' ? 'Bin' : '';
     $$('[data-panel]').forEach(p => p.hidden = p.dataset.panel !== S.tab);
     // Only Home carries a number: how many things changed. The rest stay quiet.
-    $('#n-home').textContent = (() => { try { return activeWants().reduce((n, w) => n + (wantAlerts(w).some(a => a.rank < 4 && w.dismissedAlert !== a.label) ? 1 : 0), 0) || ''; } catch (e) { return ''; } })();
+    // The Home badge counts changes you haven't seen yet: opening Home clears it until something new happens
+    $('#n-home').textContent = (() => { try {
+      const keys = activeWants().flatMap(w => wantAlerts(w).filter(a => a.rank < 4 && w.dismissedAlert !== a.label).map(a => `${w.id}|${a.label}|${a.detail || ''}`));
+      let seen = []; try { seen = JSON.parse(store.get('edit.homeSeen') || '[]'); } catch (e) {}
+      if (S.tab === 'today') { store.set('edit.homeSeen', JSON.stringify(keys.slice(-200))); return ''; }
+      const old = new Set(seen); return keys.filter(k => !old.has(k)).length || '';
+    } catch (e) { return ''; } })();
     $('#n-shop').textContent = '';
     $('#n-mine').textContent = '';
     $$('.needs-img').forEach(el => el.hidden = !S.canImages);
