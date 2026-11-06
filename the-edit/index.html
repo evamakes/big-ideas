@@ -198,6 +198,8 @@ body.compact .shop-card:not(.open) .sale :is(.picks, .meta, p, .eyebrow) { displ
 a.plain { color: inherit; text-decoration: none; }
 .prefs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .prefs .meta { font-size: 0.78rem; margin-left: 4px; }
+.alt-model { margin: 0; font-size: 0.86rem; color: var(--muted); }
+.alt-model b { color: var(--ink); font-weight: 600; }
 .tips .pill { font-size: 0.7rem; padding: 1px 7px; vertical-align: 1px; }
 .pref-var { font-size: 0.82rem; padding: 4px 10px; border-radius: 999px; background: var(--sunk); border: 0; max-width: 100%; }
 .chip.sm { font-size: 0.78rem; padding: 3px 10px; }
@@ -1159,7 +1161,10 @@ details.dna[open] > summary { margin-bottom: 10px; }
     const offers = all.filter(fits), others = all.filter(o => !fits(o));
     const best = offers[0];
     const otherDeal = others.find(o => !best || o._total < best._total) || null;
-    return { h, last, prev, peak, drop, rise, offPeak, atTarget, lastChecked, stale: daysSince(lastChecked), offers, others, best, otherDeal, preloved };
+    // Another version (usually the previous model) from a proper shop that beats the best price: shown as a side note
+    const bm = String((best && best.model) || it.model || '').toLowerCase();
+    const altModel = it.noOlderModel ? null : every.filter(o => o.model && String(o.model).toLowerCase() !== bm && !isUsed(o) && !shaky(o) && o.stock !== 'out' && (!best || o._total < best._total))[0] || null;
+    return { h, last, prev, peak, drop, rise, offPeak, atTarget, lastChecked, stale: daysSince(lastChecked), offers, others, best, otherDeal, preloved, altModel };
   }
   // Ongoing costs (subscriptions, refills, consumables) normalised to a list and a yearly figure
   const PER = { week: 52, month: 12, year: 1 };
@@ -1296,6 +1301,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
       const p = priceInfo(w), b = p.best;
       const extra = [];
       if (b && b.wasPrice && !b.unverified && w.stock !== 'out' && b.stock !== 'out') extra.push({ tone: 'good', label: 'On sale', detail: `${fmt(b._total)} at ${b.shop}${w.colourMode === 'any' && b.colour ? ` in ${b.colour}` : ''} (was ${fmt(b.wasPrice)})`, rank: 1 });
+      { const am = p.altModel; if (am && b && w.modelMode !== 'any' && (b._total - am._total >= 20 || am._total <= b._total * 0.9)) extra.push({ tone: 'accent', label: 'Older model', detail: `${am.model} ${fmt(am._total)} at ${String(am.shop).split(' (')[0]} (saves ${fmt(b._total - am._total)})`, rank: 2.5 }); }
       { const fp = freshPromo(w); if (fp && w.stock !== 'out') extra.push({ tone: 'accent', label: promoLabel(fp), detail: `${fp.code ? fp.code + ': ' : ''}${fp.text || ''}${fp.shop && !String(fp.text || '').includes(fp.shop) ? ` at ${fp.shop}` : ''}${fp.ends ? ` · ends ${endDate(fp.ends)}` : ''}`, rank: 1.5 }); }
       if (w.recheckNote && w.dealsCheckedAt && Date.now() - Date.parse(w.dealsCheckedAt) < 3 * 864e5) extra.push({ tone: 'accent', label: 'Deal found', detail: w.recheckNote, rank: 2 });
       [...wantAlerts(w).filter(a => a.rank < 4), ...extra].filter(a => w.dismissedAlert !== a.label).forEach(a => rows.push({ w, a }));
@@ -1382,7 +1388,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
   }
   const PROMO_ASK = ' PROMOS CHECKLIST: at every shop that sells it, check for and record what is live in `dealTips`, each with `kind` ("code"|"multibuy"|"gwp"|"spend"|"bundle"|"pricematch"|"cashback"|"giftcard"|"sale"), `shop`, `ends` (YYYY-MM-DD if known) and `found` (today, or the earlier date if it was already listed): live coupon and discount codes (site banners, pop-ups, first-order, newsletter and app codes, OzBargain, eBay codes); multi-buys (2 for 1, buy one get one, 3 for 2, buy 2 save %); gift with purchase; spend-and-save tiers and free-delivery thresholds; value sets or bundles cheaper than buying separately; price-match and price-beat; cashback; discounted gift cards. Apply any the item alone qualifies for to that offer\'s `total` and say so in its `note`. If a live promo lowers the delivered price by at least 5% or $5, lead `recheckNote` with it (e.g. "2 for 1 at Priceline until 12 Nov: $27 each"). MEMBER PERKS: for every membership in `meta/profile` `memberships` (e.g. Amazon Prime: free delivery on Prime-eligible items and member-only deals; OnePass: free delivery at Kmart, Target, Bunnings, Officeworks and Catch; Everyday Rewards; brand loyalty tiers), apply its member price and free or cheaper delivery to that offer\'s `delivery` and `total` when the item qualifies, and set the offer\'s `perk` to one short line (e.g. "Free delivery with Prime"). RAIZ REWARDS: the user shops through Raiz Rewards (Raiz Invest\'s cashback, paid into their investment account). For every shop in `offers`, check whether it is a current Raiz Rewards partner (raizinvest.com.au rewards pages, the Raiz Rewards brand list, or web search such as "Raiz Rewards <shop>") and set the offer\'s `raiz` to its rate as shown (e.g. "4%", "up to 6%", "$10"), or leave it out if the shop isn\'t a partner. Don\'t subtract it from `total`, and say in `recheckNote` when Raiz makes a different shop the better buy.';
   // One set of choices every search follows, so Home, cards and emails agree
-  const MODES_RULE = ' CHOICES: on wants, `colourMode: "any"` means price every colour and the cheapest counts (record `colour` on offers); `modelMode: "any"` means any version of the same brand\'s product line counts (older or newer generations) when it is new from a reputable seller (record `model` on offers); `conditionOk: "any"` means refurbished or pre-loved in good condition counts. Otherwise stick to the selected colour, the named model and new condition. Used or unknown-condition marketplace listings always carry `condition` so they never count as the best new deal.';
+  const MODES_RULE = ' CHOICES: on wants, `colourMode: "any"` means price every colour and the cheapest counts (record `colour` on offers); `modelMode: "any"` means any version of the same brand\'s product line counts (older or newer generations) when it is new from a reputable seller (record `model` on offers); `conditionOk: "any"` means refurbished or pre-loved in good condition counts. Otherwise stick to the selected colour, the named model and new condition. Used or unknown-condition marketplace listings always carry `condition` so they never count as the best new deal. PREVIOUS MODEL: for tech, appliances and gadgets with model generations (e.g. Hatch Restore 3 vs Restore 2, iPad 11th vs 10th gen), also price the previous generation new from reputable shops and add the best 1–2 as offers with `model` (e.g. "Restore 2") and `prevModel: true`, so the user can see when the older model is much cheaper; they only set `price` when `modelMode` is "any". Skip this, and add no other versions, when the want has `noOlderModel: true` (the user said they aren\'t interested).';
   async function queueDealHunt(w, text, col = 'wishlist') {
     const patch = { priceRecheck: 'queued', priceRecheckAt: now() };
     if (text) patch.priceFeedback = [...(w.priceFeedback || []), { text, at: now() }].slice(-10);
@@ -1477,6 +1483,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
           <div class="price">${p.last == null && w.rrp ? `<span class="meta">about</span> ${fmt(w.rrp)}` : fmt(p.last)}<small>${[p.best ? `<b style="color:var(--ink)">${fmt(p.best._total)}${p.best.delivery == null ? '+' : ''}</b> delivered from ${esc(p.best.shop)}${w.modelMode === 'any' && p.best.model ? ` · ${esc(p.best.model)}` : ''}${p.best.perk ? ` · ${esc(p.best.perk)}` : ''}${p.best.raiz ? ` · ${esc(p.best.raiz)} back on Raiz` : ''}${w.colourMode === 'any' && p.best.colour ? ` · ${esc(p.best.colour)}` : ''}${p.best.condition && p.best.condition !== 'new' ? ` · ${esc(CONDITION[p.best.condition] || p.best.condition)}` : ''}${payOf(p.best).length ? ` · ${esc(payOf(p.best).join(', '))}` : ''}` : '', w.size ? esc(w.size) : '', p.offPeak ? `${fmt(p.offPeak)} off peak` : ''].filter(Boolean).join(' · ') || '&nbsp;'}</small></div>
           ${spark(p.h)}
         </div>
+        ${p.altModel ? `<p class="alt-model">${p.altModel.prevModel === false ? 'Other version' : 'Older model'}: <b>${esc(p.altModel.model)}</b> · ${fmt(p.altModel._total)}${p.altModel.delivery == null ? '+' : ''} at ${safeUrl(p.altModel.url) ? `<a href="${esc(p.altModel.url)}" target="_blank" rel="noopener">${esc(String(p.altModel.shop).split(' (')[0])}</a>` : esc(p.altModel.shop)}${p.best ? ` <span class="meta">(saves ${fmt(p.best._total - p.altModel._total)})</span>` : ''}${p.altModel.unverified ? ' <span class="meta">· unconfirmed</span>' : ''}${canWrite ? ` <button class="link" data-act="no-older" data-id="${esc(w.id)}">Not interested</button>` : ''}</p>` : ''}
         ${w.recheckNote && w.priceRecheck !== 'queued' ? `<p class="hl" title="${esc(w.recheckNote)}">${esc(w.recheckNote)}</p>` : ''}
         ${sizePickHtml(w)}
         ${tipsBlock(w)}
@@ -3049,6 +3056,17 @@ details.dna[open] > summary { margin-bottom: 10px; }
         const v = spaceOf(w) === t.dataset.v ? '' : t.dataset.v;
         S.openCards = S.openCards || new Set(); S.openCards.add(id + ':');
         act(() => db.collection('wishlist').doc(id).update({ space: v }));
+        break;
+      }
+      case 'no-older': {
+        const w = find('wishlist'); if (!w) break;
+        const bm = String(priceInfo(w).best?.model || w.model || '').toLowerCase();
+        const keep = (w.offers || []).filter(o => !(o.prevModel || (o.model && String(o.model).toLowerCase() !== bm)));
+        const before = w.offers || [];
+        act(async () => {
+          await db.collection('wishlist').doc(id).update({ noOlderModel: true, offers: keep });
+          toast('Got it. Older models are off this one and won’t be searched again.', () => act(async () => { await db.collection('wishlist').doc(id).update({ noOlderModel: false, offers: before }); toast('Undone'); }));
+        });
         break;
       }
       case 'amz-det': { S.amzOpen = S.amzOpen || new Set(); S.amzOpen.has(id) ? S.amzOpen.delete(id) : S.amzOpen.add(id); renderAmazon(); break; }
