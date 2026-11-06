@@ -1,4 +1,4 @@
-<title>The Curio</title>
+<title>Curio</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Cpath fill=%22%235A2150%22 d=%22M13 5l11 4 11-4 7 2-1 26c1 5 5 7 11 8l9 2c3 1 3 5 0 6l-1 1H29l-2 9h-9l1-9c-3-9-5-20-6-40z%22/%3E%3Cpath fill=%22none%22 stroke=%22%23D8B27A%22 stroke-width=%222.2%22 stroke-linecap=%22round%22 d=%22M20 18c4 4 12 4 16 0M21 27c4 4 11 4 14 0M41 43c5 2 10 2 15 1%22/%3E%3C/svg%3E">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,7 +11,7 @@
   --surface: #FFFDF8;
   --sunk: #E9E3D8;
   --ink: #1D171C;
-  --muted: #625A60;
+  --muted: #574F55;
   --line: #DED7CA;
   --accent: #5A2150;
   --accent-ink: #FFFFFF;
@@ -183,6 +183,49 @@ body.compact .card:not(.open) .ck.fresh { display: none; }
 .vis-have { display: flex; flex-wrap: wrap; gap: 8px; }
 .vis-have .use { display: inline-flex; gap: 8px; align-items: center; background: var(--sunk); border-radius: 999px; padding: 3px 12px 3px 3px; font-size: 0.85rem; }
 .vis-have .thumb { width: 30px; height: 30px; border-radius: 50%; font-size: 0.8rem; }
+.gone { display: none !important; }
+html.large { font-size: 112.5%; }
+html.large body { font-size: 17px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (pointer: coarse) { .btn.small, .chip { min-height: 40px; } .chip.sm { min-height: 34px; } .link.det-toggle, .star { min-height: 36px; min-width: 32px; } }
+.stars { display: flex; align-items: center; gap: 0; margin-top: 2px; }
+.star { background: none; border: 0; padding: 0 2px; font-size: 1.05rem; line-height: 1; color: var(--tan); cursor: pointer; }
+.star[aria-pressed="true"] ~ .star { color: var(--line); }
+.star-l { font-size: 0.75rem; margin-left: 6px; }
+.info { background: none; border: 0; padding: 0 2px; font-size: 0.85em; color: var(--muted); cursor: pointer; vertical-align: 2px; font-family: var(--f-body); }
+.ok-mark { font-size: 0.72rem; color: var(--good); margin-left: 4px; }
+.got-choice { display: inline-flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.fix .fix-row { display: flex; gap: 8px; margin-top: 8px; }
+.fix .fix-row input { flex: 1; min-width: 0; }
+.work { position: relative; }
+.work summary { list-style: none; cursor: pointer; font-size: 0.8rem; background: var(--accent-soft); color: var(--accent); border-radius: 999px; padding: 4px 10px; display: inline-flex; gap: 6px; align-items: center; }
+.work summary::-webkit-details-marker { display: none; }
+.work .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: pulse 1.4s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .3; } }
+@media (prefers-reduced-motion: reduce) { .work .dot { animation: none; } }
+.work ul { position: absolute; right: 0; top: calc(100% + 6px); z-index: 60; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; margin: 0; list-style: none; min-width: 240px; box-shadow: 0 10px 30px rgba(0,0,0,.12); display: grid; gap: 6px; font-size: 0.85rem; }
+.gsearch { margin: 0 0 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 8px; }
+.gsearch input { width: 100%; border: 0; background: var(--sunk); border-radius: 10px; padding: 10px 12px; font-size: 1rem; }
+.gs-res { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 2px; max-height: 60vh; overflow: auto; }
+.gs-res > li.meta { padding: 8px 10px; }
+.gs-hit { display: flex; gap: 10px; align-items: center; width: 100%; background: none; border: 0; text-align: left; padding: 6px; border-radius: 10px; cursor: pointer; font: inherit; color: inherit; }
+.gs-hit:hover, .gs-hit:focus-visible { background: var(--sunk); }
+.gs-hit .thumb { width: 40px; height: 40px; font-size: 0.9rem; }
+.gs-hit > span { display: grid; min-width: 0; }
+.flash { box-shadow: 0 0 0 3px var(--accent) !important; transition: box-shadow .3s; }
+.welcome { background: var(--accent-soft); border-radius: var(--r); padding: 14px 18px; margin-bottom: 14px; }
+.welcome ol { margin: 8px 0 12px; padding-left: 20px; display: grid; gap: 4px; }
+.set-list { display: grid; gap: 2px; }
+.set-row { display: flex; gap: 14px; align-items: center; justify-content: space-between; padding: 12px 0; border-top: 1px solid var(--line); flex-wrap: wrap; }
+.set-row:first-child { border-top: 0; }
+.set-row > div:first-child { display: grid; gap: 2px; flex: 1 1 220px; }
+.switch { position: relative; width: 46px; height: 28px; flex: none; }
+.switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.switch span { position: absolute; inset: 0; background: var(--line); border-radius: 999px; transition: background .15s; pointer-events: none; }
+.switch span::after { content: ""; position: absolute; width: 22px; height: 22px; left: 3px; top: 3px; background: var(--surface); border-radius: 50%; transition: transform .15s; }
+.switch input:checked + span { background: var(--accent); }
+.switch input:checked + span::after { transform: translateX(18px); }
+.switch input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
 .refresh-line { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 0.82rem; color: var(--muted); margin: 4px 0 0; }
 .alerts code { font-family: var(--f-mono); font-weight: 700; background: var(--accent-soft); color: var(--accent); padding: 1px 6px; border-radius: 4px; font-size: 0.8rem; }
 #today-new.picks { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; }
@@ -547,12 +590,15 @@ details.dna[open] > summary { margin-bottom: 10px; }
 <header class="top">
   <div class="wrap top-in">
     <div>
-      <h1 class="brand"><svg class="brand-boot" viewBox="0 0 64 64" aria-hidden="true"><path fill="var(--accent)" d="M13 5l11 4 11-4 7 2-1 26c1 5 5 7 11 8l9 2c3 1 3 5 0 6l-1 1H29l-2 9h-9l1-9c-3-9-5-20-6-40z"/><path fill="none" stroke="#D8B27A" stroke-width="2.2" stroke-linecap="round" d="M20 18c4 4 12 4 16 0M21 27c4 4 11 4 14 0M41 43c5 2 10 2 15 1"/></svg><span>The <em>Curio</em></span></h1>
+      <h1 class="brand"><svg class="brand-boot" viewBox="0 0 64 64" aria-hidden="true"><path fill="var(--accent)" d="M13 5l11 4 11-4 7 2-1 26c1 5 5 7 11 8l9 2c3 1 3 5 0 6l-1 1H29l-2 9h-9l1-9c-3-9-5-20-6-40z"/><path fill="none" stroke="#D8B27A" stroke-width="2.2" stroke-linecap="round" d="M20 18c4 4 12 4 16 0M21 27c4 4 11 4 14 0M41 43c5 2 10 2 15 1"/></svg><span><em>Curio</em></span></h1>
     </div>
     <div class="top-tools">
       <p class="sync" id="sync">Connecting…</p>
-      <button class="link quiet desk-only" data-act="profile" id="profile-link">About me</button>
-      <button class="link quiet desk-only" data-tab="bin" id="bin-link">Bin</button>
+      <details class="work" id="work" hidden><summary id="work-sum"></summary><ul id="work-list"></ul></details>
+      <button class="link quiet" data-act="search-open" id="search-link" aria-label="Search everything"><span aria-hidden="true">⌕</span> Search</button>
+      <button class="link quiet" data-tab="settings" id="settings-link">Settings</button>
+      <button class="gone" data-act="profile" id="profile-link">About me</button>
+      <button class="gone" data-tab="bin" id="bin-link">Bin</button>
     </div>
   </div>
   <div class="wrap tabs-scroll" id="tabs-wrap">
@@ -569,6 +615,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
 </header>
 
 <main class="wrap">
+  <div class="gsearch" id="gsearch" hidden><input type="search" id="gs-in" placeholder="Search everything: a name, brand or colour" aria-label="Search everything" autocomplete="off"><ul class="gs-res" id="gs-res"></ul></div>
   <div class="subnav chips" id="subnav" role="tablist" hidden></div>
   <form class="quick" id="quick" autocomplete="off" hidden>
     <input type="text" id="quick-in" placeholder="Add anything, e.g. Jooycee aura blush, or paste a screenshot" aria-label="Product to add">
@@ -580,21 +627,22 @@ details.dna[open] > summary { margin-bottom: 10px; }
   </form>
   <p class="quick-status" id="quick-status" hidden></p>
   <div id="banner"></div>
-  <div class="glance" id="glance"><div class="chips" id="glance-chips"></div><label class="check det-all"><input type="checkbox" id="details-all"> Show all details</label></div>
+  <div class="glance" id="glance"><div class="chips" id="glance-chips"></div></div>
 
   <!-- TODAY -->
   <section class="panel" data-panel="today">
+    <div id="welcome"></div>
     <section class="block" id="alerts-block">
-      <div class="block-h"><h2>Price &amp; stock</h2><button class="link" data-tab="wants">Wants →</button></div>
+      <div class="block-h"><h2>Price &amp; stock <button class="info" data-act="tip" data-tip="Price drops, sales, codes and stock changes on the things you want. Prices include delivery to you." aria-label="What is this?">ⓘ</button></h2><button class="link" data-tab="wants">Wants →</button></div>
       <ul class="alerts" id="alerts"></ul>
     </section>
     <section class="block" id="shop-block">
-      <div class="block-h"><h2>Restock &amp; Amazon</h2><span class="tools"><span class="meta" id="shop-total"></span><button class="btn small ghost" data-act="restock-prices" id="restock-btn">Check prices now</button></span></div>
+      <div class="block-h"><h2>To rebuy <button class="info" data-act="tip" data-tip="Skincare, makeup and hair you are running low on, plus your Amazon list, with the cheapest way to buy them." aria-label="What is this?">ⓘ</button></h2><span class="tools"><span class="meta" id="shop-total"></span><button class="btn small ghost" data-act="restock-prices" id="restock-btn">Check prices now</button></span></div>
       <ul class="alerts" id="shop-list"></ul>
       <div id="shop-bundles"></div>
     </section>
     <section class="block" id="sales-block">
-      <div class="block-h"><h2>Sales</h2><button class="link" data-tab="shops">Shops →</button></div>
+      <div class="block-h"><h2>Sales <button class="info" data-act="tip" data-tip="Sales and codes at the shops you watch. Open Shopping, then Shops, and tap Watch sales on a shop to add it." aria-label="What is this?">ⓘ</button></h2><button class="link" data-tab="shops">Shops →</button></div>
       <ul class="alerts" id="today-sales"></ul>
     </section>
     <section class="block" id="new-block" hidden>
@@ -614,7 +662,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
       <div class="tools">
         <select class="plain" id="wants-sort" aria-label="Sort wants">
           <option value="alert">Deals first</option>
-          <option value="priority">Priority</option>
+          <option value="priority">Most wanted</option>
           <option value="new">Newest</option>
           <option value="low">Price: low to high</option>
           <option value="high">Price: high to low</option>
@@ -841,6 +889,21 @@ details.dna[open] > summary { margin-bottom: 10px; }
     <details class="shelf" id="amz-history"><summary>Ordered before</summary><ul class="bin" id="amz-done" style="margin-top:12px"></ul></details>
   </section>
 
+  <!-- SETTINGS -->
+  <section class="panel" data-panel="settings" hidden>
+    <section class="block">
+      <div class="block-h"><h2>Settings</h2></div>
+      <div class="set-list">
+        <div class="set-row"><div><b>About me</b><span class="meta">Sizes, skin, style, delivery address and memberships like Prime and Raiz.</span></div><button class="btn small" data-act="profile">Edit</button></div>
+        <div class="set-row"><div><b>Sale mode</b><span class="meta" id="set-sale-meta"></span></div><button class="btn small ghost" data-act="salemode" id="set-sale-btn"></button></div>
+        <div class="set-row"><div><b>Show all details</b><span class="meta">Open every card’s details, instead of the short version.</span></div><label class="switch"><input type="checkbox" id="details-all" aria-label="Show all details"><span></span></label></div>
+        <div class="set-row"><div><b>Text size</b><span class="meta">Bigger text everywhere.</span></div><div class="chips" role="group" aria-label="Text size"><button class="chip" data-act="textsize" data-v="normal" id="ts-normal">Normal</button><button class="chip" data-act="textsize" data-v="large" id="ts-large">Large</button></div></div>
+        <div class="set-row"><div><b>Morning emails</b><span class="meta">Price and stock alerts, and Sale watch, arrive each morning, only when something changed.</span></div></div>
+        <div class="set-row"><div><b>Bin</b><span class="meta" id="set-bin-meta">Things you deleted, kept for a while in case.</span></div><button class="btn small ghost" data-tab="bin">Open</button></div>
+      </div>
+    </section>
+  </section>
+
   <!-- BIN -->
   <section class="panel" data-panel="bin" hidden>
     <div class="toolbar">
@@ -875,7 +938,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
 (() => {
   // ---------- config ----------
   const COLS = ['wishlist', 'finds', 'shops', 'routine', 'beauty', 'hair', 'wardrobe', 'outfits', 'inspo', 'basket', 'briefs'];
-  const COL_LABEL = { wishlist: 'Wants', finds: 'Finds', shops: 'Shops', routine: 'Skin', beauty: 'Makeup', hair: 'Hair', wardrobe: 'Wardrobe', outfits: 'Outfits', inspo: 'Inspo', basket: 'Amazon list', briefs: 'Briefs' };
+  const COL_LABEL = { wishlist: 'Wants', finds: 'Ideas', shops: 'Shops', routine: 'Skin', beauty: 'Makeup', hair: 'Hair', wardrobe: 'Wardrobe', outfits: 'Outfits', inspo: 'Inspo', basket: 'Amazon list', briefs: 'Briefs' };
   const SUPPLY = { low: ['warn', 'Running low'], out: ['bad', 'Run out'] };
   const HAIR_STEPS = ['Shampoo', 'Conditioner', 'Mask', 'Leave-in', 'Oil / serum', 'Styling', 'Scalp', 'Tools', 'Other'];
   const RESEARCH = { queued: ['warn', 'Researching…'], draft: ['', 'Draft from Claude · not checked yet'], failed: ['bad', 'Couldn’t confirm this one'] };
@@ -1181,6 +1244,17 @@ details.dna[open] > summary { margin-bottom: 10px; }
   const payOf = (o) => (Array.isArray(o?.pay) ? o.pay : o?.pay ? [o.pay] : []).map(String).filter(Boolean);
   const payPills = (o) => payOf(o).map(v => `<span class="pill pay">${esc(v)}</span>`).join('');
 
+  // How much you want it, 1-5 stars. Older wants fall back to their priority.
+  const starsOf = (w) => Number(w.stars) || ({ must: 5, want: 3, maybe: 2 }[w.priority] || 3);
+  const STAR_LABEL = { 5: 'Must have', 4: 'Really want', 3: 'Want', 2: 'Only for a good sale', 1: 'Only at a steal' };
+  const STAR_MIN = { 1: 0.3, 2: 0.2 }; // how deep a bargain has to be before a 1-2 star want gets flagged
+  const bargainOf = (p) => { const b = p.best; const sale = b && b.wasPrice ? (Number(b.wasPrice) - b._total) / Number(b.wasPrice) : 0; const off = p.peak && p.last != null ? (p.peak - p.last) / p.peak : 0; return Math.max(sale, off, 0); };
+  const worthIt = (w, a, p) => { const st = starsOf(w); if (st >= 3) return true; if (a.tone === 'bad' || a.tone === 'warn') return false; return bargainOf(p || priceInfo(w)) >= STAR_MIN[st]; };
+  function starRow(w) {
+    const st = starsOf(w);
+    const stars = [1, 2, 3, 4, 5].map(i => canWrite ? `<button type="button" class="star" data-act="set-stars" data-id="${esc(w.id)}" data-v="${i}" aria-label="${i} ${i === 1 ? 'star' : 'stars'}: ${STAR_LABEL[i]}" aria-pressed="${i === st}" title="${STAR_LABEL[i]}">${i <= st ? '★' : '☆'}</button>` : `<span class="star" aria-hidden="true">${i <= st ? '★' : '☆'}</span>`).join('');
+    return `<div class="stars" role="group" aria-label="How much you want it: ${st} of 5, ${STAR_LABEL[st]}">${stars}<span class="meta star-l">${STAR_LABEL[st]}</span></div>`;
+  }
   function wantAlerts(it) {
     const p = priceInfo(it), out = [], mine = it.sizePick?.size ? ` in your size (${it.sizePick.size})` : '';
     // A price drop only counts if you can actually buy it in your size
@@ -1232,7 +1306,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     const sync = $('#sync');
     sync.hidden = S.status !== 'off' && (S.status !== 'live' || canWrite);
     sync.className = 'sync' + (S.status === 'live' ? ' on' : ' bad');
-    sync.textContent = S.status === 'live' ? (canWrite ? 'Saved to The Curio' : 'View only') : S.status === 'off' ? 'Not connected, changes won’t save' : 'Connecting…';
+    sync.textContent = S.status === 'live' ? (canWrite ? 'Saved to Curio' : 'View only') : S.status === 'off' ? 'Not connected, changes won’t save' : 'Connecting…';
     const stackCount = (c) => live(c).filter(x => !INACTIVE.includes(statusOf(x))).length;
     const nSkin = stackCount('routine') || 0, nMakeup = stackCount('beauty') || 0, nHair = stackCount('hair') || 0, nShops = live('shops').filter(x => !x.seen).length;
     const grp = groupOf(S.tab);
@@ -1240,7 +1314,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     const curTab = grp ? $(`.tab[data-group="${grp}"]`) : $(`.tab[data-tab="${S.tab}"]`);
     const nWants = activeWants().length, nFinds = newFinds().length + live('briefs').length, nAmazon = live('basket').filter(b => !b.ordered).length;
     const needs = (c) => live(c).filter(x => !INACTIVE.includes(statusOf(x)) && ['out', 'low'].includes(x.supply)).length;
-    const nWantAlert = activeWants().filter(w => { try { return wantAlerts(w).some(a => a.rank < 4 && w.dismissedAlert !== a.label); } catch (e) { return false; } }).length;
+    const nWantAlert = activeWants().filter(w => { try { return wantAlerts(w).some(a => a.rank < 4 && w.dismissedAlert !== a.label && worthIt(w, a)); } catch (e) { return false; } }).length;
     const subCount = { wants: nWantAlert, finds: newFinds().length, amazon: nAmazon, shops: live('shops').filter(x => x.watch && x.sale?.status === 'on').length, skin: needs('routine'), makeup: needs('beauty'), hair: needs('hair') };
     $('#subnav').hidden = !grp;
     $('#subnav').innerHTML = grp ? TAB_GROUPS[grp].map(([k, l]) => `<button class="chip" role="tab" aria-pressed="${k === S.tab}" data-tab="${k}">${l}${subCount[k] ? ` <span class="n">${subCount[k]}</span>` : ''}</button>`).join('') : '';
@@ -1248,10 +1322,11 @@ details.dna[open] > summary { margin-bottom: 10px; }
     const subLabel = grp ? (TAB_GROUPS[grp].find(([k]) => k === S.tab) || [])[1] : '';
     $('#menu-label').textContent = curTab ? (curTab.dataset.label || curTab.textContent) + (subLabel ? ' · ' + subLabel : '') : S.tab === 'bin' ? 'Bin' : '';
     $$('[data-panel]').forEach(p => p.hidden = p.dataset.panel !== S.tab);
+    renderExtras();
     // Only Home carries a number: how many things changed. The rest stay quiet.
     // The Home badge counts changes you haven't seen yet: opening Home clears it until something new happens
     $('#n-home').textContent = (() => { try {
-      const keys = activeWants().flatMap(w => wantAlerts(w).filter(a => a.rank < 4 && w.dismissedAlert !== a.label).map(a => `${w.id}|${a.label}|${a.detail || ''}`));
+      const keys = activeWants().flatMap(w => wantAlerts(w).filter(a => a.rank < 4 && w.dismissedAlert !== a.label && worthIt(w, a)).map(a => `${w.id}|${a.label}|${a.detail || ''}`));
       let seen = []; try { seen = JSON.parse(store.get('edit.homeSeen') || '[]'); } catch (e) {}
       if (S.tab === 'today') { store.set('edit.homeSeen', JSON.stringify(keys.slice(-200))); return ''; }
       const old = new Set(seen); return keys.filter(k => !old.has(k)).length || '';
@@ -1259,7 +1334,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     $('#n-shop').textContent = '';
     $('#n-mine').textContent = '';
     $$('.needs-img').forEach(el => el.hidden = !S.canImages);
-    $('#quick').hidden = !db || !canWrite || ['bin', 'inspo', 'style', 'mystyle', 'vision'].includes(S.tab);
+    $('#quick').hidden = !db || !canWrite || ['bin', 'inspo', 'style', 'mystyle', 'vision', 'settings'].includes(S.tab);
     $('#shop-form').hidden = !db || !canWrite;
     $('#deals-all').hidden = !canResearch() || !activeWants().length;
     renderGlance();
@@ -1276,11 +1351,54 @@ details.dna[open] > summary { margin-bottom: 10px; }
 
     const ex = COLS.reduce((n, c) => n + live(c).filter(x => x.example).length, 0);
     const b = $('#banner');
-    if (S.status === 'off') b.innerHTML = `<div class="banner"><span>The Curio saves to your Claude account. Open this page on claude.ai while signed in to load and save your things.</span></div>`;
+    if (S.status === 'off') b.innerHTML = `<div class="banner"><span>Curio saves to your Claude account. Open this page on claude.ai while signed in to load and save your things.</span></div>`;
     else if (ex && canWrite) b.innerHTML = `<div class="banner"><span>Things marked <span class="pill ex">Example</span> are samples to show how it works. Add your own, then clear them (they go to the bin, so you can bring them back).</span><button class="btn small" data-act="clear-examples">Clear ${ex} examples</button></div>`;
     else b.innerHTML = '';
   }
 
+  // What Claude is busy with right now, settings, search and the first-visit welcome
+  function renderExtras() {
+    const fresh = (iso) => iso && Date.now() - Date.parse(iso) < 6 * 36e5;
+    const jobs = [];
+    for (const c of ['wishlist', 'finds', 'routine', 'beauty', 'hair', 'wardrobe', 'shops']) for (const x of live(c)) {
+      if (x.research === 'queued' && fresh(x.researchQueuedAt || x.createdAt)) jobs.push([shortOf(x), 'researching']);
+      else if (x.priceRecheck === 'queued' && fresh(x.priceRecheckAt)) jobs.push([shortOf(x), 'finding deals']);
+      else if (x.altResearch === 'queued') jobs.push([shortOf(x), 'finding alternatives']);
+    }
+    for (const b of live('briefs')) if (b.status === 'queued') jobs.push([b.name || 'Options', 'finding options']);
+    const r = S.meta.refresh || {}, sw = S.meta.salewatch || {};
+    if (r.requestedAt && (!r.lastRun || r.requestedAt > r.lastRun) && fresh(r.requestedAt)) jobs.push(['All prices', 'checking']);
+    if (sw.status === 'queued') jobs.push(['Your shops', 'checking sales']);
+    $('#work').hidden = !jobs.length;
+    $('#work-sum').innerHTML = jobs.length ? `<span class="dot" aria-hidden="true"></span>Claude is checking ${jobs.length} ${jobs.length === 1 ? 'thing' : 'things'}<span class="meta"> · about ${jobs.length > 3 ? '20' : '10–15'} min</span>` : '';
+    $('#work-list').innerHTML = jobs.slice(0, 12).map(([n, w]) => `<li><b>${esc(n)}</b> <span class="meta">${esc(w)}</span></li>`).join('');
+    const nb = binItems().length;
+    $('#settings-link').hidden = !db;
+    $('#set-bin-meta').textContent = nb ? `${nb} ${nb === 1 ? 'thing' : 'things'} you deleted, kept for a while in case.` : 'Things you delete are kept here for a while in case.';
+    const ss = saleSeason();
+    $('#set-sale-meta').textContent = ss ? `${ss.label} mode is on until ${new Date(ss.until + 'T00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}: everything gets a deal search every day.` : 'Turn on during big sales (like Black Friday) for a daily deal search on everything.';
+    $('#set-sale-btn').textContent = ss ? 'Turn off' : 'Turn on Black Friday mode';
+    $('#set-sale-btn').hidden = !canResearch();
+    $('#details-all').checked = !!S.detailsAll;
+    const big = store.get('edit.text') === 'large';
+    $('#ts-normal').setAttribute('aria-pressed', String(!big)); $('#ts-large').setAttribute('aria-pressed', String(big));
+    $('#gsearch').hidden = !S.searchOpen;
+    $('#search-link').setAttribute('aria-expanded', String(!!S.searchOpen));
+    renderSearch();
+    $('#welcome').innerHTML = store.get('edit.welcome') || !db ? '' : `<div class="welcome"><b>Welcome to Curio</b><ol><li><b>Add</b> anything you want or own with the bar above: a name, a link or a screenshot.</li><li><b>Claude finds</b> the best delivered price, codes and sales, and keeps checking.</li><li><b>Home</b> tells you when something changes. Rate wants with stars so Curio knows what matters most.</li></ol><button class="btn small" data-act="welcome-ok">Got it</button></div>`;
+  }
+  const WHERE = (c, x) => c === 'wishlist' ? (x.status === 'bought' ? thingTab(x.category) : 'wants') : c === 'inspo' ? (x.kind === 'life' ? 'vision' : x.kind === 'fit' ? 'style' : 'inspo') : ({ finds: 'finds', briefs: 'finds', routine: 'skin', beauty: 'makeup', hair: 'hair', wardrobe: 'wardrobe', basket: 'amazon', shops: 'shops' })[c] || 'today';
+  const WHERE_LABEL = { wants: 'Wants', finds: 'Ideas', skin: 'Skin', makeup: 'Makeup', hair: 'Hair', wardrobe: 'Wardrobe', amazon: 'Amazon list', shops: 'Shops', vision: 'Vision board', inspo: 'Inspo', style: 'Style me', home: 'House', tech: 'Tech', wellness: 'Wellness' };
+  function renderSearch() {
+    const q = (S.gq || '').trim().toLowerCase();
+    if (!S.searchOpen || q.length < 2) { $('#gs-res').innerHTML = q.length === 1 ? '' : (S.searchOpen ? '<li class="meta">Type at least two letters.</li>' : ''); return; }
+    const hits = [];
+    for (const c of ['wishlist', 'finds', 'briefs', 'routine', 'beauty', 'hair', 'wardrobe', 'basket', 'shops', 'inspo']) for (const x of live(c)) {
+      const hay = [x.label, x.name, x.product, x.brand, x.variant, x.colour, x.shade, x.category, x.note, x.text, x.analysis?.title].filter(Boolean).join(' ').toLowerCase();
+      if (hay.includes(q)) hits.push({ c, x });
+    }
+    $('#gs-res').innerHTML = hits.length ? hits.slice(0, 30).map(({ c, x }) => { const tab = WHERE(c, x); return `<li><button class="gs-hit" data-act="goto" data-dest="${tab}" data-id="${esc(x.id)}">${thumb(x)}<span><b>${esc(shortOf(x) || x.name || x.text || 'Untitled')}</b><span class="meta">${esc([WHERE_LABEL[tab] || '', x.brand].filter(Boolean).join(' · '))}</span></span></button></li>`; }).join('') : `<li class="meta">Nothing matches “${esc(S.gq)}”.</li>`;
+  }
   function renderToday() {
     const r = S.meta.refresh || {};
     const canRefresh = !!(mcp && r.triggerId && canWrite);
@@ -1292,7 +1410,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     $('#stats').innerHTML = [
       [fmt(totalWant).replace(/\.00$/, ''), `on the want list (${wants.length})`],
       [deals, deals === 1 ? 'deal to look at' : 'deals to look at'],
-      [newFinds().length, 'new finds'],
+      [newFinds().length, 'new ideas'],
       ...(wants.some(w => yearlyOf(w)) ? [[fmt(wants.reduce((t, w) => t + yearlyOf(w), 0)).replace(/\.00$/, ''), 'a year in ongoing costs']] : [[live('wardrobe').length, 'pieces in the wardrobe']]),
     ].map(([v, k]) => `<div class="stat"><span class="v">${esc(v)}</span><span class="k">${esc(k)}</span></div>`).join('');
 
@@ -1304,9 +1422,9 @@ details.dna[open] > summary { margin-bottom: 10px; }
       { const am = p.altModel; if (am && b && w.modelMode !== 'any' && (b._total - am._total >= 20 || am._total <= b._total * 0.9)) extra.push({ tone: 'accent', label: 'Older model', detail: `${am.model} ${fmt(am._total)} at ${String(am.shop).split(' (')[0]} (saves ${fmt(b._total - am._total)})`, rank: 2.5 }); }
       { const fp = freshPromo(w); if (fp && w.stock !== 'out') extra.push({ tone: 'accent', label: promoLabel(fp), detail: `${fp.code ? fp.code + ': ' : ''}${fp.text || ''}${fp.shop && !String(fp.text || '').includes(fp.shop) ? ` at ${fp.shop}` : ''}${fp.ends ? ` · ends ${endDate(fp.ends)}` : ''}`, rank: 1.5 }); }
       if (w.recheckNote && w.dealsCheckedAt && Date.now() - Date.parse(w.dealsCheckedAt) < 3 * 864e5) extra.push({ tone: 'accent', label: 'Deal found', detail: w.recheckNote, rank: 2 });
-      [...wantAlerts(w).filter(a => a.rank < 4), ...extra].filter(a => w.dismissedAlert !== a.label).forEach(a => rows.push({ w, a }));
+      [...wantAlerts(w).filter(a => a.rank < 4), ...extra].filter(a => w.dismissedAlert !== a.label && worthIt(w, a, p)).forEach(a => rows.push({ w, a }));
     });
-    rows.sort((x, y) => x.a.rank - y.a.rank);
+    rows.sort((x, y) => (x.a.rank - y.a.rank) || (starsOf(y.w) - starsOf(x.w)));
     const seen = new Set();
     const uniq = rows.filter(({ w }) => !seen.has(w.id) && seen.add(w.id));
     $('#alerts-block').hidden = !uniq.length && wants.length > 0;
@@ -1355,8 +1473,8 @@ details.dna[open] > summary { margin-bottom: 10px; }
     const list = all.filter(w => w.status !== 'ordered' && (S.showBought || w.status !== 'bought') && (S.wantCat === 'All' || groupOfCat(w.category) === S.wantCat));
     const pr = { must: 0, want: 1, maybe: 2 };
     const sorters = {
-      alert: (a, b) => (Math.min(9, ...wantAlerts(a).map(x => x.rank)) - Math.min(9, ...wantAlerts(b).map(x => x.rank))) || (pr[a.priority] ?? 1) - (pr[b.priority] ?? 1),
-      priority: (a, b) => (pr[a.priority] ?? 1) - (pr[b.priority] ?? 1),
+      alert: (a, b) => (Math.min(9, ...wantAlerts(a).filter(x => worthIt(a, x)).map(x => x.rank)) - Math.min(9, ...wantAlerts(b).filter(x => worthIt(b, x)).map(x => x.rank))) || starsOf(b) - starsOf(a),
+      priority: (a, b) => starsOf(b) - starsOf(a),
       new: (a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')),
       low: (a, b) => (priceInfo(a).last ?? 1e9) - (priceInfo(b).last ?? 1e9),
       high: (a, b) => (priceInfo(b).last ?? -1) - (priceInfo(a).last ?? -1),
@@ -1380,8 +1498,8 @@ details.dna[open] > summary { margin-bottom: 10px; }
       ...(season ? restockItems().map(x => ({ x, col: x._col, k: x.priceCheckedAt })) : []),
       ...(season ? newFinds().filter(f => !f.example).map(x => ({ x, col: 'finds', k: x.dealsCheckedAt })) : []),
     ];
-    const stale = pool.filter(({ x, k }) => (daysSince(k) ?? 99) >= minDays && !busy(x))
-      .sort((a, b) => String(a.k || '').localeCompare(String(b.k || ''))).slice(0, season ? 5 : 3);
+    const stale = pool.filter(({ x, k, col }) => (daysSince(k) ?? 99) >= minDays && !busy(x) && (season || col !== 'wishlist' || starsOf(x) > 1))
+      .sort((a, b) => (a.col === 'wishlist' && b.col === 'wishlist' ? starsOf(b.x) - starsOf(a.x) : 0) || String(a.k || '').localeCompare(String(b.k || ''))).slice(0, season ? 5 : 3);
     if (!stale.length) return;
     try { localStorage.setItem('edit.autoHunt', String(Date.now())); } catch {}
     for (const { x, col } of stale) await queueDealHunt(x, '', col).catch(() => {});
@@ -1389,12 +1507,13 @@ details.dna[open] > summary { margin-bottom: 10px; }
   const PROMO_ASK = ' PROMOS CHECKLIST: at every shop that sells it, check for and record what is live in `dealTips`, each with `kind` ("code"|"multibuy"|"gwp"|"spend"|"bundle"|"pricematch"|"cashback"|"giftcard"|"sale"), `shop`, `ends` (YYYY-MM-DD if known) and `found` (today, or the earlier date if it was already listed): live coupon and discount codes (site banners, pop-ups, first-order, newsletter and app codes, OzBargain, eBay codes); multi-buys (2 for 1, buy one get one, 3 for 2, buy 2 save %); gift with purchase; spend-and-save tiers and free-delivery thresholds; value sets or bundles cheaper than buying separately; price-match and price-beat; cashback; discounted gift cards. Apply any the item alone qualifies for to that offer\'s `total` and say so in its `note`. If a live promo lowers the delivered price by at least 5% or $5, lead `recheckNote` with it (e.g. "2 for 1 at Priceline until 12 Nov: $27 each"). MEMBER PERKS: for every membership in `meta/profile` `memberships` (e.g. Amazon Prime: free delivery on Prime-eligible items and member-only deals; OnePass: free delivery at Kmart, Target, Bunnings, Officeworks and Catch; Everyday Rewards; brand loyalty tiers), apply its member price and free or cheaper delivery to that offer\'s `delivery` and `total` when the item qualifies, and set the offer\'s `perk` to one short line (e.g. "Free delivery with Prime"). RAIZ REWARDS: the user shops through Raiz Rewards (Raiz Invest\'s cashback, paid into their investment account). For every shop in `offers`, check whether it is a current Raiz Rewards partner (raizinvest.com.au rewards pages, the Raiz Rewards brand list, or web search such as "Raiz Rewards <shop>") and set the offer\'s `raiz` to its rate as shown (e.g. "4%", "up to 6%", "$10"), or leave it out if the shop isn\'t a partner. Don\'t subtract it from `total`, and say in `recheckNote` when Raiz makes a different shop the better buy.';
   // One set of choices every search follows, so Home, cards and emails agree
   const MODES_RULE = ' CHOICES: on wants, `colourMode: "any"` means price every colour and the cheapest counts (record `colour` on offers); `modelMode: "any"` means any version of the same brand\'s product line counts (older or newer generations) when it is new from a reputable seller (record `model` on offers); `conditionOk: "any"` means refurbished or pre-loved in good condition counts. Otherwise stick to the selected colour, the named model and new condition. Used or unknown-condition marketplace listings always carry `condition` so they never count as the best new deal. PREVIOUS MODEL: for tech, appliances and gadgets with model generations (e.g. Hatch Restore 3 vs Restore 2, iPad 11th vs 10th gen), also price the previous generation new from reputable shops and add the best 1–2 as offers with `model` (e.g. "Restore 2") and `prevModel: true`, so the user can see when the older model is much cheaper; they only set `price` when `modelMode` is "any". Skip this, and add no other versions, when the want has `noOlderModel: true` (the user said they aren\'t interested).';
+  const STARS_RULE = (w) => w && (w.stars || w.priority) ? ` WANT LEVEL: the user rated this ${starsOf(w)} of 5 stars (${STAR_LABEL[starsOf(w)]}).${starsOf(w) <= 2 ? ` Only a real bargain matters (about ${Math.round(STAR_MIN[starsOf(w)] * 100)}% off or more), so focus on deep sales and codes.` : ''}` : '';
   async function queueDealHunt(w, text, col = 'wishlist') {
     const patch = { priceRecheck: 'queued', priceRecheckAt: now() };
     if (text) patch.priceFeedback = [...(w.priceFeedback || []), { text, at: now() }].slice(-10);
     await db.collection(col).doc(w.id).update(patch);
     const season = saleSeason();
-    await mcp.callTool('Claude Code Remote', 'fire_trigger', { trigger_id: S.meta.research.triggerId, text: `Deal hunt: collection=${col} doc_id=${w.id}${text ? ' (the user flagged wrong prices: see priceFeedback)' : ''}${season ? ` Sale season: ${season.label} (until ${season.until}). Look hard for ${season.label} prices and codes.` : ''}${PROMO_ASK}${MODES_RULE}${w.colourMode === 'any' ? ' The user is happy with ANY colour: price every colour and record each with `colour` set; the cheapest colour counts.' : w.variant ? ` The user wants ${JSON.stringify(w.variant)} only: don't let other colours set the price.` : ''}${w.modelMode === 'any' ? ` The user is happy with ANY VERSION of this product line from ${JSON.stringify(w.brand || '')} (older or newer models, e.g. a previous generation), as long as it is new from a reputable seller: price each version, record it in each offer's \`model\` (e.g. "Restore 2"), and let the cheapest reputable offer win. Older versions from proper shops beat the newest model from a dodgy or unknown seller.` : w.model ? ` The user wants the ${JSON.stringify(w.model)} only.` : ''}${w.conditionOk === 'any' ? ' Refurbished or pre-loved in good condition is fine: search certified refurbished, Reebelo, Phonebot, Amazon Renewed, eBay and ex-demo, and record them with `condition`; they count towards the best price (not `similar` items).' : ''}` }, { cache: false });
+    await mcp.callTool('Claude Code Remote', 'fire_trigger', { trigger_id: S.meta.research.triggerId, text: `Deal hunt: collection=${col} doc_id=${w.id}${text ? ' (the user flagged wrong prices: see priceFeedback)' : ''}${season ? ` Sale season: ${season.label} (until ${season.until}). Look hard for ${season.label} prices and codes.` : ''}${PROMO_ASK}${MODES_RULE}${col === 'wishlist' ? STARS_RULE(w) : ''}${w.colourMode === 'any' ? ' The user is happy with ANY colour: price every colour and record each with `colour` set; the cheapest colour counts.' : w.variant ? ` The user wants ${JSON.stringify(w.variant)} only: don't let other colours set the price.` : ''}${w.modelMode === 'any' ? ` The user is happy with ANY VERSION of this product line from ${JSON.stringify(w.brand || '')} (older or newer models, e.g. a previous generation), as long as it is new from a reputable seller: price each version, record it in each offer's \`model\` (e.g. "Restore 2"), and let the cheapest reputable offer win. Older versions from proper shops beat the newest model from a dodgy or unknown seller.` : w.model ? ` The user wants the ${JSON.stringify(w.model)} only.` : ''}${w.conditionOk === 'any' ? ' Refurbished or pre-loved in good condition is fine: search certified refurbished, Reebelo, Phonebot, Amazon Renewed, eBay and ex-demo, and record them with `condition`; they count towards the best price (not `similar` items).' : ''}` }, { cache: false });
   }
   // Sale season (e.g. Black Friday): wants, restock items and finds get a deal search every day
   const saleSeason = () => { const m = S.meta.salemode; return m && m.on && (!m.until || m.until >= dayKey()) ? m : null; };
@@ -1404,7 +1523,10 @@ details.dna[open] > summary { margin-bottom: 10px; }
     const busy = x.research === 'queued' && last && Date.now() - Date.parse(last.at || 0) < 6 * 36e5;
     if (busy) return `<p class="hl">Fixing it: “${esc(last.text)}”</p>`;
     if (!(S.wp || {})[x.id]) return '';
-    return `<div class="refine wp"><input type="text" data-wp="${esc(x.id)}" placeholder="What did you mean? e.g. It's the Hatch Restore 3, not this clock" aria-label="What's the right product"><button class="btn small" data-act="wp-send" data-col="${col}" data-id="${esc(x.id)}">Fix it</button></div>`;
+    const why = (S.wpWhy || {})[x.id] || 'product';
+    const WHY = [['product', 'Wrong product'], ['price', 'Wrong price'], ['seller', 'Seller looks dodgy'], ['other', 'Something else']];
+    const ph = { product: 'What did you mean? e.g. It’s the Hatch Restore 3, not this clock', price: 'What did you see? e.g. It’s $176 at checkout at Catwalk', seller: 'Which shop or seller? e.g. the eBay listing looks second-hand', other: 'Tell Claude what to fix' }[why];
+    return `<div class="refine wp fix"><div class="chips" role="group" aria-label="What’s wrong">${WHY.map(([k, l]) => `<button type="button" class="chip sm" data-act="wp-why" data-id="${esc(x.id)}" data-v="${k}" aria-pressed="${k === why}">${l}</button>`).join('')}</div><div class="fix-row"><input type="text" data-wp="${esc(x.id)}" placeholder="${esc(ph)}" aria-label="What’s wrong"><button class="btn small" data-act="wp-send" data-col="${col}" data-id="${esc(x.id)}">Send</button></div></div>`;
   }
   function priceFbBox(w) {
     if (!canResearch()) return '';
@@ -1451,7 +1573,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
       : `<span class="meta">Colour</span>${chip('pref-colour', 'exact', !anyC, w.variant ? `${w.variant} only` : 'This colour only')}${chip('pref-colour', 'any', anyC, 'Any colour')}`;
     return `<div class="prefs">${hasColours ? colourCtl : ''}${refurbable ? `<span class="meta">Condition</span>${chip('pref-cond', 'new', !anyN, 'New only')}${chip('pref-cond', 'any', anyN, 'Refurb OK')}` : ''}${w.brand ? `<span class="meta">Model</span>${chip('pref-model', 'exact', w.modelMode !== 'any', w.model ? `${w.model} only` : 'This model only')}${chip('pref-model', 'any', w.modelMode === 'any', 'Any version')}` : ''}</div>`;
   }
-  const PROMO_KIND = { code: 'Code', multibuy: 'Multi-buy', gwp: 'Gift with purchase', spend: 'Spend & save', bundle: 'Bundle', pricematch: 'Price match', cashback: 'Cashback', giftcard: 'Gift cards', sale: 'Sale' };
+  const PROMO_KIND = { code: 'Code', multibuy: 'Buy more, save', gwp: 'Gift with purchase', spend: 'Spend & save', bundle: 'Bundle', pricematch: 'Price match', cashback: 'Cashback', giftcard: 'Gift cards', sale: 'Sale' };
   const promoLabel = (d) => d.kind === 'multibuy' && /2\s*for\s*1|buy one get one|bogo/i.test(d.text || '') ? '2 for 1' : PROMO_KIND[d.kind] || (d.code ? 'Code' : 'Deal');
   const endDate = (d) => d ? new Date(String(d).slice(0, 10) + 'T00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : '';
   function savingsOf(x) {
@@ -1476,14 +1598,15 @@ details.dna[open] > summary { margin-bottom: 10px; }
           <div class="card-title">
             <h3>${esc(shortOf(w))}</h3>
             <span class="meta clamp1">${esc([w.brand, fullOf(w), w.colourMode === 'any' ? 'Any colour' : w.variant, w.conditionOk === 'any' ? 'refurb OK' : ''].filter(Boolean).join(' · '))}</span>
-            <div class="pills">${w.example ? '<span class="pill ex">Example</span>' : ''}${w.priority === 'must' ? '<span class="pill accent">Must have</span>' : ''}${w.status === 'bought' ? '<span class="pill good">Bought</span>' : ''}</div>
+            ${w.status === 'bought' ? '' : starRow(w)}
+            <div class="pills">${w.example ? '<span class="pill ex">Example</span>' : ''}${w.status === 'bought' ? '<span class="pill good">Bought</span>' : ''}</div>
           </div>
         </div>
         <div class="price-row">
           <div class="price">${p.last == null && w.rrp ? `<span class="meta">about</span> ${fmt(w.rrp)}` : fmt(p.last)}<small>${[p.best ? `<b style="color:var(--ink)">${fmt(p.best._total)}${p.best.delivery == null ? '+' : ''}</b> delivered from ${esc(p.best.shop)}${w.modelMode === 'any' && p.best.model ? ` · ${esc(p.best.model)}` : ''}${p.best.perk ? ` · ${esc(p.best.perk)}` : ''}${p.best.raiz ? ` · ${esc(p.best.raiz)} back on Raiz` : ''}${w.colourMode === 'any' && p.best.colour ? ` · ${esc(p.best.colour)}` : ''}${p.best.condition && p.best.condition !== 'new' ? ` · ${esc(CONDITION[p.best.condition] || p.best.condition)}` : ''}${payOf(p.best).length ? ` · ${esc(payOf(p.best).join(', '))}` : ''}` : '', w.size ? esc(w.size) : '', p.offPeak ? `${fmt(p.offPeak)} off peak` : ''].filter(Boolean).join(' · ') || '&nbsp;'}</small></div>
           ${spark(p.h)}
         </div>
-        ${p.altModel ? `<p class="alt-model">${p.altModel.prevModel === false ? 'Other version' : 'Older model'}: <b>${esc(p.altModel.model)}</b> · ${fmt(p.altModel._total)}${p.altModel.delivery == null ? '+' : ''} at ${safeUrl(p.altModel.url) ? `<a href="${esc(p.altModel.url)}" target="_blank" rel="noopener">${esc(String(p.altModel.shop).split(' (')[0])}</a>` : esc(p.altModel.shop)}${p.best ? ` <span class="meta">(saves ${fmt(p.best._total - p.altModel._total)})</span>` : ''}${p.altModel.unverified ? ' <span class="meta">· unconfirmed</span>' : ''}${canWrite ? ` <button class="link" data-act="no-older" data-id="${esc(w.id)}">Not interested</button>` : ''}</p>` : ''}
+        ${p.altModel ? `<p class="alt-model">${p.altModel.prevModel === false ? 'Other version' : 'Older model'}: <b>${esc(p.altModel.model)}</b> · ${fmt(p.altModel._total)}${p.altModel.delivery == null ? '+' : ''} at ${safeUrl(p.altModel.url) ? `<a href="${esc(p.altModel.url)}" target="_blank" rel="noopener">${esc(String(p.altModel.shop).split(' (')[0])}</a>` : esc(p.altModel.shop)}${p.best ? ` <span class="meta">(saves ${fmt(p.best._total - p.altModel._total)})</span>` : ''}${p.altModel.unverified ? ' <span class="meta">· estimate</span>' : ''}${canWrite ? ` <button class="link" data-act="no-older" data-id="${esc(w.id)}">Not interested</button>` : ''}</p>` : ''}
         ${w.recheckNote && w.priceRecheck !== 'queued' ? `<p class="hl" title="${esc(w.recheckNote)}">${esc(w.recheckNote)}</p>` : ''}
         ${sizePickHtml(w)}
         ${tipsBlock(w)}
@@ -1495,8 +1618,8 @@ details.dna[open] > summary { margin-bottom: 10px; }
         ${variantsBlock('wishlist', w)}
         ${stackNoteBlock(w)}
         ${p.offers.length || p.preloved.length ? `<details class="more"><summary title="Delivered to ${esc(deliverTo())}">${p.offers.length + p.preloved.length} ${p.offers.length + p.preloved.length === 1 ? 'shop' : 'shops'}${p.lastChecked ? ` · ${esc(ago(p.lastChecked))}` : ''}</summary><ul class="offers" style="gap:8px">${p.offers.map(o => `<li style="grid-template-columns:1fr auto">
-            <span style="min-width:0">${safeUrl(o.url) ? `<a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(o.shop)}</a>` : esc(o.shop)}${o.unverified ? ' <span class="pill warn">Unconfirmed</span>' : ''}${payPills(o)}${o.raiz ? ` <span class="pill good" title="Raiz Rewards cashback, invested${String(o.raiz).length > 16 ? ': ' + esc(o.raiz) : ''}">Raiz${String(o.raiz).length > 16 ? '' : ' ' + esc(o.raiz)}</span>` : ''}${o.perk ? ` <span class="pill accent">${esc(o.perk)}</span>` : ''}<br><span class="meta">${fmt(o.price)} + ${o.delivery == null ? 'delivery not known' : Number(o.delivery) ? fmt(o.delivery) + ' delivery' : 'free delivery'}${Number(o.membership) ? ` + ${fmt(o.membership)} membership` : ''}${o.stock && o.stock !== 'unknown' ? ` · ${esc(STOCK[o.stock] || '')}` : ''}${o.note ? ` · ${esc(o.note)}` : ''}${canResearch() ? ` <button class="link wrong" data-act="price-wrong" data-id="${esc(w.id)}" data-shop="${esc(o.shop)}">Wrong?</button>` : ''}</span></span>
-            <span class="mono" style="text-align:right">${fmt(o._total)}${o.delivery == null ? '+' : ''}</span></li>`).join('')}</ul>${p.preloved.length ? `<p class="eyebrow" style="margin:10px 0 4px">Pre-loved & refurbished</p><ul class="offers">${p.preloved.map(o => `<li style="grid-template-columns:1fr auto"><span style="min-width:0">${safeUrl(o.url) ? `<a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(o.shop)}</a>` : esc(o.shop)} · ${esc(CONDITION[o.condition] || o.condition)}${o.similar ? ' · similar' : ''}${payPills(o)}${o.raiz ? ` <span class="pill good" title="Raiz Rewards cashback, invested">Raiz ${esc(o.raiz)}</span>` : ''}${o.perk ? ` <span class="pill accent">${esc(o.perk)}</span>` : ''}<br><span class="meta">${fmt(o.price)} + ${o.delivery == null ? 'delivery not known' : Number(o.delivery) ? fmt(o.delivery) + ' delivery' : 'free delivery'}${o.note ? ` · ${esc(o.note)}` : ''}</span></span><span class="mono" style="text-align:right">${fmt(o._total)}${o.delivery == null ? '+' : ''}</span></li>`).join('')}</ul>` : ''}${p.others.length ? `<p class="eyebrow" style="margin:10px 0 4px">Other colours</p><ul class="offers">${p.others.map(o => `<li style="grid-template-columns:1fr auto"><span style="min-width:0">${safeUrl(o.url) ? `<a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(o.shop)}</a>` : esc(o.shop)} · ${esc(o.colour)}<br><span class="meta">${fmt(o.price)} + ${o.delivery == null ? 'delivery not known' : Number(o.delivery) ? fmt(o.delivery) + ' delivery' : 'free delivery'}${o.note ? ` · ${esc(o.note)}` : ''}</span></span><span class="mono" style="text-align:right">${fmt(o._total)}${o.delivery == null ? '+' : ''}</span></li>`).join('')}</ul>` : ''}${priceFbBox(w)}</details>` : ''}
+            <span style="min-width:0">${safeUrl(o.url) ? `<a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(o.shop)}</a>` : esc(o.shop)}${o.unverified ? ' <span class="pill warn" title="From search results: check the price in the cart">○ Estimate</span>' : ' <span class="ok-mark" title="Price checked on the shop’s own site">✓ checked</span>'}${payPills(o)}${o.raiz ? ` <span class="pill good" title="Raiz Rewards cashback, invested${String(o.raiz).length > 16 ? ': ' + esc(o.raiz) : ''}">Raiz${String(o.raiz).length > 16 ? '' : ' ' + esc(o.raiz) + ' back'}</span>` : ''}${o.perk ? ` <span class="pill accent">${esc(o.perk)}</span>` : ''}<br><span class="meta">${fmt(o.price)} + ${o.delivery == null ? 'delivery not known' : Number(o.delivery) ? fmt(o.delivery) + ' delivery' : 'free delivery'}${Number(o.membership) ? ` + ${fmt(o.membership)} membership` : ''}${o.stock && o.stock !== 'unknown' ? ` · ${esc(STOCK[o.stock] || '')}` : ''}${o.note ? ` · ${esc(o.note)}` : ''}${canResearch() ? ` <button class="link wrong" data-act="price-wrong" data-id="${esc(w.id)}" data-shop="${esc(o.shop)}">Wrong?</button>` : ''}</span></span>
+            <span class="mono" style="text-align:right">${fmt(o._total)}${o.delivery == null ? '+' : ''}</span></li>`).join('')}</ul>${p.preloved.length ? `<p class="eyebrow" style="margin:10px 0 4px">Pre-loved & refurbished</p><ul class="offers">${p.preloved.map(o => `<li style="grid-template-columns:1fr auto"><span style="min-width:0">${safeUrl(o.url) ? `<a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(o.shop)}</a>` : esc(o.shop)} · ${esc(CONDITION[o.condition] || o.condition)}${o.similar ? ' · similar' : ''}${payPills(o)}${o.raiz ? ` <span class="pill good" title="Raiz Rewards cashback, invested">Raiz ${esc(o.raiz)} back</span>` : ''}${o.perk ? ` <span class="pill accent">${esc(o.perk)}</span>` : ''}<br><span class="meta">${fmt(o.price)} + ${o.delivery == null ? 'delivery not known' : Number(o.delivery) ? fmt(o.delivery) + ' delivery' : 'free delivery'}${o.note ? ` · ${esc(o.note)}` : ''}</span></span><span class="mono" style="text-align:right">${fmt(o._total)}${o.delivery == null ? '+' : ''}</span></li>`).join('')}</ul>` : ''}${p.others.length ? `<p class="eyebrow" style="margin:10px 0 4px">Other colours</p><ul class="offers">${p.others.map(o => `<li style="grid-template-columns:1fr auto"><span style="min-width:0">${safeUrl(o.url) ? `<a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(o.shop)}</a>` : esc(o.shop)} · ${esc(o.colour)}<br><span class="meta">${fmt(o.price)} + ${o.delivery == null ? 'delivery not known' : Number(o.delivery) ? fmt(o.delivery) + ' delivery' : 'free delivery'}${o.note ? ` · ${esc(o.note)}` : ''}</span></span><span class="mono" style="text-align:right">${fmt(o._total)}${o.delivery == null ? '+' : ''}</span></li>`).join('')}</ul>` : ''}${priceFbBox(w)}</details>` : ''}
         ${w.notes ? `<p class="notes clamp2" title="${esc(w.notes)}">${esc(w.notes)}</p>` : ''}
         ${reviewBlock(w.reviews)}
         ${altsBlock('wishlist', w)}
@@ -1506,15 +1629,14 @@ details.dna[open] > summary { margin-bottom: 10px; }
         <div class="actions">
           ${dealUrl(w) ? `<a class="btn small" href="${esc(dealUrl(w))}" target="_blank" rel="noopener" title="${esc(priceInfo(w).best?.shop || '')}">Shop ↗</a>` : ''}
           ${canResearch() && w.status !== 'bought' && w.priceRecheck !== 'queued' ? `<button class="btn small ghost" data-act="deal-hunt" data-id="${esc(w.id)}" title="Search every shop for sales and discount codes now">Find deals</button>` : ''}
-          ${canWrite && w.status !== 'bought' ? `<button class="btn small ghost" data-act="ordered" data-id="${esc(w.id)}" title="Bought it, waiting for it to arrive">Bought</button>` : ''}
-          ${canWrite ? `<button class="btn small ghost" data-act="bought" data-id="${esc(w.id)}">${w.status === 'bought' ? 'Undo' : 'I have it'}</button>` : ''}
+          ${!canWrite ? '' : w.status === 'bought' ? `<button class="btn small ghost" data-act="bought" data-id="${esc(w.id)}">Undo</button>` : (S.got || {})[w.id] ? `<span class="got-choice"><span class="meta">Got it?</span><button class="btn small" data-act="bought" data-id="${esc(w.id)}">It’s here</button><button class="btn small ghost" data-act="ordered" data-id="${esc(w.id)}">On the way</button></span>` : `<button class="btn small ghost" data-act="got" data-id="${esc(w.id)}">Got it</button>`}
           <details class="more-menu push"><summary class="btn small ghost" aria-label="More options">⋯</summary><div class="menu">
           ${canWrite && w.status !== 'bought' ? `<button class="btn small ghost" data-act="logprice" data-id="${esc(w.id)}">Log price</button>` : ''}
           ${sample && w.category === 'Clothes' && live('wardrobe').length ? `<button class="btn small ghost" data-act="ai-pairs" data-id="${esc(w.id)}">Goes with?</button>` : ''}
           ${sample && (w.variants || []).length ? `<button class="btn small ghost" data-act="ai-compare" data-col="wishlist" data-id="${esc(w.id)}">Compare with what I own</button>` : ''}
           ${canResearch() && w.altResearch !== 'queued' ? `<button class="btn small ghost" data-act="alts" data-col="wishlist" data-id="${esc(w.id)}">Similar or cheaper</button>` : ''}
           ${canResearch() && w.research !== 'queued' && w.research !== 'done' ? `<button class="btn small ghost" data-act="research" data-col="wishlist" data-id="${esc(w.id)}">Research it</button>` : ''}
-          ${canResearch() ? `<button class="btn small ghost" data-act="wrong-product" data-col="wishlist" data-id="${esc(w.id)}">Wrong product?</button>` : ''}
+          ${canResearch() ? `<button class="btn small ghost" data-act="wrong-product" data-col="wishlist" data-id="${esc(w.id)}">Something’s wrong?</button>` : ''}
           ${canWrite ? `<button class="btn small ghost" data-act="edit" data-col="wishlist" data-id="${esc(w.id)}">Edit</button>` : ''}
           ${delBtn('wishlist', w.id)}
           </div></details>
@@ -1589,7 +1711,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
           ${canWrite && (f.kind === 'skincare' || f.kind === 'makeup') ? `<button class="btn small ghost" data-act="find-stack" data-id="${esc(f.id)}">${swapTarget ? 'Swap it in' : 'Add to my stack'}</button>` : ''}
           ${canResearch() && f.altResearch !== 'queued' ? `<button class="btn small ghost" data-act="alts" data-col="finds" data-id="${esc(f.id)}">Similar or cheaper</button>` : ''}
           ${canResearch() && f.priceRecheck !== 'queued' ? `<button class="btn small ghost" data-act="deal-hunt" data-col="finds" data-id="${esc(f.id)}">Find deals</button>` : ''}
-          ${canResearch() ? `<button class="btn small ghost" data-act="wrong-product" data-col="finds" data-id="${esc(f.id)}">Wrong product?</button>` : ''}
+          ${canResearch() ? `<button class="btn small ghost" data-act="wrong-product" data-col="finds" data-id="${esc(f.id)}">Something’s wrong?</button>` : ''}
           ${canWrite ? `<button class="btn small ghost" data-act="find-snooze" data-id="${esc(f.id)}" title="Hide for a month">Not now</button>` : ''}
           ${canWrite ? `<button class="btn small ghost danger" data-act="find-nope" data-id="${esc(f.id)}" title="Never show me this, or things like it">Never</button>` : ''}
         </div>
@@ -1630,7 +1752,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
         ${canWrite && (st === 'out' || st === 'shelf') ? `<button class="btn small" data-act="restack" data-col="${col}" data-id="${esc(x.id)}">Back in my stack</button>` : ''}
         ${canWrite && st === 'try' ? `<button class="btn small" data-act="restack" data-col="${col}" data-id="${esc(x.id)}">Got it</button><button class="btn small ghost" data-act="try-want" data-col="${col}" data-id="${esc(x.id)}">Add to wants</button>` : ''}
         ${sample && st !== 'out' ? `<button class="btn small ghost" data-act="ai-alt" data-col="${col}" data-id="${esc(x.id)}">${st === 'testing' ? 'Is it worth it?' : 'Alternatives'}</button>` : ''}
-        ${canResearch() ? `<button class="btn small ghost" data-act="wrong-product" data-col="${col}" data-id="${esc(x.id)}">Wrong product?</button>` : ''}
+        ${canResearch() ? `<button class="btn small ghost" data-act="wrong-product" data-col="${col}" data-id="${esc(x.id)}">Something’s wrong?</button>` : ''}
         ${canWrite ? `<button class="btn small ghost push" data-act="edit" data-col="${col}" data-id="${esc(x.id)}">Edit</button>` : ''}
         ${delBtn(col, x.id)}
       </div>
@@ -2056,7 +2178,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     const sw = S.meta.salewatch || {};
     if (!mcp || !sw.triggerId) return false;
     await db.doc('meta/salewatch').set({ ...sw, status: 'queued', requestedAt: now() });
-    await mcp.callTool('Claude Code Remote', 'fire_trigger', { trigger_id: sw.triggerId, text: text || 'Sale sweep requested from The Curio page: check every watched shop now.' }, { cache: false });
+    await mcp.callTool('Claude Code Remote', 'fire_trigger', { trigger_id: sw.triggerId, text: text || 'Sale sweep requested from the Curio page: check every watched shop now.' }, { cache: false });
     return true;
   }
   async function addShop(raw, note = '') {
@@ -2164,7 +2286,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
       add(ws.filter(w => w.priceRecheck === 'queued').length, 'finding deals');
       add(live('wishlist').filter(w => w.status === 'ordered').length, 'on the way');
     } else if (tab === 'finds') {
-      add(newFinds().length, 'new finds', 'accent');
+      add(newFinds().length, 'new ideas', 'accent');
       add(live('briefs').filter(b => b.status === 'done').length, 'searches ready', 'good');
       add(live('briefs').filter(b => b.status === 'queued').length, 'searching');
     } else if (tab === 'shops') {
@@ -2177,10 +2299,10 @@ details.dna[open] > summary { margin-bottom: 10px; }
     } else if (tab === 'amazon') add(live('basket').filter(b => !b.ordered).length, 'to order');
     else if (tab === 'today' && canResearch()) {
       const ss = saleSeason();
-      g.push(`<button class="chip" data-act="salemode" aria-pressed="${!!ss}" title="During a big sale, check your wants, restock items and finds for deals every day">${ss ? `${esc(ss.label)} mode on · until ${esc(new Date(ss.until + 'T00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }))}` : 'Black Friday mode'}</button>`);
+      if (ss) g.push(`<span class="chip" aria-pressed="true" title="During a big sale, check your wants, restock items and finds for deals every day">${ss ? `${esc(ss.label)} mode on · until ${esc(new Date(ss.until + 'T00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }))}` : 'Black Friday mode'}</span>`);
     }
     $('#glance-chips').innerHTML = g.length ? g.join('') : (['wants', 'finds', 'shops', 'skin', 'makeup', 'hair'].includes(tab) ? '<span class="meta">Nothing new here</span>' : '');
-    $('#details-all').checked = !!S.detailsAll;
+    $('#glance').hidden = !$('#glance-chips').innerHTML.trim();
   }
   // Compact view: cards show the essentials; "Details" opens the rest (remembered per card until reload)
   const HIDDEN_SEL = ':scope > :is(.notes, details.more, p.meta, .fb, .price-fb, .hl, .gap, .prefs), :scope > div:has(> .sw), :scope .body > :is(.notes, details, .review)';
@@ -2342,7 +2464,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
       }
       dlg.close();
     } catch (err) {
-      toast(err?.code === 'quota_exceeded' ? 'The Curio is full. Empty the bin first.' : 'Couldn’t save that. Check your connection and try again.');
+      toast(err?.code === 'quota_exceeded' ? 'Curio is full. Empty the bin first.' : 'Couldn’t save that. Check your connection and try again.');
     } finally { save.disabled = false; save.textContent = 'Save'; }
   });
   $('#dlg-del').addEventListener('click', async () => {
@@ -2500,7 +2622,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     if (!mcp || !tid) return;
     btn.disabled = true; btn.textContent = 'Starting…';
     try {
-      await mcp.callTool('Claude Code Remote', 'fire_trigger', { trigger_id: tid, text: 'Manual refresh requested from The Curio page.' }, { cache: false });
+      await mcp.callTool('Claude Code Remote', 'fire_trigger', { trigger_id: tid, text: 'Manual refresh requested from the Curio page.' }, { cache: false });
       await db.doc('meta/refresh').update({ requestedAt: now() }).catch(() => {});
       toast('Refresh started. Results land here in about 10–20 minutes.');
     } catch (e) {
@@ -2616,7 +2738,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     quickStatus('');
     const where = col === 'wishlist' && doc.status === 'bought' ? thingTab(doc.category) : { beauty: 'makeup', routine: 'skin', hair: 'hair', wardrobe: 'wardrobe', wishlist: 'wants' }[col];
     if (col === 'wardrobe') S.wardCat = doc.category === 'Active' ? 'Active' : S.wardCat;
-    if (col === 'wishlist' && doc.status === 'bought') toast(`Added to My world · ${({ home: 'Home', tech: 'Tech', wellness: 'Wellness' })[where]}`);
+    if (col === 'wishlist' && doc.status === 'bought') toast(`Added to My world · ${({ home: 'House', tech: 'Tech', wellness: 'Wellness' })[where]}`);
     else toast(queued ? `Added to ${COL_LABEL[col]}. Claude is checking shops, shades and reviews.` : `Added to ${COL_LABEL[col]}${variants.length ? ` with ${variants.length} ${col === 'beauty' || kind === 'makeup' ? 'shades' : 'colours'}` : ''}.`);
     if (S.tab !== where && !S.stayOnTab) setTab(where);
     return ref.id;
@@ -2981,7 +3103,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
       else await db.collection('wishlist').doc(src.id).update({ status: src.status || 'want', boughtOn: src.boughtOn || null });
       toast('Undone');
     });
-    toast(where ? `Added to your ${where}${col === 'wardrobe' ? '. Edit it to set the category.' : ''}` : srcCol === 'finds' ? 'Marked as yours' : `Added to My world · ${({ home: 'Home', tech: 'Tech', wellness: 'Wellness' })[thingTab(src.category)]}`, col === 'routine-placeholder' ? null : undo);
+    toast(where ? `Added to your ${where}${col === 'wardrobe' ? '. Edit it to set the category.' : ''}` : srcCol === 'finds' ? 'Marked as yours' : `Added to My world · ${({ home: 'House', tech: 'Tech', wellness: 'Wellness' })[thingTab(src.category)]}`, col === 'routine-placeholder' ? null : undo);
   }
 
   // ---------- actions ----------
@@ -2989,9 +3111,9 @@ details.dna[open] > summary { margin-bottom: 10px; }
   // Fewer tabs: related pages sit under one tab with a small switch at the top
   // Four places: Home (what changed), Shopping (things to buy), Style me (getting dressed), My world (everything you own and love)
   const TAB_GROUPS = {
-    shop: [['wants', 'Wants'], ['finds', 'Finds'], ['amazon', 'Amazon list'], ['shops', 'Shops']],
+    shop: [['wants', 'Wants'], ['finds', 'Ideas'], ['amazon', 'Amazon list'], ['shops', 'Shops']],
     style: [['style', 'Get dressed'], ['mystyle', 'My style'], ['inspo', 'Inspo']],
-    mine: [['vision', 'Vision board'], ['wardrobe', 'Wardrobe'], ['skin', 'Skin'], ['makeup', 'Makeup'], ['hair', 'Hair'], ['home', 'Home'], ['tech', 'Tech'], ['wellness', 'Wellness']],
+    mine: [['vision', 'Vision board'], ['wardrobe', 'Wardrobe'], ['skin', 'Skin'], ['makeup', 'Makeup'], ['hair', 'Hair'], ['home', 'House'], ['tech', 'Tech'], ['wellness', 'Wellness']],
   };
   const groupOf = (tab) => Object.keys(TAB_GROUPS).find(g => TAB_GROUPS[g].some(([k]) => k === tab)) || '';
   function setMenu(open) { $('#tabs-wrap').classList.toggle('open', open); $('#menu-btn').setAttribute('aria-expanded', String(open)); }
@@ -2999,6 +3121,9 @@ details.dna[open] > summary { margin-bottom: 10px; }
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setMenu(false); });
   document.addEventListener('click', (e) => { if (!e.target.closest('#tabs-wrap')) setMenu(false); });
   try { S.detailsAll = localStorage.getItem('edit.details') === '1'; } catch {}
+  $('#gs-in').addEventListener('input', (e) => { S.gq = e.target.value; renderSearch(); });
+  $('#gs-in').addEventListener('keydown', (e) => { if (e.key === 'Escape') { S.searchOpen = false; render(); } });
+  try { document.documentElement.classList.toggle('large', localStorage.getItem('edit.text') === 'large'); } catch {}
   $('#details-all').addEventListener('change', (e) => { S.detailsAll = e.target.checked; try { localStorage.setItem('edit.details', S.detailsAll ? '1' : '0'); } catch {} render(); });
   // Tap a photo (or the ⤢ button) to see it large; a second tap zooms in further
   function openZoom(srcs, cap, i = 0) {
@@ -3067,6 +3192,23 @@ details.dna[open] > summary { margin-bottom: 10px; }
           await db.collection('wishlist').doc(id).update({ noOlderModel: true, offers: keep });
           toast('Got it. Older models are off this one and won’t be searched again.', () => act(async () => { await db.collection('wishlist').doc(id).update({ noOlderModel: false, offers: before }); toast('Undone'); }));
         });
+        break;
+      }
+      case 'set-stars': {
+        const w = find('wishlist'); if (!w) break;
+        const v = Number(t.dataset.v);
+        act(async () => { await db.collection('wishlist').doc(id).update({ stars: v, priority: v >= 5 ? 'must' : v <= 2 ? 'maybe' : 'want' }); toast(`${'★'.repeat(v)} ${STAR_LABEL[v]}${v <= 2 ? `: only flagged at about ${Math.round(STAR_MIN[v] * 100)}% off or more` : v === 5 ? ': every drop and stock change' : ''}`); });
+        break;
+      }
+      case 'got': { S.got = S.got || {}; S.got[id] = !S.got[id]; render(); break; }
+      case 'tip': toast(t.dataset.tip); break;
+      case 'welcome-ok': store.set('edit.welcome', '1'); render(); break;
+      case 'textsize': { const v = t.dataset.v; store.set('edit.text', v); document.documentElement.classList.toggle('large', v === 'large'); render(); break; }
+      case 'search-open': { S.searchOpen = !S.searchOpen; render(); if (S.searchOpen) setTimeout(() => $('#gs-in')?.focus(), 30); break; }
+      case 'goto': {
+        S.searchOpen = false; $('#gs-in').value = ''; S.gq = '';
+        const tid = t.dataset.id; setTab(t.dataset.dest);
+        setTimeout(() => { const el = $(`main [data-id="${CSS.escape(tid)}"]`); const c = el && el.closest('.card, .sitem, .shop-card, .piece, li, .inspo-card'); if (c) { c.scrollIntoView({ behavior: 'smooth', block: 'center' }); c.classList.add('flash'); setTimeout(() => c.classList.remove('flash'), 1800); } }, 80);
         break;
       }
       case 'amz-det': { S.amzOpen = S.amzOpen || new Set(); S.amzOpen.has(id) ? S.amzOpen.delete(id) : S.amzOpen.add(id); renderAmazon(); break; }
@@ -3390,10 +3532,18 @@ details.dna[open] > summary { margin-bottom: 10px; }
         setTimeout(() => $(`[data-wp="${CSS.escape(id)}"]`)?.focus(), 50);
         break;
       }
+      case 'wp-why': { S.wpWhy = S.wpWhy || {}; S.wpWhy[id] = t.dataset.v; render(); setTimeout(() => $(`[data-wp="${CSS.escape(id)}"]`)?.focus(), 30); break; }
       case 'wp-send': {
         const x = find(col); if (!x) break;
         const text = ($(`[data-wp="${CSS.escape(id)}"]`)?.value || '').trim().slice(0, 400);
-        if (!text) { toast('Say what the right product is, e.g. the brand and name.'); break; }
+        const why = (S.wpWhy || {})[id] || 'product';
+        if (!text) { toast(why === 'product' ? 'Say what the right product is, e.g. the brand and name.' : 'Add a few words so Claude knows what to fix.'); break; }
+        if (why !== 'product') {
+          t.disabled = true;
+          const lead = { price: 'Wrong price', seller: 'This seller looks dodgy or second-hand; only count reputable sellers', other: 'User note' }[why];
+          act(async () => { await queueDealHunt(x, `${lead}: ${text}`, col); S.wp[id] = false; toast('Thanks. Claude is rechecking it with your note.'); });
+          break;
+        }
         t.disabled = true;
         act(async () => {
           await db.collection(col).doc(id).update({ productFeedback: [...(x.productFeedback || []), { text, at: now(), was: [x.brand, nameOf(x)].filter(Boolean).join(' ') }].slice(-10), research: 'queued', researchQueuedAt: now() });
