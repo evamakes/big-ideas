@@ -143,7 +143,9 @@ main.wrap { padding-block: 24px 64px; display: grid; gap: 20px; }
 .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
 .tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .chips { display: flex; gap: 6px; flex-wrap: wrap; }
-.subnav { margin: -4px 0 14px; }
+.subnav { margin: -4px 0 14px; display: flex; gap: 6px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.subnav::-webkit-scrollbar { display: none; }
+.subnav .chip { flex: none; }
 .glance { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 14px; }
 .glance .chips { gap: 6px; }
 .glance .pill { font-size: 0.8rem; }
@@ -157,11 +159,14 @@ body.compact .card:not(.open) > :is(.notes, details.more, p.meta, .fb, .price-fb
 body.compact .card:not(.open) > div:has(> .sw),
 body.compact .sitem:not(.open) .body > :is(.notes, details, .review),
 body.compact .shop-card:not(.open) .body > :is(.notes, .pills) { display: none; }
-body.compact .card:not(.open) > :is(.hl, .gap),
+body.compact .card:not(.open) > :is(.hl, .gap, .prefs),
 body.compact .card:not(.open) .spark,
 body.compact .card:not(.open) .price small,
 body.compact .shop-card:not(.open) .sale :is(.picks, .meta, p, .eyebrow) { display: none; }
 a.plain { color: inherit; text-decoration: none; }
+.prefs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.prefs .meta { font-size: 0.78rem; margin-left: 4px; }
+.chip.sm { font-size: 0.78rem; padding: 3px 10px; }
 .ck { margin: 0; font-size: 0.78rem; color: var(--muted); }
 body.compact .card:not(.open) > .ck { margin-top: -6px; }
 .chip { border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 5px 12px; font-size: 0.84rem; cursor: pointer; color: var(--muted); }
@@ -509,20 +514,15 @@ details.dna[open] > summary { margin-bottom: 10px; }
       <p class="sync" id="sync">Connecting…</p>
       <button class="link quiet desk-only" data-act="profile" id="profile-link">About me</button>
       <button class="link quiet desk-only" data-tab="bin" id="bin-link">Bin</button>
-      <button class="btn small ghost" data-tab="today">Today</button>
-      <button class="btn small primary" data-tab="style">Style me</button>
     </div>
   </div>
   <div class="wrap tabs-scroll" id="tabs-wrap">
-    <button class="menu-btn" id="menu-btn" aria-expanded="false" aria-controls="tabs-nav"><span class="burger" aria-hidden="true"><i></i><i></i><i></i></span><span id="menu-label">Today</span></button>
+    <button class="menu-btn" id="menu-btn" aria-expanded="false" aria-controls="tabs-nav"><span class="burger" aria-hidden="true"><i></i><i></i><i></i></span><span id="menu-label">Home</span></button>
     <nav class="tabs" role="tablist" aria-label="Sections" id="tabs-nav">
-      <button class="tab" role="tab" data-tab="today">Today</button>
-      <button class="tab" role="tab" data-tab="wants">Wants<span class="n" id="n-wants"></span></button>
-      <button class="tab" role="tab" data-tab="finds" data-group="finds">Finds<span class="n" id="n-finds"></span></button>
-      <button class="tab" role="tab" data-tab="skin" data-group="beauty">Beauty<span class="n" id="n-beauty"></span></button>
-      <button class="tab" role="tab" data-tab="wardrobe">Wardrobe<span class="n" id="n-wardrobe"></span></button>
-      <button class="tab" role="tab" data-tab="style" data-group="style">Style</button>
-      <button class="tab" role="tab" data-tab="amazon">Amazon list<span class="n" id="n-amazon"></span></button>
+      <button class="tab" role="tab" data-tab="today">Home<span class="n" id="n-home"></span></button>
+      <button class="tab" role="tab" data-tab="wants" data-group="shop">Shopping<span class="n" id="n-shop"></span></button>
+      <button class="tab" role="tab" data-tab="style" data-group="style">Style me</button>
+      <button class="tab" role="tab" data-tab="wardrobe" data-group="mine">My stuff<span class="n" id="n-mine"></span></button>
       <button class="tab minor mob-only" data-act="profile" id="profile-btn">About me</button>
       <button class="tab minor mob-only" role="tab" data-tab="bin" id="bin-btn">Bin</button>
     </nav>
@@ -530,6 +530,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
 </header>
 
 <main class="wrap">
+  <div class="subnav chips" id="subnav" role="tablist" hidden></div>
   <form class="quick" id="quick" autocomplete="off" hidden>
     <input type="text" id="quick-in" placeholder="Add anything, e.g. Jooycee aura blush, or paste a screenshot" aria-label="Product to add">
     <label class="btn small ghost" id="quick-photo-label" for="quick-photo" title="Add a photo or screenshot">Photo</label>
@@ -539,7 +540,6 @@ details.dna[open] > summary { margin-bottom: 10px; }
   </form>
   <p class="quick-status" id="quick-status" hidden></p>
   <div id="banner"></div>
-  <div class="subnav chips" id="subnav" role="tablist" hidden></div>
   <div class="glance" id="glance"><div class="chips" id="glance-chips"></div><label class="check det-all"><input type="checkbox" id="details-all"> Show all details</label></div>
 
   <!-- TODAY -->
@@ -1080,10 +1080,12 @@ details.dna[open] > summary { margin-bottom: 10px; }
     const sel = String(it.variant || '').toLowerCase();
     const every = (it.offers || []).filter(o => o && o.price != null).map(o => ({ ...o, _total: totalOf(o) })).sort((a, b) => ((a.stock === 'out') - (b.stock === 'out')) || (!!a.unverified - !!b.unverified) || a._total - b._total);
     const isUsed = (o) => o.condition && o.condition !== 'new';
-    const all = every.filter(o => !isUsed(o)), usedAll = every.filter(isUsed);
+    // "Refurb OK": genuine refurbished/pre-loved listings of the exact item compete with new on price
+    const condOk = it.conditionOk === 'any', counts = (o) => !isUsed(o) || (condOk && !o.similar);
+    const all = every.filter(counts), usedAll = every.filter(o => !counts(o));
     const newBest = all.find(o => !o.colour || !String(it.variant || '') || String(o.colour).toLowerCase() === String(it.variant).toLowerCase());
     const preloved = usedAll.filter(o => !newBest || o._total < newBest._total);
-    const fits = (o) => !o.colour || !sel || String(o.colour).toLowerCase() === sel;
+    const fits = (o) => it.colourMode === 'any' || !o.colour || !sel || String(o.colour).toLowerCase() === sel;
     const offers = all.filter(fits), others = all.filter(o => !fits(o));
     const best = offers[0];
     const otherDeal = others.find(o => !best || o._total < best._total) || null;
@@ -1161,16 +1163,17 @@ details.dna[open] > summary { margin-bottom: 10px; }
     const grp = groupOf(S.tab);
     $$('.tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.group ? t.dataset.group === grp : t.dataset.tab === S.tab)));
     const curTab = grp ? $(`.tab[data-group="${grp}"]`) : $(`.tab[data-tab="${S.tab}"]`);
-    const subCount = { skin: nSkin, makeup: nMakeup, hair: nHair, shops: nShops };
+    const nWants = activeWants().length, nFinds = newFinds().length + live('briefs').length, nAmazon = live('basket').filter(b => !b.ordered).length;
+    const subCount = { wants: nWants, finds: nFinds, amazon: nAmazon, shops: nShops, wardrobe: live('wardrobe').length, skin: nSkin, makeup: nMakeup, hair: nHair };
     $('#subnav').hidden = !grp;
     $('#subnav').innerHTML = grp ? TAB_GROUPS[grp].map(([k, l]) => `<button class="chip" role="tab" aria-pressed="${k === S.tab}" data-tab="${k}">${l}${subCount[k] ? ` <span class="n">${subCount[k]}</span>` : ''}</button>`).join('') : '';
-    $('#menu-label').textContent = curTab ? curTab.firstChild.textContent : S.tab === 'bin' ? 'Bin' : '';
+    const subLabel = grp ? (TAB_GROUPS[grp].find(([k]) => k === S.tab) || [])[1] : '';
+    $('#menu-label').textContent = curTab ? curTab.firstChild.textContent + (subLabel ? ' · ' + subLabel : '') : S.tab === 'bin' ? 'Bin' : '';
     $$('[data-panel]').forEach(p => p.hidden = p.dataset.panel !== S.tab);
-    $('#n-wants').textContent = activeWants().length || '';
-    $('#n-finds').textContent = (newFinds().length + live('briefs').length) || '';
-    $('#n-beauty').textContent = (nSkin + nMakeup + nHair) || '';
-    $('#n-wardrobe').textContent = live('wardrobe').length || '';
-    $('#n-amazon').textContent = live('basket').filter(b => !b.ordered).length || '';
+    // Only Home carries a number: how many things changed. The rest stay quiet.
+    $('#n-home').textContent = (() => { try { return activeWants().reduce((n, w) => n + (wantAlerts(w).some(a => a.rank < 4 && w.dismissedAlert !== a.label) ? 1 : 0), 0) || ''; } catch (e) { return ''; } })();
+    $('#n-shop').textContent = '';
+    $('#n-mine').textContent = '';
     $$('.needs-img').forEach(el => el.hidden = !S.canImages);
     $('#quick').hidden = !db || !canWrite || ['bin', 'inspo', 'style', 'mystyle', 'amazon', 'shops'].includes(S.tab);
     $('#shop-form').hidden = !db || !canWrite;
@@ -1296,7 +1299,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     if (text) patch.priceFeedback = [...(w.priceFeedback || []), { text, at: now() }].slice(-10);
     await db.collection(col).doc(w.id).update(patch);
     const season = saleSeason();
-    await mcp.callTool('Claude Code Remote', 'fire_trigger', { trigger_id: S.meta.research.triggerId, text: `Deal hunt: collection=${col} doc_id=${w.id}${text ? ' (the user flagged wrong prices: see priceFeedback)' : ''}${season ? ` Sale season: ${season.label} (until ${season.until}). Look hard for ${season.label} prices and codes.` : ''}` }, { cache: false });
+    await mcp.callTool('Claude Code Remote', 'fire_trigger', { trigger_id: S.meta.research.triggerId, text: `Deal hunt: collection=${col} doc_id=${w.id}${text ? ' (the user flagged wrong prices: see priceFeedback)' : ''}${season ? ` Sale season: ${season.label} (until ${season.until}). Look hard for ${season.label} prices and codes.` : ''}${w.colourMode === 'any' ? ' The user is happy with ANY colour: price every colour and record each with `colour` set; the cheapest colour counts.' : w.variant ? ` The user wants ${JSON.stringify(w.variant)} only: don't let other colours set the price.` : ''}${w.conditionOk === 'any' ? ' Refurbished or pre-loved in good condition is fine: search certified refurbished, Reebelo, Phonebot, Amazon Renewed, eBay and ex-demo, and record them with `condition`; they count towards the best price (not `similar` items).' : ''}` }, { cache: false });
   }
   // Sale season (e.g. Black Friday): wants, restock items and finds get a deal search every day
   const saleSeason = () => { const m = S.meta.salemode; return m && m.on && (!m.until || m.until >= dayKey()) ? m : null; };
@@ -1338,18 +1341,28 @@ details.dna[open] > summary { margin-bottom: 10px; }
   }
   // Where Shop should go: the cheapest in-stock offer the card is showing, else the product page
   const dealUrl = (w) => { const b = priceInfo(w).best; return (b && b.stock !== 'out' && safeUrl(b.url)) || safeUrl(w.url) || ''; };
+  // What the user is flexible on: one exact colour or any; new only or refurbished/pre-loved OK
+  function prefsRow(w) {
+    if (!canWrite) return '';
+    const hasColours = (w.variants || []).length > 1 || w.variant;
+    const refurbable = ['Tech', 'Home', 'Office', 'Clothes', 'Activewear', 'Health', 'Other'].includes(w.category);
+    if (!hasColours && !refurbable) return '';
+    const chip = (act, v, on, label) => `<button class="chip sm" data-act="${act}" data-id="${esc(w.id)}" data-v="${v}" aria-pressed="${on}">${esc(label)}</button>`;
+    const anyC = w.colourMode === 'any', anyN = w.conditionOk === 'any';
+    return `<div class="prefs">${hasColours ? `<span class="meta">Colour</span>${chip('pref-colour', 'exact', !anyC, w.variant ? `${w.variant} only` : 'This colour only')}${chip('pref-colour', 'any', anyC, 'Any colour')}` : ''}${refurbable ? `<span class="meta">Condition</span>${chip('pref-cond', 'new', !anyN, 'New only')}${chip('pref-cond', 'any', anyN, 'Refurb OK')}` : ''}</div>`;
+  }
   function wantCard(w) {
       const p = priceInfo(w), al = wantAlerts(w);
       return `<article class="card ${w.status === 'bought' ? 'faded' : ''}">
         <div class="card-top">${thumb(w)}
           <div class="card-title">
             <h3>${esc(shortOf(w))}</h3>
-            <span class="meta clamp1">${esc([w.brand, fullOf(w), w.variant].filter(Boolean).join(' · '))}</span>
+            <span class="meta clamp1">${esc([w.brand, fullOf(w), w.colourMode === 'any' ? 'Any colour' : w.variant, w.conditionOk === 'any' ? 'refurb OK' : ''].filter(Boolean).join(' · '))}</span>
             <div class="pills">${w.example ? '<span class="pill ex">Example</span>' : ''}${w.priority === 'must' ? '<span class="pill accent">Must have</span>' : ''}${w.status === 'bought' ? '<span class="pill good">Bought</span>' : ''}</div>
           </div>
         </div>
         <div class="price-row">
-          <div class="price">${p.last == null && w.rrp ? `<span class="meta">about</span> ${fmt(w.rrp)}` : fmt(p.last)}<small>${[p.best ? `<b style="color:var(--ink)">${fmt(p.best._total)}${p.best.delivery == null ? '+' : ''}</b> delivered from ${esc(p.best.shop)}${payOf(p.best).length ? ` · ${esc(payOf(p.best).join(', '))}` : ''}` : '', w.size ? esc(w.size) : '', p.offPeak ? `${fmt(p.offPeak)} off peak` : ''].filter(Boolean).join(' · ') || '&nbsp;'}</small></div>
+          <div class="price">${p.last == null && w.rrp ? `<span class="meta">about</span> ${fmt(w.rrp)}` : fmt(p.last)}<small>${[p.best ? `<b style="color:var(--ink)">${fmt(p.best._total)}${p.best.delivery == null ? '+' : ''}</b> delivered from ${esc(p.best.shop)}${w.colourMode === 'any' && p.best.colour ? ` · ${esc(p.best.colour)}` : ''}${p.best.condition && p.best.condition !== 'new' ? ` · ${esc(CONDITION[p.best.condition] || p.best.condition)}` : ''}${payOf(p.best).length ? ` · ${esc(payOf(p.best).join(', '))}` : ''}` : '', w.size ? esc(w.size) : '', p.offPeak ? `${fmt(p.offPeak)} off peak` : ''].filter(Boolean).join(' · ') || '&nbsp;'}</small></div>
           ${spark(p.h)}
         </div>
         ${w.recheckNote && w.priceRecheck !== 'queued' ? `<p class="hl" title="${esc(w.recheckNote)}">${esc(w.recheckNote)}</p>` : ''}
@@ -1359,6 +1372,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
         ${al.some(a => a.rank < 4) || RESEARCH[w.research] || w.priceRecheck === 'queued' ? `<div class="pills">${w.priceRecheck === 'queued' ? '<span class="pill warn">Finding deals…</span>' : ''}${researchPill(w)}${al.filter(a => a.rank < 4).map(a => `<span class="pill ${a.tone}">${esc(a.label)}</span>`).join('')}</div>` : ''}
         ${p.preloved.length ? `<p class="notes" style="margin:0"><span class="pill pay" style="margin:0">${esc(CONDITION[p.preloved[0].condition] || 'Pre-loved')}</span> ${fmt(p.preloved[0]._total)}${p.preloved[0].delivery == null ? '+' : ''} delivered from ${esc(p.preloved[0].shop)}${p.preloved[0].similar ? ' · similar, not the exact one' : ''}${p.preloved.length > 1 ? ` · ${p.preloved.length - 1} more below` : ''}</p>` : ''}
         ${ongoingBlock(w, p.best ? p.best._total : p.last)}
+        ${prefsRow(w)}
         ${variantsBlock('wishlist', w)}
         ${stackNoteBlock(w)}
         ${p.offers.length || p.preloved.length ? `<details class="more"><summary title="Delivered to ${esc(deliverTo())}">${p.offers.length + p.preloved.length} ${p.offers.length + p.preloved.length === 1 ? 'shop' : 'shops'}${p.lastChecked ? ` · ${esc(ago(p.lastChecked))}` : ''}</summary><ul class="offers" style="gap:8px">${p.offers.map(o => `<li style="grid-template-columns:1fr auto">
@@ -1994,7 +2008,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     $('#details-all').checked = !!S.detailsAll;
   }
   // Compact view: cards show the essentials; "Details" opens the rest (remembered per card until reload)
-  const HIDDEN_SEL = ':scope > :is(.notes, details.more, p.meta, .fb, .price-fb, .hl, .gap), :scope > div:has(> .sw), :scope .body > :is(.notes, details, .review)';
+  const HIDDEN_SEL = ':scope > :is(.notes, details.more, p.meta, .fb, .price-fb, .hl, .gap, .prefs), :scope > div:has(> .sw), :scope .body > :is(.notes, details, .review)';
   function decorateCards() {
     document.body.classList.toggle('compact', !S.detailsAll);
     S.openCards = S.openCards || new Set();
@@ -2740,7 +2754,12 @@ details.dna[open] > summary { margin-bottom: 10px; }
   // ---------- actions ----------
   async function act(fn, fail = 'Couldn’t save that. Try again.') { try { await fn(); } catch { toast(fail); } }
   // Fewer tabs: related pages sit under one tab with a small switch at the top
-  const TAB_GROUPS = { finds: [['finds', 'Finds'], ['shops', 'Shops to check out']], beauty: [['skin', 'Skin'], ['makeup', 'Makeup'], ['hair', 'Hair']], style: [['style', 'Get dressed'], ['mystyle', 'My style']] };
+  // Four places: Home (what changed), Shopping (things to buy), Style me (getting dressed), My stuff (what you own)
+  const TAB_GROUPS = {
+    shop: [['wants', 'Wants'], ['finds', 'Finds'], ['amazon', 'Amazon list'], ['shops', 'Shops']],
+    style: [['style', 'Get dressed'], ['mystyle', 'My style'], ['inspo', 'Inspo']],
+    mine: [['wardrobe', 'Wardrobe'], ['skin', 'Skin'], ['makeup', 'Makeup'], ['hair', 'Hair']],
+  };
   const groupOf = (tab) => Object.keys(TAB_GROUPS).find(g => TAB_GROUPS[g].some(([k]) => k === tab)) || '';
   function setMenu(open) { $('#tabs-wrap').classList.toggle('open', open); $('#menu-btn').setAttribute('aria-expanded', String(open)); }
   $('#menu-btn').addEventListener('click', () => setMenu(!$('#tabs-wrap').classList.contains('open')));
@@ -3124,6 +3143,18 @@ details.dna[open] > summary { margin-bottom: 10px; }
           await mcp.callTool('Claude Code Remote', 'fire_trigger', { trigger_id: S.meta.research.triggerId, text: `Research request: collection=${col} doc_id=${id} phrase=${JSON.stringify(phrase)}. CORRECTION FROM THE USER: this card shows the wrong product (currently "${[x.brand, nameOf(x)].filter(Boolean).join(' ')}"). They said: ${JSON.stringify(text)}. Re-identify the exact product they mean, following BRAND AND MODEL FIDELITY, and replace name/product, brand, label, url, variants, photoId (a clean photo of the right product), offers, price, stock, reviews and stackNote to match it. Move the wrong product into \`alternatives\` only if it's a sensible cheaper option; otherwise drop it. Keep productFeedback as it is.` }, { cache: false });
           S.wp[id] = false;
           toast('Thanks. Claude is finding the right product.');
+        });
+        break;
+      }
+      case 'pref-colour': case 'pref-cond': {
+        const w = find('wishlist'); if (!w) break;
+        const field = a === 'pref-colour' ? 'colourMode' : 'conditionOk', v = t.dataset.v;
+        if ((w[field] || (a === 'pref-colour' ? 'exact' : 'new')) === v) break;
+        S.openCards = S.openCards || new Set(); S.openCards.add(id + ':');
+        act(async () => {
+          await db.collection('wishlist').doc(id).update({ [field]: v });
+          if (canResearch() && v === 'any') { await queueDealHunt({ ...w, [field]: v }); toast(a === 'pref-colour' ? 'Any colour it is. Claude is checking every colour for the best price.' : 'Refurb OK. Claude is checking refurbished and pre-loved too.'); }
+          else toast(a === 'pref-colour' ? `Locked to ${w.variant || 'this colour'}.` : 'New only.');
         });
         break;
       }
