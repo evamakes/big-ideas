@@ -1294,6 +1294,14 @@ details.dna[open] > summary { margin-bottom: 10px; }
   }
   // Sale season (e.g. Black Friday): wants, restock items and finds get a deal search every day
   const saleSeason = () => { const m = S.meta.salemode; return m && m.on && (!m.until || m.until >= dayKey()) ? m : null; };
+  // "This is the wrong product": the user says what they meant and Claude re-identifies it
+  function wpBox(col, x) {
+    const last = (x.productFeedback || []).slice(-1)[0];
+    const busy = x.research === 'queued' && last && Date.now() - Date.parse(last.at || 0) < 6 * 36e5;
+    if (busy) return `<p class="hl">Fixing it: “${esc(last.text)}”</p>`;
+    if (!(S.wp || {})[x.id]) return '';
+    return `<div class="refine wp"><input type="text" data-wp="${esc(x.id)}" placeholder="What did you mean? e.g. It's the Hatch Restore 3, not this clock" aria-label="What's the right product"><button class="btn small" data-act="wp-send" data-col="${col}" data-id="${esc(x.id)}">Fix it</button></div>`;
+  }
   function priceFbBox(w) {
     if (!canResearch()) return '';
     const last = (w.priceFeedback || []).slice(-1)[0];
@@ -1352,6 +1360,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
         ${reviewBlock(w.reviews)}
         ${altsBlock('wishlist', w)}
         ${aiBox(w.id)}
+        ${wpBox('wishlist', w)}
         <div class="actions">
           ${safeUrl(w.url) ? `<a class="btn small" href="${esc(w.url)}" target="_blank" rel="noopener">Shop ↗</a>` : ''}
           ${canResearch() && w.status !== 'bought' && w.priceRecheck !== 'queued' ? `<button class="btn small ghost" data-act="deal-hunt" data-id="${esc(w.id)}" title="Search every shop for sales and discount codes now">Find deals</button>` : ''}
@@ -1363,6 +1372,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
           ${sample && (w.variants || []).length ? `<button class="btn small ghost" data-act="ai-compare" data-col="wishlist" data-id="${esc(w.id)}">Compare with what I own</button>` : ''}
           ${canResearch() && w.altResearch !== 'queued' ? `<button class="btn small ghost" data-act="alts" data-col="wishlist" data-id="${esc(w.id)}">Similar or cheaper</button>` : ''}
           ${canResearch() && w.research !== 'queued' && w.research !== 'done' ? `<button class="btn small ghost" data-act="research" data-col="wishlist" data-id="${esc(w.id)}">Research it</button>` : ''}
+          ${canResearch() ? `<button class="btn small ghost" data-act="wrong-product" data-col="wishlist" data-id="${esc(w.id)}">Wrong product?</button>` : ''}
           ${canWrite ? `<button class="btn small ghost" data-act="edit" data-col="wishlist" data-id="${esc(w.id)}">Edit</button>` : ''}
           ${delBtn('wishlist', w.id)}
           </div></details>
@@ -1429,6 +1439,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
         ${reviewBlock(f.review || f)}
         ${altsBlock('finds', f)}
         ${itemFb('finds', f.id, null, f.feedback)}
+        ${wpBox('finds', f)}
         <div class="actions">
           ${safeUrl(f.url) ? `<a class="btn small" href="${esc(f.url)}" target="_blank" rel="noopener">Shop ↗</a>` : ''}
           ${canWrite ? `<button class="btn small" data-act="find-own" data-id="${esc(f.id)}">I have it</button>` : ''}
@@ -1436,6 +1447,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
           ${canWrite && (f.kind === 'skincare' || f.kind === 'makeup') ? `<button class="btn small ghost" data-act="find-stack" data-id="${esc(f.id)}">${swapTarget ? 'Swap it in' : 'Add to my stack'}</button>` : ''}
           ${canResearch() && f.altResearch !== 'queued' ? `<button class="btn small ghost" data-act="alts" data-col="finds" data-id="${esc(f.id)}">Similar or cheaper</button>` : ''}
           ${canResearch() && f.priceRecheck !== 'queued' ? `<button class="btn small ghost" data-act="deal-hunt" data-col="finds" data-id="${esc(f.id)}">Find deals</button>` : ''}
+          ${canResearch() ? `<button class="btn small ghost" data-act="wrong-product" data-col="finds" data-id="${esc(f.id)}">Wrong product?</button>` : ''}
           ${canWrite ? `<button class="btn small ghost" data-act="find-snooze" data-id="${esc(f.id)}" title="Hide for a month">Not now</button>` : ''}
           ${canWrite ? `<button class="btn small ghost danger" data-act="find-nope" data-id="${esc(f.id)}" title="Never show me this, or things like it">Never</button>` : ''}
         </div>
@@ -1464,6 +1476,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
         ${reviewBlock(x.reviews)}
         ${altsBlock(col, x)}
         ${aiBox(x.id)}
+        ${wpBox(col, x)}
       </div>
       <div class="actions">
         ${canWrite && !INACTIVE.includes(st) ? (x.supply === 'out' ? `<button class="btn small" data-act="supply" data-v="ok" data-col="${col}" data-id="${esc(x.id)}">Restocked</button>`
@@ -1475,6 +1488,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
         ${canWrite && (st === 'out' || st === 'shelf') ? `<button class="btn small" data-act="restack" data-col="${col}" data-id="${esc(x.id)}">Back in my stack</button>` : ''}
         ${canWrite && st === 'try' ? `<button class="btn small" data-act="restack" data-col="${col}" data-id="${esc(x.id)}">Got it</button><button class="btn small ghost" data-act="try-want" data-col="${col}" data-id="${esc(x.id)}">Add to wants</button>` : ''}
         ${sample && st !== 'out' ? `<button class="btn small ghost" data-act="ai-alt" data-col="${col}" data-id="${esc(x.id)}">${st === 'testing' ? 'Is it worth it?' : 'Alternatives'}</button>` : ''}
+        ${canResearch() ? `<button class="btn small ghost" data-act="wrong-product" data-col="${col}" data-id="${esc(x.id)}">Wrong product?</button>` : ''}
         ${canWrite ? `<button class="btn small ghost push" data-act="edit" data-col="${col}" data-id="${esc(x.id)}">Edit</button>` : ''}
         ${delBtn(col, x.id)}
       </div>
@@ -3080,6 +3094,27 @@ details.dna[open] > summary { margin-bottom: 10px; }
           try { localStorage.removeItem('edit.autoHunt'); } catch {}
           toast('Black Friday mode on until 1 Dec: your wants, restock items and finds get a deal search every day.');
           setTimeout(() => autoHuntStale().catch(() => {}), 1500);
+        });
+        break;
+      }
+      case 'wrong-product': {
+        S.wp = S.wp || {}; S.wp[id] = !S.wp[id];
+        t.closest('details')?.removeAttribute('open');
+        render();
+        setTimeout(() => $(`[data-wp="${CSS.escape(id)}"]`)?.focus(), 50);
+        break;
+      }
+      case 'wp-send': {
+        const x = find(col); if (!x) break;
+        const text = ($(`[data-wp="${CSS.escape(id)}"]`)?.value || '').trim().slice(0, 400);
+        if (!text) { toast('Say what the right product is, e.g. the brand and name.'); break; }
+        t.disabled = true;
+        act(async () => {
+          await db.collection(col).doc(id).update({ productFeedback: [...(x.productFeedback || []), { text, at: now(), was: [x.brand, nameOf(x)].filter(Boolean).join(' ') }].slice(-10), research: 'queued', researchQueuedAt: now() });
+          const phrase = x.quickPhrase || [x.brand, nameOf(x)].filter(Boolean).join(' ');
+          await mcp.callTool('Claude Code Remote', 'fire_trigger', { trigger_id: S.meta.research.triggerId, text: `Research request: collection=${col} doc_id=${id} phrase=${JSON.stringify(phrase)}. CORRECTION FROM THE USER: this card shows the wrong product (currently "${[x.brand, nameOf(x)].filter(Boolean).join(' ')}"). They said: ${JSON.stringify(text)}. Re-identify the exact product they mean, following BRAND AND MODEL FIDELITY, and replace name/product, brand, label, url, variants, photoId (a clean photo of the right product), offers, price, stock, reviews and stackNote to match it. Move the wrong product into \`alternatives\` only if it's a sensible cheaper option; otherwise drop it. Keep productFeedback as it is.` }, { cache: false });
+          S.wp[id] = false;
+          toast('Thanks. Claude is finding the right product.');
         });
         break;
       }
