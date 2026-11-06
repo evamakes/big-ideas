@@ -246,6 +246,8 @@ a.plain { color: inherit; text-decoration: none; }
 .col-pick { display: flex; flex-wrap: wrap; gap: 6px; }
 .col-chip i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; border: 1px solid var(--line); margin-right: 6px; vertical-align: -1px; }
 .col-hint { font-size: 0.75rem; }
+.grp-h { grid-column: 1 / -1; margin: 10px 0 -4px; font-family: var(--f-display); font-weight: 500; font-size: 1.15rem; }
+.grp-h:first-child { margin-top: 0; }
 .alt-model { margin: 0; font-size: 0.86rem; color: var(--muted); }
 .alt-model b { color: var(--ink); font-weight: 600; }
 .tips .pill { font-size: 0.7rem; padding: 1px 7px; vertical-align: 1px; }
@@ -661,13 +663,14 @@ details.dna[open] > summary { margin-bottom: 10px; }
 
   <!-- WANTS -->
   <section class="panel" data-panel="wants" hidden>
-    <details class="filters" id="wants-filter"><summary><span class="btn small ghost">Filter</span><span class="meta" id="wants-filter-sum"></span></summary>
+    <details class="filters" id="wants-filter"><summary><span class="btn small ghost">Filter &amp; sort</span><span class="meta" id="wants-filter-sum"></span></summary>
     <div class="toolbar">
       <div class="chips" id="wants-chips"></div>
       <div class="tools">
         <select class="plain" id="wants-sort" aria-label="Sort wants">
-          <option value="alert">Deals first</option>
+          <option value="alert">Sort: Deals first</option>
           <option value="priority">Most wanted</option>
+          <option value="cat">Category</option>
           <option value="new">Newest</option>
           <option value="low">Price: low to high</option>
           <option value="high">Price: high to low</option>
@@ -949,6 +952,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
   const RESEARCH = { queued: ['warn', 'Researching…'], draft: ['', 'Draft from Claude · not checked yet'], failed: ['bad', 'Couldn’t confirm this one'] };
   const WANT_CATS = ['Clothes', 'Activewear', 'Beauty', 'Skincare', 'Hair', 'Health', 'Office', 'Home', 'Tech', 'Other'];
   const WANT_GROUPS = [['Clothes', ['Clothes']], ['Shoes', []], ['Bags & accessories', []], ['Activewear', ['Activewear']], ['Beauty', ['Beauty', 'Skincare', 'Hair']], ['Wellness', ['Health']], ['Tech', ['Tech']], ['Home', ['Home', 'Office']], ['Other', ['Other']]];
+  const GROUP_ORDER = ['Clothes', 'Shoes', 'Bags & accessories', 'Activewear', 'Beauty', 'Wellness', 'Tech', 'Home', 'Other'];
   const groupOfCat = (c) => (WANT_GROUPS.find(g => g[1].includes(c)) || ['Other'])[0];
   // Shoes and bags live under Clothes as a category, so they're picked out by name for the filter
   const SHOE_RX = /\b(boots?|shoes?|sneakers?|trainers?|heels?|sandals?|loafers?|mules?|slides?|flats|mary janes?|clogs?|thongs|converse|birkenstocks?|uggs?)\b/i;
@@ -1488,11 +1492,15 @@ details.dna[open] > summary { margin-bottom: 10px; }
       new: (a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')),
       low: (a, b) => (priceInfo(a).last ?? 1e9) - (priceInfo(b).last ?? 1e9),
       high: (a, b) => (priceInfo(b).last ?? -1) - (priceInfo(a).last ?? -1),
+      cat: (a, b) => (GROUP_ORDER.indexOf(wantGroup(a)) - GROUP_ORDER.indexOf(wantGroup(b))) || starsOf(b) - starsOf(a),
     };
     list.sort(sorters[S.wantSort] || sorters.alert);
     const el = $('#wants-list');
     if (!list.length) { el.innerHTML = emptyState('wishlist', all.length ? 'Nothing in this category.' : 'Add things you’re eyeing: clothes, beauty, office bits. The daily refresh checks prices and stock across shops.'); return; }
-    el.innerHTML = list.map(wantCard).join('');
+    if (S.wantSort === 'cat') {
+      // grouped under a heading per category
+      let cur = null; el.innerHTML = list.map(w => { const g = wantGroup(w), head = g !== cur ? `<h3 class="grp-h">${esc(g)} <span class="meta">${list.filter(x => wantGroup(x) === g).length}</span></h3>` : ''; cur = g; return head + wantCard(w); }).join('');
+    } else el.innerHTML = list.map(wantCard).join('');
   }
   const sizePickHtml = (x) => x.sizePick?.size ? `<p class="notes" style="margin:0"><b>Your size: ${esc(x.sizePick.size)}</b>${x.sizePick.why ? ` · ${esc(x.sizePick.why)}` : ''}</p>` : '';
   // "These prices aren't right": the note goes on the want and a price-only recheck is queued
