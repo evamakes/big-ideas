@@ -239,8 +239,13 @@ body.compact .card:not(.open) .spark,
 body.compact .card:not(.open) .price small,
 body.compact .shop-card:not(.open) .sale :is(.picks, .meta, p, .eyebrow) { display: none; }
 a.plain { color: inherit; text-decoration: none; }
-.prefs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.prefs { display: grid; gap: 10px; }
+.pref-g { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.pref-g > .meta:first-child { flex-basis: 100%; margin: 0; font-weight: 600; color: var(--ink); }
 .prefs .meta { font-size: 0.78rem; margin-left: 4px; }
+.col-pick { display: flex; flex-wrap: wrap; gap: 6px; }
+.col-chip i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; border: 1px solid var(--line); margin-right: 6px; vertical-align: -1px; }
+.col-hint { font-size: 0.75rem; }
 .alt-model { margin: 0; font-size: 0.86rem; color: var(--muted); }
 .alt-model b { color: var(--ink); font-weight: 600; }
 .tips .pill { font-size: 0.7rem; padding: 1px 7px; vertical-align: 1px; }
@@ -1115,12 +1120,12 @@ details.dna[open] > summary { margin-bottom: 10px; }
   const COLOUR_WORDS = /^(?:(?:light|dark|pale|deep|soft|bright|dusty|navy|black|white|off-white|cream|ivory|beige|tan|camel|brown|chocolate|grey|gray|charcoal|silver|gold|rose|pink|blush|red|burgundy|plum|purple|lilac|lavender|blue|sky|teal|green|sage|olive|khaki|yellow|mustard|orange|coral|peach|nude|stone|sand|sandalwood|natural|midnight|space|starlight|graphite)[\s-]+)+/i;
   const shortOf = (x) => {
     const l = x.label || nameOf(x);
-    if (!x.label || (x.colourMode !== 'any' && !x.colourPicked)) return l;
+    if (!x.label || (x.colourMode !== 'any' && x.colourMode !== 'some' && !x.colourPicked)) return l;
     let t = x.labelColour ? l.replace(new RegExp('^' + String(x.labelColour).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s+', 'i'), '') : l;
     t = (x.variant ? t.replace(new RegExp('^' + String(x.variant).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s+', 'i'), '') : t).replace(COLOUR_WORDS, '');
     if (!t) return l;
     // a colour you picked yourself leads the name, e.g. Silver iPad 11-inch
-    if (x.colourMode !== 'any' && x.variant) return `${x.variant} ${t}`;
+    if (x.colourMode !== 'any' && x.colourMode !== 'some' && x.variant) return `${x.variant} ${t}`;
     return /^[a-z][a-z]/.test(t) ? t.charAt(0).toUpperCase() + t.slice(1) : t; // keeps iPad as iPad
   };
   const fullOf = (x) => x.label && x.label !== nameOf(x) ? nameOf(x) : '';
@@ -1220,7 +1225,8 @@ details.dna[open] > summary { margin-bottom: 10px; }
     const all = every.filter(counts), usedAll = every.filter(o => !counts(o));
     const newBest = all.find(o => !o.colour || !String(it.variant || '') || String(o.colour).toLowerCase() === String(it.variant).toLowerCase());
     const preloved = usedAll.filter(o => !newBest || o._total < newBest._total);
-    const fits = (o) => (it.colourMode === 'any' || !o.colour || !sel || String(o.colour).toLowerCase() === sel) && (it.modelMode === 'any' || !o.model || !it.model || String(o.model).toLowerCase() === String(it.model).toLowerCase());
+    const picks = it.colourMode === 'some' ? (it.colours || []).map(c => String(c).toLowerCase()) : null;
+    const fits = (o) => (it.colourMode === 'any' || !o.colour || (picks ? picks.includes(String(o.colour).toLowerCase()) : (!sel || String(o.colour).toLowerCase() === sel))) && (it.modelMode === 'any' || !o.model || !it.model || String(o.model).toLowerCase() === String(it.model).toLowerCase());
     const offers = all.filter(fits), others = all.filter(o => !fits(o));
     const best = offers[0];
     const otherDeal = others.find(o => !best || o._total < best._total) || null;
@@ -1418,7 +1424,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     wants.forEach(w => {
       const p = priceInfo(w), b = p.best;
       const extra = [];
-      if (b && b.wasPrice && !b.unverified && w.stock !== 'out' && b.stock !== 'out') extra.push({ tone: 'good', label: 'On sale', detail: `${fmt(b._total)} at ${b.shop}${w.colourMode === 'any' && b.colour ? ` in ${b.colour}` : ''} (was ${fmt(b.wasPrice)})`, rank: 1 });
+      if (b && b.wasPrice && !b.unverified && w.stock !== 'out' && b.stock !== 'out') extra.push({ tone: 'good', label: 'On sale', detail: `${fmt(b._total)} at ${b.shop}${(w.colourMode === 'any' || w.colourMode === 'some') && b.colour ? ` in ${b.colour}` : ''} (was ${fmt(b.wasPrice)})`, rank: 1 });
       { const am = p.altModel; if (am && b && w.modelMode !== 'any' && (b._total - am._total >= 20 || am._total <= b._total * 0.9)) extra.push({ tone: 'accent', label: 'Older model', detail: `${am.model} ${fmt(am._total)} at ${String(am.shop).split(' (')[0]} (saves ${fmt(b._total - am._total)})`, rank: 2.5 }); }
       { const fp = freshPromo(w); if (fp && w.stock !== 'out') extra.push({ tone: 'accent', label: promoLabel(fp), detail: `${fp.code ? fp.code + ': ' : ''}${fp.text || ''}${fp.shop && !String(fp.text || '').includes(fp.shop) ? ` at ${fp.shop}` : ''}${fp.ends ? ` · ends ${endDate(fp.ends)}` : ''}`, rank: 1.5 }); }
       if (w.recheckNote && w.dealsCheckedAt && Date.now() - Date.parse(w.dealsCheckedAt) < 3 * 864e5) extra.push({ tone: 'accent', label: 'Deal found', detail: w.recheckNote, rank: 2 });
@@ -1506,7 +1512,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
   }
   const PROMO_ASK = ' PROMOS CHECKLIST: at every shop that sells it, check for and record what is live in `dealTips`, each with `kind` ("code"|"multibuy"|"gwp"|"spend"|"bundle"|"pricematch"|"cashback"|"giftcard"|"sale"), `shop`, `ends` (YYYY-MM-DD if known) and `found` (today, or the earlier date if it was already listed): live coupon and discount codes (site banners, pop-ups, first-order, newsletter and app codes, OzBargain, eBay codes); multi-buys (2 for 1, buy one get one, 3 for 2, buy 2 save %); gift with purchase; spend-and-save tiers and free-delivery thresholds; value sets or bundles cheaper than buying separately; price-match and price-beat; cashback; discounted gift cards. Apply any the item alone qualifies for to that offer\'s `total` and say so in its `note`. If a live promo lowers the delivered price by at least 5% or $5, lead `recheckNote` with it (e.g. "2 for 1 at Priceline until 12 Nov: $27 each"). MEMBER PERKS: for every membership in `meta/profile` `memberships` (e.g. Amazon Prime: free delivery on Prime-eligible items and member-only deals; OnePass: free delivery at Kmart, Target, Bunnings, Officeworks and Catch; Everyday Rewards; brand loyalty tiers), apply its member price and free or cheaper delivery to that offer\'s `delivery` and `total` when the item qualifies, and set the offer\'s `perk` to one short line (e.g. "Free delivery with Prime"). RAIZ REWARDS: the user shops through Raiz Rewards (Raiz Invest\'s cashback, paid into their investment account). For every shop in `offers`, check whether it is a current Raiz Rewards partner (raizinvest.com.au rewards pages, the Raiz Rewards brand list, or web search such as "Raiz Rewards <shop>") and set the offer\'s `raiz` to its rate as shown (e.g. "4%", "up to 6%", "$10"), or leave it out if the shop isn\'t a partner. Don\'t subtract it from `total`, and say in `recheckNote` when Raiz makes a different shop the better buy.';
   // One set of choices every search follows, so Home, cards and emails agree
-  const MODES_RULE = ' CHOICES: on wants, `colourMode: "any"` means price every colour and the cheapest counts (record `colour` on offers); `modelMode: "any"` means any version of the same brand\'s product line counts (older or newer generations) when it is new from a reputable seller (record `model` on offers); `conditionOk: "any"` means refurbished or pre-loved in good condition counts. Otherwise stick to the selected colour, the named model and new condition. Used or unknown-condition marketplace listings always carry `condition` so they never count as the best new deal. PREVIOUS MODEL: for tech, appliances and gadgets with model generations (e.g. Hatch Restore 3 vs Restore 2, iPad 11th vs 10th gen), also price the previous generation new from reputable shops and add the best 1–2 as offers with `model` (e.g. "Restore 2") and `prevModel: true`, so the user can see when the older model is much cheaper; they only set `price` when `modelMode` is "any". Skip this, and add no other versions, when the want has `noOlderModel: true` (the user said they aren\'t interested).';
+  const MODES_RULE = ' CHOICES: on wants, `colourMode: "any"` means price every colour and the cheapest counts (record `colour` on offers); `colourMode: "some"` means price each colour in `colours` (up to 3) and the cheapest of those counts; `modelMode: "any"` means any version of the same brand\'s product line counts (older or newer generations) when it is new from a reputable seller (record `model` on offers); `conditionOk: "any"` means refurbished or pre-loved in good condition counts. Otherwise stick to the selected colour, the named model and new condition. Used or unknown-condition marketplace listings always carry `condition` so they never count as the best new deal. PREVIOUS MODEL: for tech, appliances and gadgets with model generations (e.g. Hatch Restore 3 vs Restore 2, iPad 11th vs 10th gen), also price the previous generation new from reputable shops and add the best 1–2 as offers with `model` (e.g. "Restore 2") and `prevModel: true`, so the user can see when the older model is much cheaper; they only set `price` when `modelMode` is "any". Skip this, and add no other versions, when the want has `noOlderModel: true` (the user said they aren\'t interested).';
   const STARS_RULE = (w) => w && (w.stars || w.priority) ? ` WANT LEVEL: the user rated this ${starsOf(w)} of 5 stars (${STAR_LABEL[starsOf(w)]}).${starsOf(w) <= 2 ? ` Only a real bargain matters (about ${Math.round(STAR_MIN[starsOf(w)] * 100)}% off or more), so focus on deep sales and codes.` : ''}` : '';
   async function queueDealHunt(w, text, col = 'wishlist') {
     const patch = { priceRecheck: 'queued', priceRecheckAt: now() };
@@ -1568,10 +1574,13 @@ details.dna[open] > summary { margin-bottom: 10px; }
     const anyC = w.colourMode === 'any', anyN = w.conditionOk === 'any';
     const vs = (w.variants || []).filter(v => v && v.name).slice(0, 24);
     const optWord = ['Skincare', 'Hair', 'Health'].includes(w.category) ? 'Option' : w.category === 'Beauty' ? 'Shade' : 'Colour';
+    const chosen = w.colourMode === 'any' ? [] : w.colourMode === 'some' ? (w.colours || []) : (w.variant ? [w.variant] : []);
+    const isOn = (n) => chosen.some(c => String(c).toLowerCase() === String(n).toLowerCase());
+    const many = optWord === 'Colour' ? 'colours' : optWord === 'Shade' ? 'shades' : 'options';
     const colourCtl = vs.length > 1
-      ? `<span class="meta">${optWord}</span><select class="plain pref-var" data-pref-var="${esc(w.id)}" aria-label="Which ${optWord.toLowerCase()} to track"><option value="__any"${anyC ? ' selected' : ''}>${optWord === 'Colour' ? 'Any colour' : 'Any'} (cheapest)</option>${vs.map((v, i) => `<option value="${i}"${!anyC && v.name === w.variant ? ' selected' : ''}>${esc(v.name)} only</option>`).join('')}</select>`
+      ? `<span class="meta">${optWord}</span><div class="col-pick" role="group" aria-label="Pick up to 3 ${many}">${canWrite ? `<button type="button" class="chip sm" data-act="pick-col-any" data-id="${esc(w.id)}" aria-pressed="${anyC}">Any</button>` : ''}${vs.map((v, i) => `<button type="button" class="chip sm col-chip" data-act="pick-col" data-id="${esc(w.id)}" data-i="${i}" aria-pressed="${isOn(v.name)}" title="${esc(v.note || v.name)}">${v.hex ? `<i style="background:${esc(v.hex)}"></i>` : ''}${esc(v.name)}</button>`).join('')}</div><span class="meta col-hint">${anyC ? `Any ${optWord.toLowerCase()}, cheapest wins` : chosen.length > 1 ? `Cheapest of your ${chosen.length}` : 'Tap up to 3'}</span>`
       : `<span class="meta">Colour</span>${chip('pref-colour', 'exact', !anyC, w.variant ? `${w.variant} only` : 'This colour only')}${chip('pref-colour', 'any', anyC, 'Any colour')}`;
-    return `<div class="prefs">${hasColours ? colourCtl : ''}${refurbable ? `<span class="meta">Condition</span>${chip('pref-cond', 'new', !anyN, 'New only')}${chip('pref-cond', 'any', anyN, 'Refurb OK')}` : ''}${w.brand ? `<span class="meta">Model</span>${chip('pref-model', 'exact', w.modelMode !== 'any', w.model ? `${w.model} only` : 'This model only')}${chip('pref-model', 'any', w.modelMode === 'any', 'Any version')}` : ''}</div>`;
+    return `<div class="prefs">${hasColours ? `<div class="pref-g">${colourCtl}</div>` : ''}${refurbable ? `<div class="pref-g"><span class="meta">Condition</span>${chip('pref-cond', 'new', !anyN, 'New only')}${chip('pref-cond', 'any', anyN, 'Refurb OK')}</div>` : ''}${w.brand ? `<div class="pref-g"><span class="meta">Model</span>${chip('pref-model', 'exact', w.modelMode !== 'any', w.model ? `${w.model} only` : 'This model only')}${chip('pref-model', 'any', w.modelMode === 'any', 'Any version')}</div>` : ''}</div>`;
   }
   const PROMO_KIND = { code: 'Code', multibuy: 'Buy more, save', gwp: 'Gift with purchase', spend: 'Spend & save', bundle: 'Bundle', pricematch: 'Price match', cashback: 'Cashback', giftcard: 'Gift cards', sale: 'Sale' };
   const promoLabel = (d) => d.kind === 'multibuy' && /2\s*for\s*1|buy one get one|bogo/i.test(d.text || '') ? '2 for 1' : PROMO_KIND[d.kind] || (d.code ? 'Code' : 'Deal');
@@ -1593,17 +1602,19 @@ details.dna[open] > summary { margin-bottom: 10px; }
   }
   function wantCard(w) {
       const p = priceInfo(w), al = wantAlerts(w);
+      const shownCol = (w.colourMode === 'any' || w.colourMode === 'some') && p.best && p.best.colour ? p.best.colour : w.variant;
+      const shownVar = (w.variants || []).find(v => v && v.name && shownCol && v.name.toLowerCase() === String(shownCol).toLowerCase());
       return `<article class="card ${w.status === 'bought' ? 'faded' : ''}">
-        <div class="card-top">${thumb(w)}
+        <div class="card-top">${thumb(shownVar ? { ...w, variant: shownVar.name } : w)}
           <div class="card-title">
             <h3>${esc(shortOf(w))}</h3>
-            <span class="meta clamp1">${esc([w.brand, fullOf(w), w.colourMode === 'any' ? 'Any colour' : w.variant, w.conditionOk === 'any' ? 'refurb OK' : ''].filter(Boolean).join(' · '))}</span>
+            <span class="meta clamp1">${esc([w.brand, fullOf(w), w.colourMode === 'any' ? 'Any colour' : w.colourMode === 'some' ? (w.colours || []).join(', ') : w.variant, w.conditionOk === 'any' ? 'refurb OK' : ''].filter(Boolean).join(' · '))}</span>
             ${w.status === 'bought' ? '' : starRow(w)}
             <div class="pills">${w.example ? '<span class="pill ex">Example</span>' : ''}${w.status === 'bought' ? '<span class="pill good">Bought</span>' : ''}</div>
           </div>
         </div>
         <div class="price-row">
-          <div class="price">${p.last == null && w.rrp ? `<span class="meta">about</span> ${fmt(w.rrp)}` : fmt(p.last)}<small>${[p.best ? `<b style="color:var(--ink)">${fmt(p.best._total)}${p.best.delivery == null ? '+' : ''}</b> delivered from ${esc(p.best.shop)}${w.modelMode === 'any' && p.best.model ? ` · ${esc(p.best.model)}` : ''}${p.best.perk ? ` · ${esc(p.best.perk)}` : ''}${p.best.raiz ? ` · ${esc(p.best.raiz)} back on Raiz` : ''}${w.colourMode === 'any' && p.best.colour ? ` · ${esc(p.best.colour)}` : ''}${p.best.condition && p.best.condition !== 'new' ? ` · ${esc(CONDITION[p.best.condition] || p.best.condition)}` : ''}${payOf(p.best).length ? ` · ${esc(payOf(p.best).join(', '))}` : ''}` : '', w.size ? esc(w.size) : '', p.offPeak ? `${fmt(p.offPeak)} off peak` : ''].filter(Boolean).join(' · ') || '&nbsp;'}</small></div>
+          <div class="price">${p.last == null && w.rrp ? `<span class="meta">about</span> ${fmt(w.rrp)}` : fmt(p.last)}<small>${[p.best ? `<b style="color:var(--ink)">${fmt(p.best._total)}${p.best.delivery == null ? '+' : ''}</b> delivered from ${esc(p.best.shop)}${w.modelMode === 'any' && p.best.model ? ` · ${esc(p.best.model)}` : ''}${p.best.perk ? ` · ${esc(p.best.perk)}` : ''}${p.best.raiz ? ` · ${esc(p.best.raiz)} back on Raiz` : ''}${(w.colourMode === 'any' || w.colourMode === 'some') && p.best.colour ? ` · ${esc(p.best.colour)}` : ''}${p.best.condition && p.best.condition !== 'new' ? ` · ${esc(CONDITION[p.best.condition] || p.best.condition)}` : ''}${payOf(p.best).length ? ` · ${esc(payOf(p.best).join(', '))}` : ''}` : '', w.size ? esc(w.size) : '', p.offPeak ? `${fmt(p.offPeak)} off peak` : ''].filter(Boolean).join(' · ') || '&nbsp;'}</small></div>
           ${spark(p.h)}
         </div>
         ${p.altModel ? `<p class="alt-model">${p.altModel.prevModel === false ? 'Other version' : 'Older model'}: <b>${esc(p.altModel.model)}</b> · ${fmt(p.altModel._total)}${p.altModel.delivery == null ? '+' : ''} at ${safeUrl(p.altModel.url) ? `<a href="${esc(p.altModel.url)}" target="_blank" rel="noopener">${esc(String(p.altModel.shop).split(' (')[0])}</a>` : esc(p.altModel.shop)}${p.best ? ` <span class="meta">(saves ${fmt(p.best._total - p.altModel._total)})</span>` : ''}${p.altModel.unverified ? ' <span class="meta">· estimate</span>' : ''}${canWrite ? ` <button class="link" data-act="no-older" data-id="${esc(w.id)}">Not interested</button>` : ''}</p>` : ''}
@@ -1615,7 +1626,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
         ${p.preloved.length ? `<p class="notes" style="margin:0"><span class="pill pay" style="margin:0">${esc(CONDITION[p.preloved[0].condition] || 'Pre-loved')}</span> ${fmt(p.preloved[0]._total)}${p.preloved[0].delivery == null ? '+' : ''} delivered from ${esc(p.preloved[0].shop)}${p.preloved[0].similar ? ' · similar, not the exact one' : ''}${p.preloved.length > 1 ? ` · ${p.preloved.length - 1} more below` : ''}</p>` : ''}
         ${ongoingBlock(w, p.best ? p.best._total : p.last)}
         ${prefsRow(w)}
-        ${variantsBlock('wishlist', w)}
+        ${(w.variants || []).filter(v => v && v.name).length > 1 && canWrite ? '' : variantsBlock('wishlist', w)}
         ${stackNoteBlock(w)}
         ${p.offers.length || p.preloved.length ? `<details class="more"><summary title="Delivered to ${esc(deliverTo())}">${p.offers.length + p.preloved.length} ${p.offers.length + p.preloved.length === 1 ? 'shop' : 'shops'}${p.lastChecked ? ` · ${esc(ago(p.lastChecked))}` : ''}</summary><ul class="offers" style="gap:8px">${p.offers.map(o => `<li style="grid-template-columns:1fr auto">
             <span style="min-width:0">${safeUrl(o.url) ? `<a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(o.shop)}</a>` : esc(o.shop)}${o.unverified ? ' <span class="pill warn" title="From search results: check the price in the cart">○ Estimate</span>' : ' <span class="ok-mark" title="Price checked on the shop’s own site">✓ checked</span>'}${payPills(o)}${o.raiz ? ` <span class="pill good" title="Raiz Rewards cashback, invested${String(o.raiz).length > 16 ? ': ' + esc(o.raiz) : ''}">Raiz${String(o.raiz).length > 16 ? '' : ' ' + esc(o.raiz) + ' back'}</span>` : ''}${o.perk ? ` <span class="pill accent">${esc(o.perk)}</span>` : ''}<br><span class="meta">${fmt(o.price)} + ${o.delivery == null ? 'delivery not known' : Number(o.delivery) ? fmt(o.delivery) + ' delivery' : 'free delivery'}${Number(o.membership) ? ` + ${fmt(o.membership)} membership` : ''}${o.stock && o.stock !== 'unknown' ? ` · ${esc(STOCK[o.stock] || '')}` : ''}${o.note ? ` · ${esc(o.note)}` : ''}${canResearch() ? ` <button class="link wrong" data-act="price-wrong" data-id="${esc(w.id)}" data-shop="${esc(o.shop)}">Wrong?</button>` : ''}</span></span>
@@ -3209,6 +3220,30 @@ details.dna[open] > summary { margin-bottom: 10px; }
         S.searchOpen = false; $('#gs-in').value = ''; S.gq = '';
         const tid = t.dataset.id; setTab(t.dataset.dest);
         setTimeout(() => { const el = $(`main [data-id="${CSS.escape(tid)}"]`); const c = el && el.closest('.card, .sitem, .shop-card, .piece, li, .inspo-card'); if (c) { c.scrollIntoView({ behavior: 'smooth', block: 'center' }); c.classList.add('flash'); setTimeout(() => c.classList.remove('flash'), 1800); } }, 80);
+        break;
+      }
+      case 'pick-col': case 'pick-col-any': {
+        const w = find('wishlist'); if (!w) break;
+        const vs = (w.variants || []).filter(v => v && v.name).slice(0, 24);
+        let chosen = w.colourMode === 'any' ? [] : w.colourMode === 'some' ? [...(w.colours || [])] : (w.variant ? [w.variant] : []);
+        if (a === 'pick-col-any') chosen = [];
+        else {
+          const v = vs[Number(t.dataset.i)]; if (!v) break;
+          const k = chosen.findIndex(c => String(c).toLowerCase() === v.name.toLowerCase());
+          if (k >= 0) chosen.splice(k, 1); else { if (chosen.length >= 3) { toast('Pick up to 3. Tap one to take it off first.'); break; } chosen.push(v.name); }
+        }
+        const first = vs.find(v => chosen[0] && v.name.toLowerCase() === String(chosen[0]).toLowerCase());
+        const data = !chosen.length ? { colourMode: 'any', colours: [] }
+          : chosen.length === 1 ? { colourMode: 'exact', colourPicked: true, colours: chosen, variant: chosen[0], shadeHex: first?.hex || '', ...(safeUrl(first?.url) ? { url: first.url } : {}), ...(w.labelColour || !w.colourPicked ? { labelColour: w.labelColour || w.variant || '' } : {}) }
+          : { colourMode: 'some', colours: chosen, colourPicked: true, variant: chosen[0], shadeHex: first?.hex || '', ...(w.labelColour || !w.colourPicked ? { labelColour: w.labelColour || w.variant || '' } : {}) };
+        S.openCards = S.openCards || new Set(); S.openCards.add(id + ':');
+        act(async () => {
+          await db.collection('wishlist').doc(id).update(data);
+          // one deal search once you've finished tapping, not one per tap
+          S.colHunt = S.colHunt || {}; clearTimeout(S.colHunt[id]);
+          if (canResearch()) S.colHunt[id] = setTimeout(() => { const cur = live('wishlist').find(x => x.id === id); if (cur) queueDealHunt(cur).then(() => toast('Claude is checking prices for your colours.')).catch(() => {}); }, 5000);
+          toast(!chosen.length ? 'Any colour: the cheapest wins.' : chosen.length === 1 ? `Tracking ${chosen[0]} only.` : `Tracking ${chosen.join(', ')}: the cheapest of these wins.`);
+        });
         break;
       }
       case 'amz-det': { S.amzOpen = S.amzOpen || new Set(); S.amzOpen.has(id) ? S.amzOpen.delete(id) : S.amzOpen.add(id); renderAmazon(); break; }
