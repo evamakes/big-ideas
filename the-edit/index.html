@@ -99,6 +99,17 @@ a { color: var(--accent); }
 .link.quiet:hover { color: var(--accent); }
 @media (min-width: 701px) { .mob-only { display: none !important; } }
 @media (max-width: 700px) { .desk-only { display: none !important; } }
+/* Phones: the four sections sit in a visible bar (no hidden menu); About me and Bin stay as quiet links up top */
+@media (max-width: 700px) {
+  .top-in { padding-right: 16px; align-items: center; }
+  .menu-btn { display: none !important; }
+  .top .desk-only { display: inline-flex !important; }
+  .tabs { display: flex !important; position: static; flex-direction: row; flex-wrap: nowrap; gap: 0; background: none; border: 0; border-radius: 0; padding: 0; box-shadow: none; }
+  .tabs .tab.mob-only { display: none !important; }
+  .tab { flex: 1 1 0; text-align: center; border-radius: 0; padding: 12px 2px 11px; border-bottom: 2px solid transparent; font-size: 0.7rem; letter-spacing: 0.1em; }
+  .tab[aria-selected="true"] { background: none; border-bottom-color: var(--tan); }
+  .tab .n { display: none; }
+}
 .shop-note { border-left: 1px solid var(--line) !important; padding-left: 12px !important; }
 .shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; }
 .shop-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; display: grid; grid-template-rows: auto 1fr; transition: border-color .2s; }
