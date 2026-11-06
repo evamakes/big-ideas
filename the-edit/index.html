@@ -198,6 +198,7 @@ body.compact .shop-card:not(.open) .sale :is(.picks, .meta, p, .eyebrow) { displ
 a.plain { color: inherit; text-decoration: none; }
 .prefs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .prefs .meta { font-size: 0.78rem; margin-left: 4px; }
+.pref-var { font-size: 0.82rem; padding: 4px 10px; border-radius: 999px; background: var(--sunk); border: 0; max-width: 100%; }
 .chip.sm { font-size: 0.78rem; padding: 3px 10px; }
 .ck { margin: 0; font-size: 0.78rem; color: var(--muted); }
 body.compact .card:not(.open) > .ck { margin-top: -6px; }
@@ -1048,10 +1049,13 @@ details.dna[open] > summary { margin-bottom: 10px; }
   const COLOUR_WORDS = /^(?:(?:light|dark|pale|deep|soft|bright|dusty|navy|black|white|off-white|cream|ivory|beige|tan|camel|brown|chocolate|grey|gray|charcoal|silver|gold|rose|pink|blush|red|burgundy|plum|purple|lilac|lavender|blue|sky|teal|green|sage|olive|khaki|yellow|mustard|orange|coral|peach|nude|stone|sand|sandalwood|natural|midnight|space|starlight|graphite)[\s-]+)+/i;
   const shortOf = (x) => {
     const l = x.label || nameOf(x);
-    if (x.colourMode !== 'any' || !x.label) return l;
-    let t = x.variant ? l.replace(new RegExp('^' + String(x.variant).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s+', 'i'), '') : l;
-    t = t.replace(COLOUR_WORDS, '');
-    return !t ? l : /^[a-z][a-z]/.test(t) ? t.charAt(0).toUpperCase() + t.slice(1) : t; // keeps iPad as iPad
+    if (!x.label || (x.colourMode !== 'any' && !x.colourPicked)) return l;
+    let t = x.labelColour ? l.replace(new RegExp('^' + String(x.labelColour).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s+', 'i'), '') : l;
+    t = (x.variant ? t.replace(new RegExp('^' + String(x.variant).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s+', 'i'), '') : t).replace(COLOUR_WORDS, '');
+    if (!t) return l;
+    // a colour you picked yourself leads the name, e.g. Silver iPad 11-inch
+    if (x.colourMode !== 'any' && x.variant) return `${x.variant} ${t}`;
+    return /^[a-z][a-z]/.test(t) ? t.charAt(0).toUpperCase() + t.slice(1) : t; // keeps iPad as iPad
   };
   const fullOf = (x) => x.label && x.label !== nameOf(x) ? nameOf(x) : '';
   const live = (col) => S[col].filter(x => !x.deleted);
@@ -1427,7 +1431,12 @@ details.dna[open] > summary { margin-bottom: 10px; }
     if (!hasColours && !refurbable) return '';
     const chip = (act, v, on, label) => `<button class="chip sm" data-act="${act}" data-id="${esc(w.id)}" data-v="${v}" aria-pressed="${on}">${esc(label)}</button>`;
     const anyC = w.colourMode === 'any', anyN = w.conditionOk === 'any';
-    return `<div class="prefs">${hasColours ? `<span class="meta">Colour</span>${chip('pref-colour', 'exact', !anyC, w.variant ? `${w.variant} only` : 'This colour only')}${chip('pref-colour', 'any', anyC, 'Any colour')}` : ''}${refurbable ? `<span class="meta">Condition</span>${chip('pref-cond', 'new', !anyN, 'New only')}${chip('pref-cond', 'any', anyN, 'Refurb OK')}` : ''}</div>`;
+    const vs = (w.variants || []).filter(v => v && v.name).slice(0, 24);
+    const optWord = ['Skincare', 'Hair', 'Health'].includes(w.category) ? 'Option' : w.category === 'Beauty' ? 'Shade' : 'Colour';
+    const colourCtl = vs.length > 1
+      ? `<span class="meta">${optWord}</span><select class="plain pref-var" data-pref-var="${esc(w.id)}" aria-label="Which ${optWord.toLowerCase()} to track"><option value="__any"${anyC ? ' selected' : ''}>${optWord === 'Colour' ? 'Any colour' : 'Any'} (cheapest)</option>${vs.map((v, i) => `<option value="${i}"${!anyC && v.name === w.variant ? ' selected' : ''}>${esc(v.name)} only</option>`).join('')}</select>`
+      : `<span class="meta">Colour</span>${chip('pref-colour', 'exact', !anyC, w.variant ? `${w.variant} only` : 'This colour only')}${chip('pref-colour', 'any', anyC, 'Any colour')}`;
+    return `<div class="prefs">${hasColours ? colourCtl : ''}${refurbable ? `<span class="meta">Condition</span>${chip('pref-cond', 'new', !anyN, 'New only')}${chip('pref-cond', 'any', anyN, 'Refurb OK')}` : ''}</div>`;
   }
   function wantCard(w) {
       const p = priceInfo(w), al = wantAlerts(w);
@@ -3483,6 +3492,18 @@ details.dna[open] > summary { margin-bottom: 10px; }
   });
   document.addEventListener('change', (e) => {
     const t = e.target;
+    if (t.dataset && t.dataset.prefVar) {
+      const id = t.dataset.prefVar, w = live('wishlist').find(x => x.id === id); if (!w) return;
+      S.openCards = S.openCards || new Set(); S.openCards.add(id + ':');
+      if (t.value === '__any') {
+        act(async () => { await db.collection('wishlist').doc(id).update({ colourMode: 'any' }); if (canResearch()) { await queueDealHunt({ ...w, colourMode: 'any' }); toast('Any colour it is. Claude is checking every colour for the best price.'); } });
+        return;
+      }
+      const v = (w.variants || [])[Number(t.value)]; if (!v) return;
+      const data = { colourMode: 'exact', colourPicked: true, variant: v.name, shadeHex: v.hex || '', ...(w.labelColour || !w.colourPicked ? { labelColour: w.labelColour || w.variant || '' } : {}), ...(safeUrl(v.url) ? { url: v.url } : {}), ...(v.photoId ? { photoId: v.photoId } : {}) };
+      act(async () => { await db.collection('wishlist').doc(id).update(data); if (canResearch()) { await queueDealHunt({ ...w, ...data }); toast(`Tracking ${v.name} only. Claude is checking its prices now.`); } else toast(`Tracking ${v.name} only.`); });
+      return;
+    }
     if (t.dataset.act === 'amz-tick') act(() => db.collection('basket').doc(t.dataset.id).update({ ticked: t.checked }));
     if (t.id === 'wants-sort') { S.wantSort = t.value; renderWants(); }
     if (t.id === 'wants-bought') { S.showBought = t.checked; renderWants(); }
