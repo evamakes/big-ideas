@@ -248,6 +248,10 @@ a.plain { color: inherit; text-decoration: none; }
 .col-hint { font-size: 0.75rem; }
 .grp-h { grid-column: 1 / -1; margin: 10px 0 -4px; font-family: var(--f-display); font-weight: 500; font-size: 1.15rem; }
 .grp-h:first-child { margin-top: 0; }
+.picks .pk { position: relative; display: block; }
+.picks .pk > a { display: grid; }
+.pk-x { position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; border-radius: 50%; border: 0; background: rgba(0,0,0,.55); color: #fff; font-size: 0.75rem; cursor: pointer; line-height: 26px; padding: 0; }
+.sale-acts { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .alt-model { margin: 0; font-size: 0.86rem; color: var(--muted); }
 .alt-model b { color: var(--ink); font-weight: 600; }
 .tips .pill { font-size: 0.7rem; padding: 1px 7px; vertical-align: 1px; }
@@ -1450,15 +1454,15 @@ details.dna[open] > summary { margin-bottom: 10px; }
 
     // Sales at the shops you watch, and new arrivals from them
     const watched = live('shops').filter(x => x.watch);
-    const sales = watched.filter(x => ['on', 'soon'].includes(x.sale?.status)).sort((a, b) => (a.sale.status === 'on' ? 0 : 1) - (b.sale.status === 'on' ? 0 : 1));
+    const sales = watched.filter(x => ['on', 'soon'].includes(x.sale?.status) && saleIsNew(x)).sort((a, b) => (a.sale.status === 'on' ? 0 : 1) - (b.sale.status === 'on' ? 0 : 1));
     const dd = (d) => d ? new Date(String(d).slice(0, 10) + 'T00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : '';
     const sw = S.meta.salewatch || {};
     $('#sales-block').hidden = !sales.length;
     $('#today-sales').innerHTML = sales.length ? sales.map(x => { const sl = x.sale, c = (sl.codes || [])[0]; return `<li>${thumb(x)}
-        <span class="what"><b>${esc(x.name || 'Shop')}</b><span class="pills"><span class="pill ${sl.status === 'on' ? 'good' : 'warn'}">${sl.status === 'on' ? 'On sale' : 'Coming'}</span>${c ? `<code>${esc(c.code)}</code>` : ''}<span class="meta">${esc(sl.status === 'on' ? (sl.endsAt ? 'ends ' + dd(sl.endsAt) : '') : (sl.startsAt ? 'starts ' + dd(sl.startsAt) : ''))}</span></span>${sl.headline ? `<span class="meta clamp1">${esc(sl.headline)}</span>` : ''}</span>
-        <span class="tools">${safeUrl(sl.url || x.url) ? `<a class="btn small ghost" href="${esc(sl.url || x.url)}" target="_blank" rel="noopener">See sale ↗</a>` : ''}</span></li>`; }).join('')
+        <span class="what"><b>${esc(x.name || 'Shop')}</b><span class="pills"><span class="pill ${sl.status === 'on' ? 'good' : 'warn'}">${sl.status === 'on' ? 'On sale' : 'Coming'}</span>${c ? `<code>${esc(c.code)}</code>` : ''}<span class="meta">${esc(sl.status === 'on' ? (sl.endsAt ? 'ends ' + dd(sl.endsAt) : '') : (sl.startsAt ? 'starts ' + dd(sl.startsAt) : ''))}</span></span>${sl.headline ? `<span class="meta clamp1">${esc(sl.headline)}</span>` : ''}${(() => { const np = newPicksOf(x); return x.saleSeen && x.saleSeen.sig === saleSig(sl) && np.length ? `<span class="meta"><b>${np.length} new ${np.length === 1 ? 'pick' : 'picks'}</b> since you looked</span>` : ''; })()}</span>
+        <span class="tools">${safeUrl(sl.url || x.url) ? `<a class="btn small ghost" href="${esc(sl.url || x.url)}" target="_blank" rel="noopener">See sale ↗</a>` : ''}${canWrite ? `<button class="btn small ghost" data-act="sale-seen" data-id="${esc(x.id)}">Seen it</button>` : ''}</span></li>`; }).join('')
       : `<li style="display:block"><span class="meta">${watched.length ? `No sales yet at the ${watched.length} shops you watch${sw.lastRun ? ` · checked ${esc(ago(sw.lastRun))}` : ''}.` : 'Tap Watch sales on a shop to see its sales here.'}</span></li>`;
-    const fresh = watched.flatMap(x => ((x.newIn || {}).items || []).map(it => ({ ...it, _shop: x.name }))).slice(0, 8);
+    const fresh = watched.flatMap(x => ((x.newIn || {}).items || []).filter(it => !(x.hiddenPicks || []).includes(pickKey(it))).map(it => ({ ...it, _shop: x.name, _sid: x.id }))).slice(0, 8);
     $('#new-block').hidden = !fresh.length;
     $('#today-new').innerHTML = fresh.map(pk => { const src = photoSrc(pk); return `<a ${safeUrl(pk.url) ? `href="${esc(pk.url)}" target="_blank" rel="noopener"` : ''} title="${esc(pk.why || '')}"><span class="im">${src ? `<img src="${esc(src)}" alt="" loading="lazy"${zoomAttr(pk)}>` : esc((pk.name || '?').slice(0, 1))}</span><span class="meta">${esc(pk._shop || '')}</span><span>${esc(pk.name || '')}</span><span><b>${fmt(pk.price)}</b></span></a>`; }).join('');
 
@@ -2182,18 +2186,24 @@ details.dna[open] > summary { margin-bottom: 10px; }
         </div></article>`;
     }).join('') : `<div class="empty">Save shops and brands you spot in ads or on socials. Each one gets a preview card so you can check them out later.</div>`;
   }
+  // Sale items you've dismissed stay gone; a sale you've seen only comes back when something about it changes
+  const pickKey = (pk) => String(pk.url || pk.name || '').toLowerCase();
+  const saleSig = (sl) => sl ? [sl.status, sl.headline, sl.discount, sl.endsAt, (sl.codes || []).map(c => c.code || c.what).join(',')].join('|') : '';
+  const shownPicks = (x) => ((x.sale || {}).picks || []).filter(pk => !(x.hiddenPicks || []).includes(pickKey(pk)));
+  const newPicksOf = (x) => shownPicks(x).filter(pk => !((x.saleSeen || {}).picks || []).includes(pickKey(pk)));
+  const saleIsNew = (x) => !x.saleSeen || x.saleSeen.sig !== saleSig(x.sale) || newPicksOf(x).length > 0;
   function saleBlock(x) {
     const sl = x.sale;
     if (!sl) return '<div class="sale none"><span class="meta">Sale watch is on. The first check is on its way.</span></div>';
     const date = (d) => d ? new Date(String(d).slice(0, 10) + 'T00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : '';
-    const picks = (sl.picks || []).slice(0, 6);
+    const picks = shownPicks(x).slice(0, 6);
     return `<div class="sale${sl.status === 'on' || sl.status === 'soon' ? '' : ' none'}">
       <div class="pills">${sl.status === 'on' ? '<span class="pill good">On sale</span>' : sl.status === 'soon' ? '<span class="pill warn">Sale coming</span>' : '<span class="pill">No sale yet</span>'}${sl.endsAt ? `<span class="meta">ends ${esc(date(sl.endsAt))}</span>` : sl.startsAt ? `<span class="meta">starts ${esc(date(sl.startsAt))}</span>` : ''}</div>
       ${sl.headline ? `<b>${esc(sl.headline)}</b>` : ''}
       ${(sl.codes || []).length ? `<div class="codes">${sl.codes.slice(0, 3).map(c => `<code>${esc(c.code)}</code><span class="meta">${esc(c.what || '')}${c.verified === false ? ' (unconfirmed)' : ''}</span>`).join('')}</div>` : ''}
       ${sl.note ? `<p class="meta clamp2" style="margin:0">${esc(sl.note)}</p>` : ''}
-      ${picks.length ? `<p class="eyebrow" style="margin:4px 0 0">Picked for you</p><div class="picks">${picks.map(pk => { const src = photoSrc(pk); return `<a ${safeUrl(pk.url) ? `href="${esc(pk.url)}" target="_blank" rel="noopener"` : ''} title="${esc(pk.why || pk.name || '')}"><span class="im">${src ? `<img src="${esc(src)}" alt="" loading="lazy"${zoomAttr(pk)}>` : esc((pk.name || '?').slice(0, 1))}</span><span>${esc(pk.name || '')}</span><span><b>${fmt(pk.price)}</b>${pk.wasPrice ? ` <s>${fmt(pk.wasPrice)}</s>` : ''}${pk.size ? ` · ${esc(pk.size)}` : ''}</span></a>`; }).join('')}</div>` : ''}
-      ${safeUrl(sl.url) ? `<a class="link" href="${esc(sl.url)}" target="_blank" rel="noopener" style="justify-self:start">See the sale ↗</a>` : ''}
+      ${picks.length ? `<p class="eyebrow" style="margin:4px 0 0">Picked for you</p><div class="picks">${picks.map(pk => { const src = photoSrc(pk); return `<span class="pk"><a ${safeUrl(pk.url) ? `href="${esc(pk.url)}" target="_blank" rel="noopener"` : ''} title="${esc(pk.why || pk.name || '')}"><span class="im">${src ? `<img src="${esc(src)}" alt="" loading="lazy"${zoomAttr(pk)}>` : esc((pk.name || '?').slice(0, 1))}</span><span>${esc(pk.name || '')}</span><span><b>${fmt(pk.price)}</b>${pk.wasPrice ? ` <s>${fmt(pk.wasPrice)}</s>` : ''}${pk.size ? ` · ${esc(pk.size)}` : ''}</span></a>${canWrite ? `<button class="pk-x" data-act="pick-hide" data-id="${esc(x.id)}" data-k="${esc(pickKey(pk))}" aria-label="Not for me: ${esc(pk.name || '')}" title="Not for me">✕</button>` : ''}</span>`; }).join('')}</div>` : ''}
+      <div class="sale-acts">${safeUrl(sl.url) ? `<a class="link" href="${esc(sl.url)}" target="_blank" rel="noopener">See the sale ↗</a>` : ''}${canWrite && (sl.status === 'on' || sl.status === 'soon') ? (saleIsNew(x) ? `<button class="btn small ghost" data-act="sale-seen" data-id="${esc(x.id)}">Seen it</button>` : '<span class="meta">Seen · we’ll flag anything new</span>') : ''}</div>
       ${sl.checkedAt ? `<span class="meta" style="font-size:0.75rem">Checked ${esc(ago(sl.checkedAt))}</span>` : ''}
     </div>`;
   }
@@ -2328,7 +2338,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     $('#glance').hidden = !$('#glance-chips').innerHTML.trim();
   }
   // Compact view: cards show the essentials; "Details" opens the rest (remembered per card until reload)
-  const HIDDEN_SEL = ':scope > :is(.notes, details.more, p.meta, .fb, .price-fb, .hl, .gap, .prefs), :scope > div:has(> .sw), :scope .body > :is(.notes, details, .review)';
+  const HIDDEN_SEL = ':scope > :is(.notes, details.more, p.meta, .fb, .price-fb, .hl, .gap, .prefs), :scope > div:has(> .sw), :scope .body > :is(.notes, details, .review), :scope .sale .picks';
   function decorateCards() {
     document.body.classList.toggle('compact', !S.detailsAll);
     S.openCards = S.openCards || new Set();
@@ -3256,6 +3266,18 @@ details.dna[open] > summary { margin-bottom: 10px; }
           if (canResearch()) S.colHunt[id] = setTimeout(() => { const cur = live('wishlist').find(x => x.id === id); if (cur) queueDealHunt(cur).then(() => toast('Claude is checking prices for your colours.')).catch(() => {}); }, 5000);
           toast(!chosen.length ? 'Any colour: the cheapest wins.' : chosen.length === 1 ? `Tracking ${chosen[0]} only.` : `Tracking ${chosen.join(', ')}: the cheapest of these wins.`);
         });
+        break;
+      }
+      case 'pick-hide': {
+        const x = find('shops'); if (!x) break;
+        const k = t.dataset.k, before = x.hiddenPicks || [];
+        act(async () => { await db.collection('shops').doc(id).update({ hiddenPicks: [...before, k].slice(-200) }); toast('Gone. Sale watch won’t suggest it again.', () => act(() => db.collection('shops').doc(id).update({ hiddenPicks: before }))); });
+        break;
+      }
+      case 'sale-seen': {
+        const x = find('shops'); if (!x || !x.sale) break;
+        const before = x.saleSeen || null;
+        act(async () => { await db.collection('shops').doc(id).update({ saleSeen: { sig: saleSig(x.sale), picks: shownPicks(x).map(pickKey), at: now() } }); toast(`Seen. ${x.name || 'This shop'} comes back if there are new picks, codes or dates.`, () => act(() => db.collection('shops').doc(id).update({ saleSeen: before }))); });
         break;
       }
       case 'amz-det': { S.amzOpen = S.amzOpen || new Set(); S.amzOpen.has(id) ? S.amzOpen.delete(id) : S.amzOpen.add(id); renderAmazon(); break; }
