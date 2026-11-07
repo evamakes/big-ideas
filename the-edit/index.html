@@ -3694,7 +3694,8 @@ details.dna[open] > summary { margin-bottom: 10px; }
           const ref = await db.collection('wishlist').add({
             name: o.name, brand: o.brand || '', category: WANT_CATS.includes(o.category) ? o.category : 'Other', variant: o.colour || '',
             url: o.url || '', price: o.price ?? null, priceHistory: o.price != null ? [{ d: today, p: o.price }] : [], lastChecked: o.price != null ? today : null,
-            offers: o.price != null && o.shop ? [{ shop: o.shop, price: o.price, delivery: o.delivery ?? null, total, url: o.url || '', pay: payOf(o), stock: 'unknown', checked: today }] : [],
+            offers: o.price != null && o.shop ? [{ shop: o.shop, price: o.price, delivery: o.delivery ?? null, total, url: o.url || '', pay: payOf(o), stock: 'unknown', checked: today, ...(o.condition ? { condition: o.condition } : {}), ...(o.raiz ? { raiz: o.raiz } : {}), ...(o.note ? { note: String(o.note).slice(0, 200) } : {}) }] : [],
+            ...(o.condition && o.condition !== 'new' ? { conditionOk: 'any' } : {}),
             ...(o.ongoing ? { ongoing: o.ongoing } : {}), photoId: o.photoId || null, notes: o.why || '',
             priority: 'want', status: 'want', stock: 'unknown', createdAt: now(), fromBrief: b.id,
           });
