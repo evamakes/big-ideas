@@ -1281,12 +1281,33 @@ details.dna[open] > summary { margin-bottom: 10px; }
     const stars = [1, 2, 3, 4, 5].map(i => canWrite ? `<button type="button" class="star" data-act="set-stars" data-id="${esc(w.id)}" data-v="${i}" aria-label="${i} ${i === 1 ? 'star' : 'stars'}: ${STAR_LABEL[i]}" aria-pressed="${i === st}" title="${STAR_LABEL[i]}">${i <= st ? '★' : '☆'}</button>` : `<span class="star" aria-hidden="true">${i <= st ? '★' : '☆'}</span>`).join('');
     return `<div class="stars" role="group" aria-label="How much you want it: ${st} of 5, ${STAR_LABEL[st]}">${stars}<span class="meta star-l">${STAR_LABEL[st]}</span></div>`;
   }
+  // Stock for the colour(s) you've picked, from per-colour offers, rather than one in/out flag for the whole item
+  const STOCK_RANK = { in: 0, low: 1, selling: 1, unknown: 2, out: 3 };
+  function colourStock(it) {
+    const map = {};
+    for (const o of it.offers || []) { if (!o || !o.colour || !o.stock) continue; const k = String(o.colour).toLowerCase(); if (map[k] == null || STOCK_RANK[o.stock] < STOCK_RANK[map[k].s]) map[k] = { s: o.stock, name: o.colour }; }
+    if (!Object.keys(map).length) return { eff: it.stock, outIn: [], inOther: [] };
+    const chosen = it.colourMode === 'any' ? Object.keys(map) : it.colourMode === 'some' ? (it.colours || []).map(c => String(c).toLowerCase()) : (it.variant ? [String(it.variant).toLowerCase()] : []);
+    const known = chosen.filter(c => map[c]);
+    if (!known.length) return { eff: it.stock, outIn: [], inOther: [] };
+    const best = known.map(c => map[c].s).sort((a, b) => STOCK_RANK[a] - STOCK_RANK[b])[0];
+    const outIn = known.filter(c => map[c].s === 'out').map(c => map[c].name);
+    const inOther = Object.keys(map).filter(c => !chosen.includes(c) && ['in', 'low', 'selling'].includes(map[c].s)).map(c => map[c].name);
+    return { eff: best === 'unknown' ? (it.stock === 'out' ? 'unknown' : it.stock || 'unknown') : best, outIn, inOther };
+  }
+  // one line under the price when some of your colours are sold out
+  function colourStockNote(w) {
+    if (w.colourMode === 'any') return '';
+    const cs = colourStock(w);
+    if (!cs.outIn.length) return '';
+    return `<p class="ck">${esc(cs.outIn.join(', '))} sold out${cs.eff !== 'out' ? '' : cs.inOther.length ? ` · in stock in ${esc(cs.inOther.join(', '))}` : ''}</p>`;
+  }
   function wantAlerts(it) {
-    const p = priceInfo(it), out = [], mine = it.sizePick?.size ? ` in your size (${it.sizePick.size})` : '';
+    const p = priceInfo(it), cs = colourStock(it), st = cs.eff, out = [], mine = it.sizePick?.size ? ` in your size (${it.sizePick.size})` : '';
     // A price drop only counts if you can actually buy it in your size
-    if (it.stock === 'out') out.push({ tone: 'bad', label: mine ? 'Out in your size' : 'Out of stock', detail: p.drop ? `Price dropped ${fmt(p.drop)}, but it's sold out${mine}` : `Sold out${mine}. Watching for restocks`, rank: 2 });
+    if (st === 'out') out.push({ tone: 'bad', label: cs.outIn.length && it.colourMode !== 'any' ? `Out in ${cs.outIn.length > 1 ? 'your colours' : cs.outIn[0]}` : mine ? 'Out in your size' : 'Out of stock', detail: cs.outIn.length && it.colourMode !== 'any' ? `Sold out in ${cs.outIn.join(' and ')}${cs.inOther.length ? ` · in stock in ${cs.inOther.join(', ')}` : ''}${p.drop ? ` (price down ${fmt(p.drop)})` : ''}` : p.drop ? `Price dropped ${fmt(p.drop)}, but it's sold out${mine}` : `Sold out${mine}. Watching for restocks`, rank: 2 });
     else if (p.drop) out.push({ tone: 'good', label: `Down ${fmt(p.drop)}`, detail: `${Math.round(p.drop / p.prev * 100)}% since last check`, rank: 1 });
-    if (it.stock === 'low' || it.stock === 'selling') out.push({ tone: 'warn', label: STOCK[it.stock], detail: 'Might go soon', rank: 2 });
+    if (st === 'low' || st === 'selling') out.push({ tone: 'warn', label: STOCK[st], detail: 'Might go soon', rank: 2 });
     if (p.rise) out.push({ tone: 'bad', label: `Up ${fmt(p.rise)}`, detail: 'Price went up since last check', rank: 3 });
     if (p.stale != null && p.stale >= 7) out.push({ tone: '', label: `Checked ${p.stale} days ago`, detail: 'The next refresh will check it', rank: 4 });
     return out;
@@ -1429,9 +1450,9 @@ details.dna[open] > summary { margin-bottom: 10px; }
   function homeAlertsOf(w) {
     const p = priceInfo(w), b = p.best;
     const extra = [];
-    if (b && b.wasPrice && !b.unverified && w.stock !== 'out' && b.stock !== 'out') extra.push({ tone: 'good', label: 'On sale', detail: `${fmt(b._total)} at ${b.shop}${(w.colourMode === 'any' || w.colourMode === 'some') && b.colour ? ` in ${b.colour}` : ''} (was ${fmt(b.wasPrice)})`, rank: 1 });
+    if (b && b.wasPrice && !b.unverified && colourStock(w).eff !== 'out' && b.stock !== 'out') extra.push({ tone: 'good', label: 'On sale', detail: `${fmt(b._total)} at ${b.shop}${(w.colourMode === 'any' || w.colourMode === 'some') && b.colour ? ` in ${b.colour}` : ''} (was ${fmt(b.wasPrice)})`, rank: 1 });
     { const am = p.altModel; if (am && b && w.modelMode !== 'any' && (b._total - am._total >= 20 || am._total <= b._total * 0.9)) extra.push({ tone: 'accent', label: 'Older model', detail: `${am.model} ${fmt(am._total)} at ${String(am.shop).split(' (')[0]} (saves ${fmt(b._total - am._total)})`, rank: 2.5 }); }
-    { const fp = freshPromo(w); if (fp && w.stock !== 'out') extra.push({ tone: 'accent', label: promoLabel(fp), detail: `${fp.code ? fp.code + ': ' : ''}${fp.text || ''}${fp.shop && !String(fp.text || '').includes(fp.shop) ? ` at ${fp.shop}` : ''}${fp.ends ? ` · ends ${endDate(fp.ends)}` : ''}`, rank: 1.5 }); }
+    { const fp = freshPromo(w); if (fp && colourStock(w).eff !== 'out') extra.push({ tone: 'accent', label: promoLabel(fp), detail: `${fp.code ? fp.code + ': ' : ''}${fp.text || ''}${fp.shop && !String(fp.text || '').includes(fp.shop) ? ` at ${fp.shop}` : ''}${fp.ends ? ` · ends ${endDate(fp.ends)}` : ''}`, rank: 1.5 }); }
     if (w.recheckNote && w.dealsCheckedAt && Date.now() - Date.parse(w.dealsCheckedAt) < 3 * 864e5) extra.push({ tone: 'accent', label: 'Deal found', detail: w.recheckNote, rank: 2 });
     return [...wantAlerts(w).filter(a => a.rank < 4), ...extra].filter(a => !isDismissed(w, a) && worthIt(w, a, p));
   }
@@ -1540,7 +1561,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
   }
   const PROMO_ASK = ' PROMOS CHECKLIST: at every shop that sells it, check for and record what is live in `dealTips`, each with `kind` ("code"|"multibuy"|"gwp"|"spend"|"bundle"|"pricematch"|"cashback"|"giftcard"|"sale"), `shop`, `ends` (YYYY-MM-DD if known) and `found` (today, or the earlier date if it was already listed): live coupon and discount codes (site banners, pop-ups, first-order, newsletter and app codes, OzBargain, eBay codes); multi-buys (2 for 1, buy one get one, 3 for 2, buy 2 save %); gift with purchase; spend-and-save tiers and free-delivery thresholds; value sets or bundles cheaper than buying separately; price-match and price-beat; cashback; discounted gift cards. Apply any the item alone qualifies for to that offer\'s `total` and say so in its `note`. If a live promo lowers the delivered price by at least 5% or $5, lead `recheckNote` with it (e.g. "2 for 1 at Priceline until 12 Nov: $27 each"). MEMBER PERKS: for every membership in `meta/profile` `memberships` (e.g. Amazon Prime: free delivery on Prime-eligible items and member-only deals; OnePass: free delivery at Kmart, Target, Bunnings, Officeworks and Catch; Everyday Rewards; brand loyalty tiers), apply its member price and free or cheaper delivery to that offer\'s `delivery` and `total` when the item qualifies, and set the offer\'s `perk` to one short line (e.g. "Free delivery with Prime"). RAIZ REWARDS: the user shops through Raiz Rewards (Raiz Invest\'s cashback, paid into their investment account). For every shop in `offers`, check whether it is a current Raiz Rewards partner (raizinvest.com.au rewards pages, the Raiz Rewards brand list, or web search such as "Raiz Rewards <shop>") and set the offer\'s `raiz` to its rate as shown (e.g. "4%", "up to 6%", "$10"), or leave it out if the shop isn\'t a partner. Don\'t subtract it from `total`, and say in `recheckNote` when Raiz makes a different shop the better buy.';
   // One set of choices every search follows, so Home, cards and emails agree
-  const MODES_RULE = ' CHOICES: on wants, `colourMode: "any"` means price every colour and the cheapest counts (record `colour` on offers); `colourMode: "some"` means price each colour in `colours` (up to 3) and the cheapest of those counts; `modelMode: "any"` means any version of the same brand\'s product line counts (older or newer generations) when it is new from a reputable seller (record `model` on offers); `conditionOk: "any"` means refurbished or pre-loved in good condition counts. Otherwise stick to the selected colour, the named model and new condition. Used or unknown-condition marketplace listings always carry `condition` so they never count as the best new deal. GRADE: when a want has `minGrade: "likenew"`, only Like New / Excellent / As New / Premium refurbished grades count: record the grade as `grade` on each refurbished offer and skip lower grades (Good, Very Good, B, C). SHORTLIST: when a want has `shortlist` (a list of `{model, condition}`, e.g. several phones the user is choosing between), price EVERY entry: for each, find the best reputable offers in that condition ("new" or "refurbished"), record `model` (exactly as written in the shortlist) and `condition` on each offer, keep 1–3 offers per entry, and let `price` be the cheapest of them all. Do not add models that are not on the shortlist. PREVIOUS MODEL: for tech, appliances and gadgets with model generations (e.g. Hatch Restore 3 vs Restore 2, iPad 11th vs 10th gen), also price the previous generation new from reputable shops and add the best 1–2 as offers with `model` (e.g. "Restore 2") and `prevModel: true`, so the user can see when the older model is much cheaper; they only set `price` when `modelMode` is "any". Skip this, and add no other versions, when the want has `noOlderModel: true` (the user said they aren\'t interested).';
+  const MODES_RULE = ' CHOICES: on wants, `colourMode: "any"` means price every colour and the cheapest counts (record `colour` on offers); `colourMode: "some"` means price each colour in `colours` (up to 3) and the cheapest of those counts; `modelMode: "any"` means any version of the same brand\'s product line counts (older or newer generations) when it is new from a reputable seller (record `model` on offers); `conditionOk: "any"` means refurbished or pre-loved in good condition counts. Otherwise stick to the selected colour, the named model and new condition. STOCK BY COLOUR: check stock for each colour separately on each shop page or product JSON; when one colour is sold out, keep an offer for that colour with `colour` and `stock: "out"` instead of marking the whole item out, and set the `stock` of the doc from the chosen colour(s) only. Used or unknown-condition marketplace listings always carry `condition` so they never count as the best new deal. GRADE: when a want has `minGrade: "likenew"`, only Like New / Excellent / As New / Premium refurbished grades count: record the grade as `grade` on each refurbished offer and skip lower grades (Good, Very Good, B, C). SHORTLIST: when a want has `shortlist` (a list of `{model, condition}`, e.g. several phones the user is choosing between), price EVERY entry: for each, find the best reputable offers in that condition ("new" or "refurbished"), record `model` (exactly as written in the shortlist) and `condition` on each offer, keep 1–3 offers per entry, and let `price` be the cheapest of them all. Do not add models that are not on the shortlist. PREVIOUS MODEL: for tech, appliances and gadgets with model generations (e.g. Hatch Restore 3 vs Restore 2, iPad 11th vs 10th gen), also price the previous generation new from reputable shops and add the best 1–2 as offers with `model` (e.g. "Restore 2") and `prevModel: true`, so the user can see when the older model is much cheaper; they only set `price` when `modelMode` is "any". Skip this, and add no other versions, when the want has `noOlderModel: true` (the user said they aren\'t interested).';
   const STARS_RULE = (w) => w && (w.stars || w.priority) ? ` WANT LEVEL: the user rated this ${starsOf(w)} of 5 stars (${STAR_LABEL[starsOf(w)]}).${starsOf(w) <= 2 ? ` Only a real bargain matters (about ${Math.round(STAR_MIN[starsOf(w)] * 100)}% off or more), so focus on deep sales and codes.` : ''}` : '';
   async function queueDealHunt(w, text, col = 'wishlist') {
     const patch = { priceRecheck: 'queued', priceRecheckAt: now() };
@@ -1660,6 +1681,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
           ${spark(p.h)}
         </div>
         ${shortlistBlock(w)}
+        ${colourStockNote(w)}
         ${p.altModel ? `<p class="alt-model">${p.altModel.prevModel === false ? 'Other version' : 'Older model'}: <b>${esc(p.altModel.model)}</b> · ${fmt(p.altModel._total)}${p.altModel.delivery == null ? '+' : ''} at ${safeUrl(p.altModel.url) ? `<a href="${esc(p.altModel.url)}" target="_blank" rel="noopener">${esc(String(p.altModel.shop).split(' (')[0])}</a>` : esc(p.altModel.shop)}${p.best ? ` <span class="meta">(saves ${fmt(p.best._total - p.altModel._total)})</span>` : ''}${p.altModel.unverified ? ' <span class="meta">· estimate</span>' : ''}${canWrite ? ` <button class="link" data-act="no-older" data-id="${esc(w.id)}">Not interested</button>` : ''}</p>` : ''}
         ${w.recheckNote && w.priceRecheck !== 'queued' ? `<p class="hl" title="${esc(w.recheckNote)}">${esc(w.recheckNote)}</p>` : ''}
         ${sizePickHtml(w)}
@@ -2344,7 +2366,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     if (tab === 'wants') {
       const ws = activeWants().filter(w => !w.example);
       add(ws.filter(w => wantAlerts(w).some(a => a.tone === 'good')).length, 'price drops', 'good');
-      add(ws.filter(w => w.stock !== 'out' && (w.offers || []).some(o => o.wasPrice && !o.unverified && o.stock !== 'out')).length, 'on sale', 'good');
+      add(ws.filter(w => colourStock(w).eff !== 'out' && (w.offers || []).some(o => o.wasPrice && !o.unverified && o.stock !== 'out')).length, 'on sale', 'good');
       add(ws.filter(w => recent(w.dealsCheckedAt) && w.recheckNote).length, 'new deal notes', 'accent');
       add(ws.filter(w => ['low', 'selling', 'out'].includes(w.stock)).length, 'low or out of stock', 'warn');
       add(ws.filter(w => w.priceRecheck === 'queued').length, 'finding deals');
