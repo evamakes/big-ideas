@@ -257,9 +257,25 @@ a.plain { color: inherit; text-decoration: none; }
 .shortlist li.win { background: var(--good-soft, var(--accent-soft)); }
 .shortlist a { color: inherit; text-decoration: none; }
 .idea-block { margin-bottom: 18px; }
+.gift-sub { font-size: 0.82rem; font-weight: 700; margin: 14px 0 8px; display: flex; gap: 8px; align-items: baseline; }
+.gift-shops li { align-items: flex-start; }
+.gift-sum { display: block; color: var(--ink); margin-top: 2px; }
+.gift-more summary { list-style: none; display: inline; font-size: 0.8rem; }
+.gift-more summary::-webkit-details-marker { display: none; }
+.gift-notes-text { white-space: pre-line; font-size: 0.85rem; margin: 6px 0 0; overflow-wrap: anywhere; }
+.gift-notes { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.gift-notes li { display: flex; gap: 8px; align-items: center; justify-content: space-between; background: var(--sunk); border-radius: 10px; padding: 8px 10px; font-size: 0.9rem; overflow-wrap: anywhere; }
+.gift-notes .tools { display: flex; gap: 4px; flex: none; }
+.gift-date-form { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0 0 10px; }
+.gift-date-form input { flex: 1 1 140px; min-width: 0; }
+.gift-date-form input, .gift-date-form select, .gift-add select { border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 999px; padding: 7px 12px; font: inherit; font-size: 0.88rem; }
+.pill-x { border: 0; background: none; color: inherit; cursor: pointer; padding: 0 0 0 4px; font-size: 0.9rem; line-height: 1; }
+.aside-block { margin-top: 18px; }
+.aside-block > summary { cursor: pointer; padding: 6px 0; }
 .gift-dates { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0 0 10px; }
-.gift-add { margin-top: 10px; display: flex; gap: 8px; }
-.gift-add input { flex: 1; min-width: 0; }
+.gift-add { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
+.gift-add select { flex: none; }
+.gift-add input { flex: 1 1 180px; min-width: 0; border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 8px 14px; font: inherit; font-size: 0.9rem; }
 .gift-add-person { display: flex; gap: 8px; margin-top: 8px; }
 .gift-add-person input { flex: 1; min-width: 0; }
 .gift-block { margin-bottom: 16px; }
@@ -711,6 +727,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
       <div class="chips" id="finds-chips"></div>
     </div>
     <div class="cards" id="finds-list"></div>
+    <details class="aside-block" id="aside-block" hidden><summary class="meta" id="aside-sum"></summary><ul class="alerts" id="aside-list"></ul></details>
   </section>
 
   <!-- SHOPS -->
@@ -1361,7 +1378,8 @@ details.dna[open] > summary { margin-bottom: 10px; }
   }
 
   // ---------- rendering ----------
-  const activeWants = () => live('wishlist').filter(w => w.status !== 'bought' && w.status !== 'ordered');
+  const activeWants = () => live('wishlist').filter(w => w.status !== 'bought' && w.status !== 'ordered' && w.status !== 'aside' && w.giftKind !== 'shop');
+  const asideWants = () => live('wishlist').filter(w => w.status === 'aside');
   const newFinds = () => live('finds').filter(f => f.status !== 'added' && !(f.snoozedUntil && f.snoozedUntil > dayKey()));
   const binItems = () => COLS.flatMap(c => S[c].filter(x => x.deleted).map(x => ({ col: c, x }))).sort((a, b) => String(b.x.deletedAt || '').localeCompare(String(a.x.deletedAt || '')));
 
@@ -1477,7 +1495,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
   function renderToday() {
     { const soon = giftPeople().flatMap(p => giftDates(p).filter(d => d.days <= 30).map(d => ({ p, d }))).sort((a, b) => a.d.days - b.d.days);
       $('#gifts-soon').hidden = !soon.length;
-      $('#gifts-soon-list').innerHTML = soon.map(({ p, d }) => { const n = giftsFor(p.name).length, got = live('wishlist').some(w => w.section === 'gifts' && w.giftFor === p.name && (w.status === 'bought' || w.status === 'ordered')); return `<li><span class="what"><b>${esc(p.name)}: ${esc(d.label)}</b><span class="meta">${esc(d.dl)} · ${inDays(d.days)} · ${got ? 'gift bought' : n ? `${n} ${n === 1 ? 'idea' : 'ideas'} saved` : 'no ideas yet'}</span></span><span class="tools"><button class="btn small ghost" data-tab="gifts">Open</button></span></li>`; }).join(''); }
+      $('#gifts-soon-list').innerHTML = soon.map(({ p, d }) => { const n = giftsFor(p.name).length + giftShopsFor(p.name).length + giftNotesFor(p.name).length, got = live('wishlist').some(w => w.section === 'gifts' && w.giftFor === p.name && (w.status === 'bought' || w.status === 'ordered')); return `<li><span class="what"><b>${esc(p.name)}: ${esc(d.label)}</b><span class="meta">${esc(d.dl)} · ${inDays(d.days)} · ${got ? 'gift bought' : n ? `${n} saved` : 'no ideas yet'}</span></span><span class="tools"><button class="btn small ghost" data-tab="gifts">Open</button></span></li>`; }).join(''); }
     const r = S.meta.refresh || {};
     const canRefresh = !!(mcp && r.triggerId && canWrite);
     $('#refresh').innerHTML = `<span>${r.lastRun ? `Prices checked ${esc(ago(r.lastRun))}` : 'Prices haven’t been checked yet'}${r.requestedAt && (!r.lastRun || r.requestedAt > r.lastRun) ? ' · checking now' : ''}</span>${canRefresh ? `<button class="link" data-act="refresh-now">Check now</button>` : ''}`;
@@ -1732,6 +1750,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
           ${canResearch() && w.altResearch !== 'queued' ? `<button class="btn small ghost" data-act="alts" data-col="wishlist" data-id="${esc(w.id)}">Similar or cheaper</button>` : ''}
           ${canResearch() && w.research !== 'queued' && w.research !== 'done' ? `<button class="btn small ghost" data-act="research" data-col="wishlist" data-id="${esc(w.id)}">Research it</button>` : ''}
           ${canResearch() ? `<button class="btn small ghost" data-act="wrong-product" data-col="wishlist" data-id="${esc(w.id)}">Something’s wrong?</button>` : ''}
+          ${canWrite && w.status === 'want' ? `<button class="btn small ghost" data-act="want-aside" data-id="${esc(w.id)}" title="Stop tracking it for now, without deleting it">Set aside</button>` : ''}
           ${canWrite ? `<button class="btn small ghost" data-act="edit" data-col="wishlist" data-id="${esc(w.id)}">Edit</button>` : ''}
           ${delBtn('wishlist', w.id)}
           </div></details>
@@ -1777,6 +1796,10 @@ details.dna[open] > summary { margin-bottom: 10px; }
     const iw = activeWants().filter(w => w.section === 'ideas');
     const groups = [...new Set(iw.map(w => w.ideaGroup || 'Researching'))];
     $('#idea-wants').innerHTML = groups.map(g => { const ws = iw.filter(w => (w.ideaGroup || 'Researching') === g).sort((a, b) => (priceInfo(a).last ?? 1e9) - (priceInfo(b).last ?? 1e9)); return `<section class="block idea-block"><div class="block-h"><h2>${esc(g)} <button class="info" data-act="tip" data-tip="One card per option, priced every day across shops (codes, sales and Raiz included). Cheapest first. Tap Got it on the one you buy." aria-label="What is this?">ⓘ</button></h2><span class="meta">${ws.length} ${ws.length === 1 ? 'option' : 'options'} · cheapest first</span></div><div class="cards">${ws.map(wantCard).join('')}</div></section>`; }).join('');
+    { const as = asideWants();
+      $('#aside-block').hidden = !as.length;
+      $('#aside-sum').textContent = `Set aside (${as.length}): not tracked or alerted`;
+      $('#aside-list').innerHTML = as.map(w => `<li>${thumb(w)}<span class="what"><b>${esc(shortOf(w))}</b><span class="meta">${esc([w.ideaGroup, w.price != null ? 'last seen ' + fmt(w.price) : ''].filter(Boolean).join(' · '))}${w.asideNote ? ' · ' + esc(w.asideNote) : ''}</span></span><span class="tools">${canWrite ? `<button class="btn small ghost" data-act="want-aside" data-v="back" data-id="${esc(w.id)}">Bring back</button>${delBtn('wishlist', w.id)}` : ''}</span></li>`).join(''); }
     const all = newFinds();
     chipRow($('#finds-chips'), Object.entries(FIND_KINDS).filter(([k]) => all.some(f => f.kind === k)), S.findKind, 'find-kind');
     const list = all.filter(f => S.findKind === 'All' || f.kind === S.findKind).sort((a, b) => String(b.foundOn || '').localeCompare(String(a.foundOn || '')));
@@ -2220,20 +2243,61 @@ details.dna[open] > summary { margin-bottom: 10px; }
   const giftDates = (person) => (person.dates || []).map(dt => ({ ...dt, ...nextDate(dt.md) })).sort((a, b) => a.days - b.days);
   const inDays = (n) => n === 0 ? 'today' : n === 1 ? 'tomorrow' : `in ${n} days`;
   const giftsFor = (name) => activeWants().filter(w => w.section === 'gifts' && w.giftFor === name);
+  const giftShopsFor = (name) => live('wishlist').filter(w => w.section === 'gifts' && w.giftKind === 'shop' && w.giftFor === name);
+  const giftNotes = () => ((S.meta.gifts || {}).notes || []);
+  const giftNotesFor = (name) => giftNotes().filter(n => n.who === name);
+  const linkify = (t) => esc(t).replace(/https?:\/\/[^\s<]+/g, (u) => `<a href="${u}" target="_blank" rel="noopener">${u.replace(/^https?:\/\/(www\.)?/, '').slice(0, 48)}${u.length > 60 ? '…' : ''}</a>`);
+  const guessGiftKind = (v) => { v = String(v || '').trim(); if (!v) return 'item'; if (!isLink(v)) return 'note'; return /\/(products?|dp|p|item|itm)\//i.test(v) ? 'item' : 'shop'; };
+  const firstLine = (t) => { const x = String(t || '').split(/\n/)[0]; const m = x.match(/^(.{20,160}?[.!?])(\s|$)/); return m ? m[1] : x.slice(0, 160); };
+  function giftShopRow(w) {
+    const busy = w.research === 'queued';
+    return `<li class="gift-shop">${thumb(w)}<span class="what"><b>${esc(shortOf(w))}</b><span class="meta">${esc(sourceName(w.url || w.source || ''))}${busy ? ' · Claude is looking it up…' : ''}</span>${w.notes ? `<span class="meta gift-sum">${esc(firstLine(w.notes))}</span><details class="gift-more"><summary class="link">More</summary><p class="gift-notes-text">${linkify(w.notes)}</p></details>` : ''}</span><span class="tools">${safeUrl(w.url || w.source) ? `<a class="btn small ghost" href="${esc(w.url || w.source)}" target="_blank" rel="noopener">Browse ↗</a>` : ''}${delBtn('wishlist', w.id, 'Remove')}</span></li>`;
+  }
   function renderGifts() {
     const ppl = giftPeople().map(p => ({ ...p, _dates: giftDates(p) })).sort((a, b) => ((a._dates[0] || {}).days ?? 999) - ((b._dates[0] || {}).days ?? 999));
     $('#gift-person').closest('.gift-add-person').hidden = !canWrite;
+    const DAYS = Array.from({ length: 31 }, (_, i) => i + 1);
     $('#gifts-list').innerHTML = ppl.map(p => {
+      const who = esc(p.name);
       const ideas = giftsFor(p.name).sort((a, b) => starsOf(b) - starsOf(a));
+      const shops = giftShopsFor(p.name), notes = giftNotesFor(p.name);
       const bought = live('wishlist').filter(w => w.section === 'gifts' && w.giftFor === p.name && (w.status === 'bought' || w.status === 'ordered'));
+      const total = ideas.length + shops.length + notes.length;
+      const kind = (S.giftKind || {})[p.name] || 'item';
+      const dateForm = S.giftDateFor === p.name ? `<div class="gift-date-form" data-gdf="${who}">
+          <input type="text" data-gd-label placeholder="Occasion, e.g. Birthday" aria-label="Occasion" maxlength="30">
+          <select data-gd-day aria-label="Day">${DAYS.map(d => `<option value="${d}">${d}</option>`).join('')}</select>
+          <select data-gd-month aria-label="Month">${MONTHS.map((m, i) => `<option value="${i + 1}">${m}</option>`).join('')}</select>
+          <button class="btn small" data-act="gift-date-save" data-v="${who}">Save</button><button class="btn small ghost" data-act="gift-date-cancel">Cancel</button>
+        </div>` : '';
       return `<section class="block gift-block">
-        <div class="block-h"><h2>${esc(p.name)}</h2><span class="meta">${ideas.length} ${ideas.length === 1 ? 'idea' : 'ideas'}${bought.length ? ` · ${bought.length} bought` : ''}</span></div>
-        <div class="gift-dates">${p._dates.map((d, i) => `<span class="pill ${i === 0 && d.days <= 30 ? 'warn' : ''}">${esc(d.label)} ${esc(d.dl)} · ${inDays(d.days)}</span>`).join('')}${canWrite ? `<button class="link" data-act="gift-date" data-v="${esc(p.name)}">+ date</button>` : ''}</div>
-        ${ideas.length ? `<div class="cards">${ideas.map(wantCard).join('')}</div>` : `<p class="meta" style="margin:6px 0 0">No ideas for ${esc(p.name)} yet. Paste a link or type an idea below.</p>`}
+        <div class="block-h"><h2>${who}</h2><span class="meta">${total ? `${total} saved` : 'Nothing saved yet'}${bought.length ? ` · ${bought.length} bought` : ''}</span></div>
+        <div class="gift-dates">${p._dates.map((d, i) => `<span class="pill ${i === 0 && d.days <= 30 ? 'warn' : ''}">${esc(d.label)} ${esc(d.dl)} · ${inDays(d.days)}${canWrite ? `<button class="pill-x" data-act="gift-date-del" data-v="${who}" data-i="${(p.dates || []).findIndex(x => x.md === d.md && x.label === d.label)}" aria-label="Remove ${esc(d.label)}">×</button>` : ''}</span>`).join('')}${canWrite && S.giftDateFor !== p.name ? `<button class="link" data-act="gift-date-open" data-v="${who}">+ date</button>` : ''}</div>
+        ${dateForm}
+        ${ideas.length ? `<h3 class="gift-sub">Gifts to track <span class="meta">priced daily</span></h3><div class="cards">${ideas.map(wantCard).join('')}</div>` : ''}
+        ${shops.length ? `<h3 class="gift-sub">Shops to browse</h3><ul class="alerts gift-shops">${shops.map(giftShopRow).join('')}</ul>` : ''}
+        ${notes.length ? `<h3 class="gift-sub">Notes</h3><ul class="gift-notes">${notes.map(n => `<li><span>${linkify(n.text)}</span><span class="tools">${canResearch() ? `<button class="btn small ghost" data-act="gift-note-research" data-id="${esc(n.id)}" title="Claude finds the best match and tracks its price">Research</button>` : ''}${canWrite ? `<button class="btn small ghost" data-act="gift-note-del" data-id="${esc(n.id)}" aria-label="Delete note">×</button>` : ''}</span></li>`).join('')}</ul>` : ''}
+        ${!total ? `<p class="meta" style="margin:6px 0 0">Nothing for ${who} yet. Add a gift to track, a shop to browse, or just a note.</p>` : ''}
         ${bought.length ? `<p class="meta" style="margin:8px 0 0">Bought: ${bought.map(w => esc(shortOf(w))).join(', ')}</p>` : ''}
-        ${canWrite ? `<div class="refine gift-add"><input type="text" data-gift-in="${esc(p.name)}" placeholder="Add an idea for ${esc(p.name)}: a link, a product or just a thought" aria-label="Add a gift idea for ${esc(p.name)}"><button class="btn small" data-act="gift-add" data-v="${esc(p.name)}">Add</button></div>` : ''}
+        ${canWrite ? `<div class="gift-add">
+          <select data-gift-kind="${who}" aria-label="What are you adding?"><option value="item"${kind === 'item' ? ' selected' : ''}>Gift to track</option><option value="shop"${kind === 'shop' ? ' selected' : ''}>Shop to browse</option><option value="note"${kind === 'note' ? ' selected' : ''}>Just a note</option></select>
+          <input type="text" data-gift-in="${who}" placeholder="${kind === 'note' ? `A thought, e.g. she mentioned new gardening gloves` : kind === 'shop' ? 'Paste a shop or collection link' : 'Paste a product link or name a gift'}" aria-label="Add for ${who}">
+          <button class="btn small" data-act="gift-add" data-v="${who}">Add</button>
+        </div>` : ''}
       </section>`;
     }).join('');
+  }
+  async function addGiftDoc(who, text, kind) {
+    const link = isLink(text) ? text : '';
+    const shop = kind === 'shop';
+    const ref = await db.collection('wishlist').add({ name: link ? `${shop ? 'Shop' : 'Gift idea'} from ${sourceName(link)}` : text.slice(0, 140), label: link ? (shop ? sourceName(link) : '') : text.slice(0, 40), brand: '', category: 'Other', status: shop ? 'browse' : 'want', priority: 'want', stars: 3, section: 'gifts', giftFor: who, giftKind: shop ? 'shop' : 'item', url: link, source: link, quickPhrase: text, price: null, priceHistory: [], stock: 'unknown', research: 'queued', createdAt: now() });
+    const dates = (giftPeople().find(x => x.name === who) || {}).dates || [];
+    const when = dates.length ? ` Their next occasions: ${giftDates({ dates }).map(d => `${d.label} ${d.dl}`).join(', ')}.` : '';
+    const ask = shop
+      ? `${text} (a shop or collection to browse for a gift for ${who}.${when} Keep it as a browsing link, do not pick one product and do not set price or offers: set a short label (the shop name and what it sells, e.g. "Noss & Co vases"), brand, a preview photoId, and notes with the price range, 2 or 3 standouts with prices and links, any sale or code, delivery cost to them and the order-by date to arrive in time)`
+      : `${text} (a gift idea for ${who}.${when} If it is a vague idea rather than a product, pick the single best-matching, well-reviewed product and list 2 or 3 other options with prices in notes. Note the order-by date for delivery in time)`;
+    await fireResearch('wishlist', ref.id, ask);
+    return ref;
   }
   async function saveGiftPeople(ppl) { await db.doc('meta/gifts').set({ ...(S.meta.gifts || {}), people: ppl.map(p => ({ name: p.name, dates: p.dates || [] })) }); }
   function renderAmazon() {
@@ -3379,12 +3443,59 @@ details.dna[open] > summary { margin-bottom: 10px; }
       case 'gift-add': {
         const who = t.dataset.v, inp = $(`[data-gift-in="${CSS.escape(who)}"]`), text = (inp?.value || '').trim();
         if (!text) { inp?.focus(); break; }
+        const kind = $(`[data-gift-kind="${CSS.escape(who)}"]`)?.value || guessGiftKind(text);
         t.disabled = true;
         act(async () => {
-          const link = isLink(text) ? text : '';
-          const ref = await db.collection('wishlist').add({ name: link ? `Gift idea from ${sourceName(link)}` : text.slice(0, 140), label: link ? '' : text.slice(0, 40), brand: '', category: 'Other', status: 'want', priority: 'want', stars: 3, section: 'gifts', giftFor: who, url: link, source: link, quickPhrase: text, price: null, priceHistory: [], stock: 'unknown', research: 'queued', createdAt: now() });
-          await fireResearch('wishlist', ref.id, `${text} (a gift idea for ${who}. If the link is a collection or category page rather than one product, keep it as a browsing link: set a short label, a preview photoId and the price range in notes, and don't pick a product)`);
-          inp.value = ''; toast(`Saved for ${who}. Claude is looking it up.`);
+          if (kind === 'note') {
+            await db.doc('meta/gifts').set({ ...(S.meta.gifts || {}), people: giftPeople().map(x => ({ name: x.name, dates: x.dates || [] })), notes: [...giftNotes(), { id: 'n' + Date.now().toString(36), who, text: text.slice(0, 600), at: now() }] });
+            inp.value = ''; toast(`Noted for ${who}.`);
+            return;
+          }
+          await addGiftDoc(who, text, kind);
+          inp.value = ''; toast(kind === 'shop' ? `Saved for ${who}. Claude is having a look at the shop.` : `Saved for ${who}. Claude is looking it up.`);
+        });
+        break;
+      }
+      case 'gift-note-research': {
+        const n = giftNotes().find(x => x.id === id); if (!n) break;
+        t.disabled = true;
+        act(async () => {
+          await addGiftDoc(n.who, n.text, isLink(n.text) ? guessGiftKind(n.text) : 'item');
+          await db.doc('meta/gifts').set({ ...(S.meta.gifts || {}), notes: giftNotes().filter(x => x.id !== n.id) });
+          toast(`Claude is researching that for ${n.who}. It will appear under Gifts to track.`);
+        });
+        break;
+      }
+      case 'gift-note-del': {
+        const n = giftNotes().find(x => x.id === id); if (!n) break;
+        act(async () => { await db.doc('meta/gifts').set({ ...(S.meta.gifts || {}), notes: giftNotes().filter(x => x.id !== n.id) }); toast('Note deleted', async () => { await db.doc('meta/gifts').set({ ...(S.meta.gifts || {}), notes: [...giftNotes(), n] }); }); });
+        break;
+      }
+      case 'gift-date-open': S.giftDateFor = t.dataset.v; renderGifts(); $(`[data-gdf="${CSS.escape(t.dataset.v)}"] [data-gd-label]`)?.focus(); break;
+      case 'gift-date-cancel': S.giftDateFor = null; renderGifts(); break;
+      case 'gift-date-save': {
+        const who = t.dataset.v, f = $(`[data-gdf="${CSS.escape(who)}"]`); if (!f) break;
+        const label = (f.querySelector('[data-gd-label]').value || '').trim().slice(0, 30);
+        if (!label) { toast('Give it a name, e.g. Birthday.'); f.querySelector('[data-gd-label]').focus(); break; }
+        const d = Number(f.querySelector('[data-gd-day]').value), m = Number(f.querySelector('[data-gd-month]').value);
+        if (d > new Date(2024, m, 0).getDate()) { toast(`${MONTHS[m - 1]} doesn't have ${d} days.`); break; }
+        const md = `${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const ppl = giftPeople();
+        act(async () => { await saveGiftPeople(ppl.map(x => x.name === who ? { ...x, dates: [...(x.dates || []), { label, md }] } : x)); S.giftDateFor = null; toast(`${who}'s ${label} saved.`); });
+        break;
+      }
+      case 'gift-date-del': {
+        const who = t.dataset.v, i = Number(t.dataset.i), ppl = giftPeople(), p = ppl.find(x => x.name === who); if (!p || !(p.dates || [])[i]) break;
+        const gone = p.dates[i];
+        act(async () => { await saveGiftPeople(ppl.map(x => x.name === who ? { ...x, dates: x.dates.filter((_, j) => j !== i) } : x)); toast(`Removed ${gone.label}`, async () => { await saveGiftPeople(giftPeople().map(x => x.name === who ? { ...x, dates: [...(x.dates || []), gone] } : x)); }); });
+        break;
+      }
+      case 'want-aside': {
+        const w = find('wishlist'); if (!w) break;
+        const back = t.dataset.v === 'back';
+        act(async () => {
+          await db.collection('wishlist').doc(w.id).update(back ? { status: 'want', asideAt: null } : { status: 'aside', asideAt: now() });
+          toast(back ? `${shortOf(w)} is back on your list.` : `${shortOf(w)} set aside. Find it at the bottom of Ideas.`, async () => { await db.collection('wishlist').doc(w.id).update(back ? { status: 'aside' } : { status: 'want' }); });
         });
         break;
       }
@@ -3392,15 +3503,6 @@ details.dna[open] > summary { margin-bottom: 10px; }
         const inp = $('#gift-person'), name = (inp.value || '').trim().slice(0, 40); if (!name) { inp.focus(); break; }
         const ppl = giftPeople(); if (ppl.some(p => p.name.toLowerCase() === name.toLowerCase())) { toast(`${name} is already there.`); break; }
         act(async () => { await saveGiftPeople([...ppl, { name, dates: [{ label: 'Christmas', md: '12-25' }] }]); inp.value = ''; toast(`Added ${name}, with Christmas. Tap + date for birthdays.`); });
-        break;
-      }
-      case 'gift-date': {
-        const who = t.dataset.v, ppl = giftPeople(), p = ppl.find(x => x.name === who); if (!p) break;
-        const label = (prompt(`What's the occasion for ${who}? e.g. Birthday, Anniversary`) || '').trim(); if (!label) break;
-        const raw = (prompt(`Date for ${who}'s ${label} (day and month, e.g. 23/12)`) || '').trim();
-        const m = raw.match(/^(\d{1,2})[\/\-. ](\d{1,2})$/); if (!m || Number(m[2]) < 1 || Number(m[2]) > 12 || Number(m[1]) < 1 || Number(m[1]) > 31) { toast('Use day/month, e.g. 23/12.'); break; }
-        const md = `${String(m[2]).padStart(2, '0')}-${String(m[1]).padStart(2, '0')}`;
-        act(async () => { await saveGiftPeople(ppl.map(x => x.name === who ? { ...x, dates: [...(x.dates || []), { label: label.slice(0, 30), md }] } : x)); toast(`${who}'s ${label} saved.`); });
         break;
       }
       case 'amz-det': { S.amzOpen = S.amzOpen || new Set(); S.amzOpen.has(id) ? S.amzOpen.delete(id) : S.amzOpen.add(id); renderAmazon(); break; }
@@ -3776,7 +3878,8 @@ details.dna[open] > summary { margin-bottom: 10px; }
       case 'deal-all': {
         const list = activeWants().filter(w => !w.example && w.priceRecheck !== 'queued');
         if (!list.length) { toast('Nothing to search right now.'); break; }
-        if (!confirm(`Run a dedicated deal search for each of your ${list.length} wants? It uses more of your Claude usage than the daily check.`)) break;
+        if (!S.dealAllArmed || Date.now() - S.dealAllArmed > 6000) { S.dealAllArmed = Date.now(); toast(`Tap again to search deals for all ${list.length} wants. It uses more of your Claude usage than the daily check.`); break; }
+        S.dealAllArmed = 0;
         t.disabled = true;
         act(async () => { for (const w of list) await queueDealHunt(w); toast(`Searching deals for ${list.length} wants. Results appear on each card as they finish.`); });
         break;
@@ -3879,8 +3982,14 @@ details.dna[open] > summary { margin-bottom: 10px; }
       }
     }
   });
+  document.addEventListener('input', (e) => {
+    const t = e.target; if (!t.dataset || t.dataset.giftIn == null) return;
+    const who = t.dataset.giftIn, sel = $(`[data-gift-kind="${CSS.escape(who)}"]`);
+    if (sel && !sel.dataset.touched) { const k = guessGiftKind(t.value); if (sel.value !== k) { sel.value = k; S.giftKind = { ...(S.giftKind || {}), [who]: k }; } }
+  });
   document.addEventListener('change', (e) => {
     const t = e.target;
+    if (t.dataset && t.dataset.giftKind) { t.dataset.touched = '1'; S.giftKind = { ...(S.giftKind || {}), [t.dataset.giftKind]: t.value }; const inp = $(`[data-gift-in="${CSS.escape(t.dataset.giftKind)}"]`); if (inp) inp.placeholder = t.value === 'note' ? 'A thought, e.g. she mentioned new gardening gloves' : t.value === 'shop' ? 'Paste a shop or collection link' : 'Paste a product link or name a gift'; return; }
     if (t.dataset && t.dataset.prefVar) {
       const id = t.dataset.prefVar, w = live('wishlist').find(x => x.id === id); if (!w) return;
       S.openCards = S.openCards || new Set(); S.openCards.add(id + ':');
