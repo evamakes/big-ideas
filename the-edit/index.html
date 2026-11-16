@@ -257,6 +257,12 @@ a.plain { color: inherit; text-decoration: none; }
 .shortlist li.win { background: var(--good-soft, var(--accent-soft)); }
 .shortlist a { color: inherit; text-decoration: none; }
 .idea-block { margin-bottom: 18px; }
+.gift-dates { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0 0 10px; }
+.gift-add { margin-top: 10px; display: flex; gap: 8px; }
+.gift-add input { flex: 1; min-width: 0; }
+.gift-add-person { display: flex; gap: 8px; margin-top: 8px; }
+.gift-add-person input { flex: 1; min-width: 0; }
+.gift-block { margin-bottom: 16px; }
 .alt-model { margin: 0; font-size: 0.86rem; color: var(--muted); }
 .alt-model b { color: var(--ink); font-weight: 600; }
 .tips .pill { font-size: 0.7rem; padding: 1px 7px; vertical-align: 1px; }
@@ -665,6 +671,10 @@ details.dna[open] > summary { margin-bottom: 10px; }
       <div class="block-h"><h2>New from brands you like</h2></div>
       <div class="picks" id="today-new"></div>
     </section>
+    <section class="block" id="gifts-soon" hidden>
+      <div class="block-h"><h2>Gifts coming up</h2><button class="link" data-tab="gifts">Gifts →</button></div>
+      <ul class="alerts" id="gifts-soon-list"></ul>
+    </section>
     <div class="quiet-home" id="today-quiet" hidden><b>All quiet.</b> <span class="meta">No price changes, restocks or sales right now. Anything that changes shows up here.</span></div>
     <div class="refresh-line" id="refresh"></div>
     <div id="stats" hidden></div><ul id="today-finds" hidden></ul>
@@ -886,6 +896,12 @@ details.dna[open] > summary { margin-bottom: 10px; }
       </div>
     </div>
     <div class="inspo-list" id="inspo-list2" style="margin-top:16px"></div>
+  </section>
+
+  <!-- GIFTS -->
+  <section class="panel" data-panel="gifts" hidden>
+    <div id="gifts-list"></div>
+    <div class="gift-add-person"><input type="text" id="gift-person" placeholder="Add someone, e.g. Dad" aria-label="Add a person"><button class="btn small ghost" data-act="gift-person-add">Add person</button></div>
   </section>
 
   <!-- AMAZON LIST -->
@@ -1381,7 +1397,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     $('#n-shop').textContent = '';
     $('#n-mine').textContent = '';
     $$('.needs-img').forEach(el => el.hidden = !S.canImages);
-    $('#quick').hidden = !db || !canWrite || ['bin', 'inspo', 'style', 'mystyle', 'vision', 'settings'].includes(S.tab);
+    $('#quick').hidden = !db || !canWrite || ['bin', 'inspo', 'style', 'mystyle', 'vision', 'settings', 'gifts'].includes(S.tab);
     $('#shop-form').hidden = !db || !canWrite;
     $('#deals-all').hidden = !canResearch() || !activeWants().length;
     renderGlance();
@@ -1459,6 +1475,9 @@ details.dna[open] > summary { margin-bottom: 10px; }
   const alertKey = (a) => `${a.label}|${a.detail || ''}`;
   const isDismissed = (w, a) => w.dismissedAlert === a.label || (w.dismissedAlerts || []).includes(alertKey(a));
   function renderToday() {
+    { const soon = giftPeople().flatMap(p => giftDates(p).filter(d => d.days <= 30).map(d => ({ p, d }))).sort((a, b) => a.d.days - b.d.days);
+      $('#gifts-soon').hidden = !soon.length;
+      $('#gifts-soon-list').innerHTML = soon.map(({ p, d }) => { const n = giftsFor(p.name).length, got = live('wishlist').some(w => w.section === 'gifts' && w.giftFor === p.name && (w.status === 'bought' || w.status === 'ordered')); return `<li><span class="what"><b>${esc(p.name)}: ${esc(d.label)}</b><span class="meta">${esc(d.dl)} · ${inDays(d.days)} · ${got ? 'gift bought' : n ? `${n} ${n === 1 ? 'idea' : 'ideas'} saved` : 'no ideas yet'}</span></span><span class="tools"><button class="btn small ghost" data-tab="gifts">Open</button></span></li>`; }).join(''); }
     const r = S.meta.refresh || {};
     const canRefresh = !!(mcp && r.triggerId && canWrite);
     $('#refresh').innerHTML = `<span>${r.lastRun ? `Prices checked ${esc(ago(r.lastRun))}` : 'Prices haven’t been checked yet'}${r.requestedAt && (!r.lastRun || r.requestedAt > r.lastRun) ? ' · checking now' : ''}</span>${canRefresh ? `<button class="link" data-act="refresh-now">Check now</button>` : ''}`;
@@ -1513,7 +1532,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
 
   function renderWants() {
     const all = live('wishlist');
-    const counts = {}; all.filter(w => w.section !== 'ideas' && w.status !== 'ordered' && (S.showBought || w.status !== 'bought')).forEach(w => { const g = wantGroup(w); counts[g] = (counts[g] || 0) + 1; });
+    const counts = {}; all.filter(w => !['ideas', 'gifts'].includes(w.section) && w.status !== 'ordered' && (S.showBought || w.status !== 'bought')).forEach(w => { const g = wantGroup(w); counts[g] = (counts[g] || 0) + 1; });
     chipRow($('#wants-chips'), WANT_GROUPS.map(g => g[0]).filter(g => counts[g]).map(g => [g, `${g} ${counts[g]}`]), S.wantCat, 'want-cat');
     $('#wants-sort').value = S.wantSort;
     $('#wants-bought').checked = S.showBought;
@@ -1521,7 +1540,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
     const otw = all.filter(w => w.status === 'ordered').sort((a, b) => String(b.orderedOn || '').localeCompare(String(a.orderedOn || '')));
     $('#wants-otw').hidden = !otw.length;
     $('#wants-otw-list').innerHTML = otw.map(otwCard).join('');
-    const list = all.filter(w => w.section !== 'ideas' && w.status !== 'ordered' && (S.showBought || w.status !== 'bought') && (S.wantCat === 'All' || wantGroup(w) === S.wantCat));
+    const list = all.filter(w => !['ideas', 'gifts'].includes(w.section) && w.status !== 'ordered' && (S.showBought || w.status !== 'bought') && (S.wantCat === 'All' || wantGroup(w) === S.wantCat));
     const pr = { must: 0, want: 1, maybe: 2 };
     const sorters = {
       alert: (a, b) => (Math.min(9, ...wantAlerts(a).filter(x => worthIt(a, x)).map(x => x.rank)) - Math.min(9, ...wantAlerts(b).filter(x => worthIt(b, x)).map(x => x.rank))) || starsOf(b) - starsOf(a),
@@ -2193,6 +2212,30 @@ details.dna[open] > summary { margin-bottom: 10px; }
     const toGet = vis.reduce((n, x) => n + ((x.analysis || {}).missing || []).filter(m => !m.added).length, 0);
     $('#home-vision').innerHTML = hs === 'All' ? '' : `<div class="vis-strip">${vis.slice(0, 4).map(x => { const src = photoSrc(x); return src ? `<img src="${esc(src)}" alt="" loading="lazy">` : ''; }).join('')}<span class="meta">${vis.length ? `Your ${esc(SPACE_LABEL[hs].toLowerCase())} vision${toGet ? ` · ${toGet} ${toGet === 1 ? 'thing' : 'things'} to get there` : ''}` : `No vision for your ${esc(SPACE_LABEL[hs].toLowerCase())} yet`}</span><button class="btn small ghost" data-act="open-vision" data-v="${hs}">${vis.length ? 'Open' : 'Add one'}</button></div>`;
   }
+  // Gifts: one section per person, with their dates and gift ideas (priced daily like wants)
+  const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const DEFAULT_PEOPLE = [{ name: 'Mum', dates: [{ label: 'Birthday', md: '12-23' }, { label: 'Christmas', md: '12-25' }] }, { name: 'Fred', dates: [{ label: 'Christmas', md: '12-25' }] }];
+  const giftPeople = () => { const g = S.meta.gifts; const ppl = (g && g.people) || DEFAULT_PEOPLE; const extra = [...new Set(live('wishlist').filter(w => w.section === 'gifts' && w.giftFor).map(w => w.giftFor))].filter(n => !ppl.some(p => p.name === n)).map(name => ({ name, dates: [] })); return [...ppl, ...extra]; };
+  const nextDate = (md) => { const [m, d] = String(md).split('-').map(Number); const t = new Date(); t.setHours(0, 0, 0, 0); let x = new Date(t.getFullYear(), m - 1, d); if (x < t) x = new Date(t.getFullYear() + 1, m - 1, d); return { when: x, days: Math.round((x - t) / 864e5), dl: `${d} ${MONTHS[m - 1]}` }; };
+  const giftDates = (person) => (person.dates || []).map(dt => ({ ...dt, ...nextDate(dt.md) })).sort((a, b) => a.days - b.days);
+  const inDays = (n) => n === 0 ? 'today' : n === 1 ? 'tomorrow' : `in ${n} days`;
+  const giftsFor = (name) => activeWants().filter(w => w.section === 'gifts' && w.giftFor === name);
+  function renderGifts() {
+    const ppl = giftPeople().map(p => ({ ...p, _dates: giftDates(p) })).sort((a, b) => ((a._dates[0] || {}).days ?? 999) - ((b._dates[0] || {}).days ?? 999));
+    $('#gift-person').closest('.gift-add-person').hidden = !canWrite;
+    $('#gifts-list').innerHTML = ppl.map(p => {
+      const ideas = giftsFor(p.name).sort((a, b) => starsOf(b) - starsOf(a));
+      const bought = live('wishlist').filter(w => w.section === 'gifts' && w.giftFor === p.name && (w.status === 'bought' || w.status === 'ordered'));
+      return `<section class="block gift-block">
+        <div class="block-h"><h2>${esc(p.name)}</h2><span class="meta">${ideas.length} ${ideas.length === 1 ? 'idea' : 'ideas'}${bought.length ? ` · ${bought.length} bought` : ''}</span></div>
+        <div class="gift-dates">${p._dates.map((d, i) => `<span class="pill ${i === 0 && d.days <= 30 ? 'warn' : ''}">${esc(d.label)} ${esc(d.dl)} · ${inDays(d.days)}</span>`).join('')}${canWrite ? `<button class="link" data-act="gift-date" data-v="${esc(p.name)}">+ date</button>` : ''}</div>
+        ${ideas.length ? `<div class="cards">${ideas.map(wantCard).join('')}</div>` : `<p class="meta" style="margin:6px 0 0">No ideas for ${esc(p.name)} yet. Paste a link or type an idea below.</p>`}
+        ${bought.length ? `<p class="meta" style="margin:8px 0 0">Bought: ${bought.map(w => esc(shortOf(w))).join(', ')}</p>` : ''}
+        ${canWrite ? `<div class="refine gift-add"><input type="text" data-gift-in="${esc(p.name)}" placeholder="Add an idea for ${esc(p.name)}: a link, a product or just a thought" aria-label="Add a gift idea for ${esc(p.name)}"><button class="btn small" data-act="gift-add" data-v="${esc(p.name)}">Add</button></div>` : ''}
+      </section>`;
+    }).join('');
+  }
+  async function saveGiftPeople(ppl) { await db.doc('meta/gifts').set({ ...(S.meta.gifts || {}), people: ppl.map(p => ({ name: p.name, dates: p.dates || [] })) }); }
   function renderAmazon() {
     const all = live('basket'), open = all.filter(b => !b.ordered).sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)));
     const done = all.filter(b => b.ordered).sort((a, b) => String(b.orderedAt || '').localeCompare(String(a.orderedAt || '')));
@@ -2355,9 +2398,9 @@ details.dna[open] > summary { margin-bottom: 10px; }
 
   function render() {
     renderChrome();
-    renderToday(); renderWants(); renderFinds(); renderSkin(); renderMakeup(); renderHair(); renderWardrobe(); renderStyle(); renderSizes(); renderShops(); renderInspo(); renderShopList(); renderAmazon(); renderThings(); renderBin();
+    renderToday(); renderWants(); renderFinds(); renderSkin(); renderMakeup(); renderHair(); renderWardrobe(); renderStyle(); renderSizes(); renderShops(); renderInspo(); renderShopList(); renderAmazon(); renderThings(); renderGifts(); renderBin();
     decorateCards();
-    $('#today-quiet').hidden = !['#alerts-block', '#shop-block', '#sales-block', '#new-block'].every(q => $(q).hidden);
+    $('#today-quiet').hidden = !['#alerts-block', '#shop-block', '#sales-block', '#new-block', '#gifts-soon'].every(q => $(q).hidden);
   }
   // At-a-glance strip under the tabs: just what changed or needs you on this page
   function renderGlance() {
@@ -3197,7 +3240,7 @@ details.dna[open] > summary { margin-bottom: 10px; }
   // Fewer tabs: related pages sit under one tab with a small switch at the top
   // Four places: Home (what changed), Shopping (things to buy), Style me (getting dressed), My world (everything you own and love)
   const TAB_GROUPS = {
-    shop: [['wants', 'Wants'], ['finds', 'Ideas'], ['amazon', 'Amazon list'], ['shops', 'Shops']],
+    shop: [['wants', 'Wants'], ['finds', 'Ideas'], ['gifts', 'Gifts'], ['amazon', 'Amazon list'], ['shops', 'Shops']],
     style: [['style', 'Get dressed'], ['mystyle', 'My style'], ['inspo', 'Inspo']],
     mine: [['vision', 'Vision board'], ['wardrobe', 'Wardrobe'], ['skin', 'Skin'], ['makeup', 'Makeup'], ['hair', 'Hair'], ['home', 'House'], ['tech', 'Tech'], ['wellness', 'Wellness']],
   };
@@ -3331,6 +3374,33 @@ details.dna[open] > summary { margin-bottom: 10px; }
         const x = find('shops'); if (!x || !x.sale) break;
         const before = x.saleSeen || null;
         act(async () => { await db.collection('shops').doc(id).update({ saleSeen: { sig: saleSig(x.sale), picks: shownPicks(x).map(pickKey), at: now() } }); toast(`Seen. ${x.name || 'This shop'} comes back if there are new picks, codes or dates.`, () => act(() => db.collection('shops').doc(id).update({ saleSeen: before }))); });
+        break;
+      }
+      case 'gift-add': {
+        const who = t.dataset.v, inp = $(`[data-gift-in="${CSS.escape(who)}"]`), text = (inp?.value || '').trim();
+        if (!text) { inp?.focus(); break; }
+        t.disabled = true;
+        act(async () => {
+          const link = isLink(text) ? text : '';
+          const ref = await db.collection('wishlist').add({ name: link ? `Gift idea from ${sourceName(link)}` : text.slice(0, 140), label: link ? '' : text.slice(0, 40), brand: '', category: 'Other', status: 'want', priority: 'want', stars: 3, section: 'gifts', giftFor: who, url: link, source: link, quickPhrase: text, price: null, priceHistory: [], stock: 'unknown', research: 'queued', createdAt: now() });
+          await fireResearch('wishlist', ref.id, `${text} (a gift idea for ${who}. If the link is a collection or category page rather than one product, keep it as a browsing link: set a short label, a preview photoId and the price range in notes, and don't pick a product)`);
+          inp.value = ''; toast(`Saved for ${who}. Claude is looking it up.`);
+        });
+        break;
+      }
+      case 'gift-person-add': {
+        const inp = $('#gift-person'), name = (inp.value || '').trim().slice(0, 40); if (!name) { inp.focus(); break; }
+        const ppl = giftPeople(); if (ppl.some(p => p.name.toLowerCase() === name.toLowerCase())) { toast(`${name} is already there.`); break; }
+        act(async () => { await saveGiftPeople([...ppl, { name, dates: [{ label: 'Christmas', md: '12-25' }] }]); inp.value = ''; toast(`Added ${name}, with Christmas. Tap + date for birthdays.`); });
+        break;
+      }
+      case 'gift-date': {
+        const who = t.dataset.v, ppl = giftPeople(), p = ppl.find(x => x.name === who); if (!p) break;
+        const label = (prompt(`What's the occasion for ${who}? e.g. Birthday, Anniversary`) || '').trim(); if (!label) break;
+        const raw = (prompt(`Date for ${who}'s ${label} (day and month, e.g. 23/12)`) || '').trim();
+        const m = raw.match(/^(\d{1,2})[\/\-. ](\d{1,2})$/); if (!m || Number(m[2]) < 1 || Number(m[2]) > 12 || Number(m[1]) < 1 || Number(m[1]) > 31) { toast('Use day/month, e.g. 23/12.'); break; }
+        const md = `${String(m[2]).padStart(2, '0')}-${String(m[1]).padStart(2, '0')}`;
+        act(async () => { await saveGiftPeople(ppl.map(x => x.name === who ? { ...x, dates: [...(x.dates || []), { label: label.slice(0, 30), md }] } : x)); toast(`${who}'s ${label} saved.`); });
         break;
       }
       case 'amz-det': { S.amzOpen = S.amzOpen || new Set(); S.amzOpen.has(id) ? S.amzOpen.delete(id) : S.amzOpen.add(id); renderAmazon(); break; }
